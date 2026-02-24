@@ -65,23 +65,35 @@ The bootstrapping problem — needing NXS to use services, but needing to provid
 
 ### Proof-of-Service Mining (NXS Genesis)
 
-When a node wins a [stochastic relay reward](payment-channels) for non-trusted traffic, the protocol **mints new NXS** as the reward. This is how NXS enters existence:
+The [stochastic relay lottery](payment-channels) serves a dual purpose: it determines who earns and how much, while the **funding source** depends on the economic context:
+
+1. **Minting (subsidy)**: Each epoch, the emission schedule determines how much new NXS is minted. This is distributed proportionally to relay nodes based on their accumulated VRF lottery wins during that epoch — proof that they actually forwarded packets. Minting dominates during bootstrap and decays over time per the emission schedule.
+
+2. **Channel debit (market)**: When a relay wins the lottery and has an open [payment channel](payment-channels) with the upstream sender, the reward is debited from that channel. The sender pays directly for routing. This becomes the dominant mechanism as NXS enters circulation and channels become widespread.
+
+Both mechanisms coexist. As the economy matures, channel-funded relay payments naturally replace minting as the primary income source for relays, while the decaying emission schedule ensures the transition is smooth.
 
 ```
-Mining reward per epoch:
-  reward = base_reward_schedule(epoch_number) / active_relays_in_epoch
-  Verified via: lottery win proofs aggregated at epoch boundaries
-  Minting: new supply created (not transferred from a pool)
+Relay compensation per epoch:
+  Mining reward: base_reward_schedule(epoch_number) / active_relays_in_epoch
+    → distributed proportionally to verified VRF lottery wins
+    → new supply created (not transferred from a pool)
+
+  Channel revenue: sum of lottery wins debited from sender channels
+    → direct payment, no new supply created
+
+  Total relay income = mining reward + channel revenue
 ```
 
 ### Bootstrap Sequence
 
 1. Nodes form local meshes (free between trusted peers, no tokens)
 2. Gateway nodes bridge to wider network
-3. Non-trusted traffic triggers stochastic relay rewards (NXS minting)
-4. Relay nodes accumulate NXS from mining
-5. NXS enters circulation as relay nodes spend on services
-6. Market pricing emerges from supply/demand
+3. Non-trusted traffic triggers stochastic relay lottery (VRF-based)
+4. Lottery wins accumulate as service proofs; epoch minting distributes NXS to relays
+5. Relay nodes open payment channels and begin spending NXS on services
+6. Senders with NXS fund relay costs via channel debits; minting share decreases
+7. Market pricing emerges from supply/demand
 
 ### Trust-Based Credit
 

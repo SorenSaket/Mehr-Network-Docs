@@ -146,3 +146,99 @@ These are known unsolved problems in the NEXUS design. Each requires further res
 - Reticulum's planned Rust implementation may affect NEXUS's implementation strategy
 
 **Priority**: Architectural decision needed before Phase 1 implementation.
+
+## 13. Private Compute Overhead on Mesh
+
+**Status**: Design direction established — [private compute](../services/nxs-compute#private-compute-optional) is opt-in with four tiers (None, Split Inference, Secret Shared, TEE).
+
+**Remaining questions**:
+- What is the practical overhead of Tier 2 (secret-shared computation via 3-node quorum) on Gateway-tier hardware? Needs benchmarking.
+- For split inference (Tier 1): what are optimal cut points for common models (Whisper, LLaMA, Stable Diffusion) on Raspberry Pi + GPU node topology?
+- How does the differential privacy noise budget accumulate across multiple queries to the same compute provider? A consumer making repeated queries to the same Inference node leaks progressively more information through the aggregate of DP-noised activations.
+- Can MPC be practical for any real workload on a mesh with >50ms inter-node latency? Multiplication gates require communication rounds — deep circuits may be prohibitively slow.
+
+**Priority**: Benchmarking needed during Phase 3. The tiered opt-in design means this doesn't block deployment — consumers use Tier 0 (no privacy) by default and opt into higher tiers as they become practical.
+
+## 14. Congestion Control
+
+**Problem**: The spec has no congestion control mechanism for user data. On a shared LoRa link with multiple nodes, what prevents saturation? The [gossip bandwidth budget](../protocol/network-protocol#bandwidth-budget) provides static allocations for protocol overhead, but user data has no admission control, backpressure, or fairness mechanism. This is especially critical on half-duplex LoRa links where collisions waste the entire transmission time.
+
+**Considerations**:
+- CSMA/CA-style collision avoidance at the link layer (LoRa already has CAD — Channel Activity Detection)
+- Per-neighbor token bucket or leaky bucket rate limiting
+- Priority queuing (voice > messaging > bulk transfer) with preemption
+- Backpressure signals propagated upstream when a link is congested
+- Interaction with the economic layer — congested links should increase cost_per_byte dynamically to signal scarcity
+
+**Priority**: Required before Phase 1. Without this, a LoRa mesh with >5 active nodes will experience frequent collisions and degraded throughput.
+
+## 15. Gossip Honesty Incentive
+
+**Problem**: A relay node that learns of a cheaper route through its neighbor has an incentive to **withhold** that routing announcement from gossip, keeping traffic flowing through itself to earn more relay fees. There is no mechanism to ensure nodes forward routing announcements honestly.
+
+**Possible mitigations**:
+- Redundant announcement propagation — announcements flood via multiple paths, making suppression by a single node ineffective
+- Cross-checking — if a node consistently advertises itself as the best route to a destination that other nodes can reach more cheaply, this is detectable by neighbors
+- Reputation penalty for nodes whose cost claims diverge significantly from empirically measured costs
+- Accept as an inherent limitation — Reticulum's announce flooding already provides redundancy, and cost-weighted routing routes around overpriced nodes naturally
+
+**Priority**: Needs analysis. May be acceptable if Reticulum's existing announce propagation provides sufficient redundancy.
+
+## 16. Epoch Timing in Small Partitions
+
+**Problem**: Epochs trigger at ~10,000 settlement batches. A small partition (e.g., a 20-node village on LoRa) with low transaction volume might take **months** to reach 10,000 settlements. During this time, the settlement GSet grows without bound. Constrained devices (ESP32) will run out of memory long before an epoch triggers.
+
+**Possible solutions**:
+- **Secondary trigger**: Add a GSet size threshold (e.g., compact when the GSet exceeds 500 KB regardless of settlement count)
+- **Minimum epoch frequency**: Force an epoch after N gossip rounds even with fewer than 10,000 settlements, with reduced acknowledgment requirements for small partitions
+- **Partition-aware compaction**: Small partitions (< 50 known nodes) use a lower settlement threshold (e.g., 500 settlements)
+- **LoRa node delegation**: LoRa nodes already delegate epoch participation to high-bandwidth peers; ensure this covers GSet storage too
+
+**Priority**: Required before Phase 2. Any deployment with constrained devices will encounter this within weeks.
+
+## 17. Community Label Spoofing
+
+**Problem**: Community labels are self-assigned and non-unique. [NXS-Name](../applications/naming) resolution finds the "nearest" cluster with a given label. An attacker could set `community_label = "portland-mesh"` on nodes physically near a target, becoming the "nearest" resolver and hijacking name resolution for that community.
+
+**Possible mitigations**:
+- Trust-weighted name resolution — prefer responses from nodes in your trust graph over random nearby nodes
+- Multi-source verification — resolve names against multiple clusters with the same label and flag divergence
+- Signed community label attestation — existing members of a community sign each other's label claims, creating a web of trust around the label
+- Accept as inherent limitation — petnames as fallback, and users learn their community's real nodes through out-of-band channels
+
+**Priority**: Should be addressed before Phase 3 (NXS-Name deployment). Not a Phase 1 blocker since naming isn't needed for basic mesh operation.
+
+## 18. Gossip Budget Feasibility on LoRa
+
+**Problem**: On a 1 kbps LoRa link, Tier 1 routing gets 3% = 30 bps = ~3.75 bytes/sec. A single `CostAnnotation` is ~40+ bytes (u64 + u32 + u64 + 64-byte signature). That allows roughly **1 routing announcement per 10+ seconds**. For a mesh with 50+ destinations, route convergence could take 10+ minutes after any topology change.
+
+**Needed**:
+- Back-of-envelope validation that the budget works for realistic mesh sizes (20, 50, 100, 500 nodes)
+- Worst-case convergence time analysis after a topology change
+- Whether the constrained-link adaptations (pull-only for Tiers 3-4) are sufficient, or whether Tier 1 also needs pull-only mode on the most constrained links
+- Compact announcement encoding — can CostAnnotations be compressed below 40 bytes?
+
+**Priority**: Required before Phase 1. If the budget doesn't work at realistic mesh sizes, the gossip protocol needs fundamental redesign for constrained links.
+
+## 19. NXS-Byte Floating-Point Determinism
+
+**Problem**: [NXS-Compute](../services/nxs-compute) claims "pure deterministic computation" — given the same inputs, any node produces the same output. If NXS-Byte includes any floating-point operations, this is extremely difficult to guarantee across different hardware (ESP32 FPU, ARM, x86). Different FPUs handle rounding, denormals, NaN propagation, and fused multiply-add differently.
+
+**Options**:
+- **Exclude floating-point entirely** — NXS-Byte uses only integer and fixed-point arithmetic. Simplest and most reliable for determinism.
+- **Software floating-point** — Specify exact soft-float semantics (e.g., IEEE 754 with round-to-nearest-even, no FMA). Slower but deterministic.
+- **Restricted floating-point** — Allow hardware FP but constrain to a deterministic subset (e.g., no denormals, strict ordering). Fragile across architectures.
+
+**Priority**: Must be decided before the NXS-Byte ISA is specified (Open Question #10). Integer-only is the safe default.
+
+## 20. Erasure Coding Coordination Overhead
+
+**Problem**: Distributing erasure-coded shards requires finding and negotiating with 3-12 storage nodes across different trust neighborhoods. For a constrained device (phone, ESP32), this is a significant coordination burden — each shard requires capability discovery, agreement negotiation, and channel establishment with a separate node.
+
+**Considerations**:
+- The [RepairAgent](../services/nxs-store#automated-repair) helps but is itself an NXS-Compute contract requiring a capable host node — chicken-and-egg for initial storage
+- A "storage broker" capability could bundle shard distribution as a service — you give one node the data and payment, it handles distribution and maintenance
+- Simplified schemes for constrained devices: just replicate to 2-3 trusted peers (no erasure coding) and upgrade to erasure coding when a capable node is available
+- Default to simple replication within trust neighborhoods; erasure coding is an optimization for cross-neighborhood durability
+
+**Priority**: Phase 2. The protocol works with simple replication; erasure coding is an optimization that can be added later.

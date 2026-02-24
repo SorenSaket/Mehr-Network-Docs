@@ -54,11 +54,15 @@ Traffic between trusted peers is **always free**. A relay node checks its trust 
 
 ```
 Relay decision:
-  if sender is trusted OR destination is trusted:
+  if sender is trusted AND destination is trusted:
     relay for free (no lottery, no channel update)
+  else if sender is trusted:
+    relay for free (helping a friend send outbound)
   else:
     relay with stochastic reward lottery
 ```
+
+Note the asymmetry: a relay helps its trusted peers **send** traffic for free, but does not relay free traffic from strangers just because the destination is trusted. Without this rule, an untrusted node could route unlimited free traffic through you to any of your trusted peers, shifting relay costs onto you without compensation.
 
 This means a village mesh where everyone trusts each other operates with **zero economic overhead** — no tokens, no channels, no settlements. The economic layer only activates for traffic crossing trust boundaries.
 

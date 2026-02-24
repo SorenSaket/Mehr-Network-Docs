@@ -27,9 +27,9 @@ This page documents the key architectural decisions made during NEXUS protocol d
 
 | | |
 |---|---|
-| **Chosen** | Probabilistic micropayments (lottery per packet, channel update only on wins) |
-| **Alternatives** | Per-packet accounting, per-minute batched accounting, subscription-based |
-| **Rationale** | Per-packet and batched payment require frequent channel state updates, consuming ~2-4% bandwidth on LoRa links. Stochastic rewards achieve the same expected income but trigger updates only on lottery wins — reducing economic overhead by ~10x. Adaptive difficulty ensures fairness across traffic levels. The law of large numbers guarantees convergence for active relays. |
+| **Chosen** | Probabilistic micropayments via VRF-based lottery (channel update only on wins) |
+| **Alternatives** | Per-packet accounting, per-minute batched accounting, subscription-based, random-nonce lottery |
+| **Rationale** | Per-packet and batched payment require frequent channel state updates, consuming ~2-4% bandwidth on LoRa links. Stochastic rewards achieve the same expected income but trigger updates only on lottery wins — reducing economic overhead by ~10x. Adaptive difficulty ensures fairness across traffic levels. The law of large numbers guarantees convergence for active relays. **The lottery uses a VRF (ECVRF-ED25519-SHA512-TAI, RFC 9381)** rather than a random nonce to prevent relay nodes from grinding nonces to win every packet. The VRF produces exactly one verifiable output per (relay key, packet) pair, reusing the existing Ed25519 keypair. |
 
 ## Settlement: CRDT Ledger
 
@@ -86,6 +86,14 @@ This page documents the key architectural decisions made during NEXUS protocol d
 | **Chosen** | Community-label-scoped names (e.g., `alice@portland-mesh`) |
 | **Alternatives** | Global names via consensus |
 | **Rationale** | Global consensus contradicts partition tolerance. Community labels are self-assigned and informational — no authority, no uniqueness enforcement. Multiple disjoint clusters can share a label; resolution is proximity-based. Local petnames provide a fallback. |
+
+## Storage: Pay-Per-Duration with Erasure Coding
+
+| | |
+|---|---|
+| **Chosen** | Bilateral storage agreements, pay-per-duration, Reed-Solomon erasure coding, lightweight challenge-response proofs |
+| **Alternatives** | Filecoin-style PoRep/PoSt with on-chain proofs; Arweave-style one-time-payment permanent storage; simple full replication |
+| **Rationale** | Filecoin's Proof of Replication requires GPU-level computation (minutes to seal a sector) — impossible on ESP32 or Raspberry Pi. Arweave's permanent storage requires a blockchain endowment model and assumes perpetually declining storage costs. Both require global consensus. NEXUS uses simple Blake3 challenge-response proofs (verifiable in under 10ms on ESP32) and bilateral agreements settled via payment channels. Erasure coding (Reed-Solomon) provides the same durability as 3x replication at 1.5x storage overhead. The tradeoff: we can't prove a node stores data *uniquely* (no PoRep), but we can prove it stores data *at all* — and the data owner doesn't care how the node organizes its disk. |
 
 ## Transforms/Inference: Compute Capability, Not Protocol Primitive
 

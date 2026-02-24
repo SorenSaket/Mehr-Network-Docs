@@ -10,6 +10,24 @@ title: Introduction
 
 NEXUS is a decentralized network where every resource — bandwidth, compute, storage, connectivity — is a discoverable, negotiable, verifiable, payable capability. Nodes participate at whatever level their hardware allows. Nothing is required except a cryptographic keypair.
 
+## Vision
+
+### Strengthen Communities
+
+The internet was supposed to connect people. Instead, it routed everything through distant data centers owned by a handful of corporations. NEXUS reverses this: communication within a community is **free, direct, and unstoppable**. Trusted neighbors relay for each other at zero cost. The economic layer only activates when traffic crosses trust boundaries — just like the real world.
+
+### Democratize Communication
+
+A village with no ISP should still be able to communicate. A country under internet shutdown should still have a mesh. A community that can't afford $30/month per household should be able to share one uplink across a neighborhood. NEXUS makes communication infrastructure a commons, not a product.
+
+### One Decentralized Computer
+
+Every device on the network — from a $30 solar relay to a GPU workstation — contributes what it can. Storage, compute, bandwidth, and connectivity are pooled into a single capability marketplace. Your phone delegates AI inference to a neighbor's GPU. Your Raspberry Pi stores data for the mesh. No single point of failure, no single point of control. The network **is** the computer.
+
+### Share Hardware, Save Money
+
+Most hardware sits idle most of the time. A home internet connection averages less than 5% utilization. A desktop GPU sits unused 22 hours a day. NEXUS turns idle capacity into shared infrastructure: you earn when others use your resources, and you pay when you use theirs. The result is that communities need far less total hardware to achieve the same capabilities.
+
 ## Why NEXUS?
 
 The internet depends on centralized infrastructure: ISPs, cloud providers, DNS registrars, certificate authorities. When any of these fail — through censorship, natural disaster, or economic exclusion — people lose connectivity entirely.
@@ -35,11 +53,15 @@ Nodes are not classified into fixed roles. A node advertises what it can do. Wha
 
 Network fragmentation is not an error state — it is expected operation. A village on LoRa **is** a partition. A country with internet cut **is** a partition. Every protocol layer functions correctly during partitions and converges correctly when partitions heal.
 
-### 4. Free Local, Paid Routed
+### 4. Anonymous by Default
+
+Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. [Human-readable names](applications/naming) are optional and self-assigned. You can use the network, earn NXS, host content, and communicate without ever revealing who you are.
+
+### 5. Free Local, Paid Routed
 
 Direct neighbors communicate for free. You pay only when your packets traverse other people's infrastructure. This mirrors real-world economics — talking to your neighbor costs nothing, sending a letter across the country does.
 
-### 5. Layered Separation
+### 6. Layered Separation
 
 Each layer depends only on the layer below it. Applications never touch transport details. Payment never touches routing internals. Security is not bolted on — it is structural.
 
@@ -76,6 +98,7 @@ No central server. No accounts. No subscriptions. Just cryptographic identities 
 ## Next Steps
 
 - **Understand the protocol**: Start with [Physical Transport](protocol/physical-transport) and work up the stack
-- **Explore the economics**: Learn how [NXS tokens](economics/nxs-token) and [payment channels](economics/payment-channels) enable decentralized resource markets
+- **Explore the economics**: Learn how [NXS tokens](economics/nxs-token) and [stochastic relay rewards](economics/payment-channels) enable decentralized resource markets
+- **See the real-world impact**: Understand [how NEXUS affects existing economics](economics/real-world-impact) and how participants earn
 - **See the hardware**: Check out the [reference designs](hardware/reference-designs) for building NEXUS nodes
 - **Read the full spec**: The complete [protocol specification](specification) covers every detail

@@ -103,7 +103,7 @@ An attacker can generate unlimited identities (Sybil attack). NEXUS mitigates th
 1. **Payment channel deposits**: Opening a channel requires visible balance. Sybil nodes with no balance cannot participate in the economy.
 2. **Reputation accumulation**: Reputation is earned through verified service delivery over time. New identities start with zero reputation. Creating many identities dilutes rather than concentrates reputation.
 3. **Trust graph**: A Sybil attacker needs real social relationships to gain trust. Trusted peers [vouch economically](../economics/community-zones#trust-based-credit) — they absorb the debts of nodes they trust, making trust costly to extend.
-4. **Proof of service**: Stochastic relay rewards require verifiable lottery wins. A node can only earn by actually delivering packets.
+4. **Proof of service**: Stochastic relay rewards use a [VRF-based lottery](../economics/payment-channels#how-stochastic-rewards-work) that produces exactly one verifiable outcome per (relay, packet) pair. A node can only earn by actually delivering packets, and cannot grind for favorable lottery outcomes.
 5. **Transitive credit limits**: Even if a Sybil node gains one trust relationship, transitive credit is capped at 10% per hop and rate-limited for new relationships.
 
 ## Key Management
@@ -138,7 +138,13 @@ This is **advisory, not authoritative**. Receiving nodes may:
 - Require re-authentication for high-value operations
 - Accept the new key if evidence includes both signatures (strongest proof)
 
-This does not prevent an attacker from continuing to use the stolen key. It provides a mechanism for the legitimate owner to signal compromise and begin migration — strictly better than no mechanism at all.
+**Conflict resolution**: An attacker holding the stolen key could issue a counter-advisory claiming the legitimate owner's *new* key is compromised. Receiving nodes resolve conflicting advisories as follows:
+
+1. **`SignedByBoth` always wins over `SignedByOldOnly`** — proving control of both keys is strictly stronger evidence than proving control of only one
+2. **Multiple `SignedByOldOnly` advisories cancel out** — if two different advisories both signed only by the old key claim different new keys, both are suspect. Receiving nodes flag the old identity as compromised but accept neither new key automatically.
+3. **Trust-weighted resolution** — if the advisory is vouched for by trusted peers (who can attest to knowing the real owner), it is weighted more heavily
+
+This does not prevent an attacker from continuing to use the stolen key. It provides a mechanism for the legitimate owner to signal compromise and begin migration — strictly better than no mechanism at all. The `SignedByBoth` evidence type is the only reliable migration path; users should generate their new keypair **before** the old one is exposed whenever possible.
 
 ## Cryptographic Primitives Summary
 
@@ -150,6 +156,7 @@ This does not prevent an attacker from continuing to use the stolen key. It prov
 | Content Hashing | Blake3 | 256-bit |
 | Symmetric Encryption | ChaCha20-Poly1305 | 256-bit key, 96-bit nonce |
 | Address Derivation | Blake2b truncated | 128-bit (16-byte destination hash) |
+| Relay Lottery (VRF) | ECVRF-ED25519-SHA512-TAI ([RFC 9381](https://www.rfc-editor.org/rfc/rfc9381)) | Reuses Ed25519 keypair; 80-byte proof |
 
 ### Hash Algorithm Split
 

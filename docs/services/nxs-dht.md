@@ -7,6 +7,15 @@ title: "NXS-DHT: Distributed Hash Table"
 
 NXS-DHT maps keys to the nodes that store the corresponding data. It uses proximity-weighted gossip rather than Kademlia-style strict XOR routing, because link quality varies wildly on a mesh network.
 
+### Distance Metrics: Routing vs. DHT
+
+NEXUS uses two different distance metrics for different purposes:
+
+- **Ring distance** (routing layer): `min(|a - b|, 2^128 - |a - b|)` over the destination hash space. Used for [greedy forwarding](../protocol/network-protocol#small-world-routing-model) to route packets toward their destination. This is the Kleinberg small-world model.
+- **XOR distance** (DHT layer): `a ⊕ b` over DHT key space. Used for determining storage responsibility — which nodes are "closest" to a given key and should store its data.
+
+Both operate over 128-bit spaces derived from the same hash functions, but they serve different roles. Routing cares about navigating to a destination efficiently; the DHT cares about partitioning key-space responsibility among nodes.
+
 ## Why Not Kademlia?
 
 Traditional Kademlia routes lookups based on XOR distance between node IDs and key hashes, assuming roughly uniform latency between any two nodes. On a NEXUS mesh:
@@ -15,7 +24,7 @@ Traditional Kademlia routes lookups based on XOR distance between node IDs and k
 - A node 10 XOR-hops away might be a direct WiFi neighbor
 - Link quality varies by orders of magnitude
 
-NXS-DHT uses **proximity-weighted gossip** that considers both XOR distance and actual network cost when deciding where to route lookups.
+NXS-DHT uses **proximity-weighted gossip** that considers both XOR distance and actual network cost when deciding where to route lookups. XOR distance determines the **target** (which nodes should store a key); network cost determines the **path** (how to reach those nodes efficiently).
 
 ## Lookup Process
 

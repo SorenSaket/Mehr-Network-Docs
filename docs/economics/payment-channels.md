@@ -13,15 +13,20 @@ Per-packet payment requires a channel state update for every batch of relayed pa
 
 ## How Stochastic Rewards Work
 
-Each relayed packet carries a random nonce. If the hash of the nonce meets a difficulty target, the relay "wins" a reward:
+Each relayed packet is checked against a **VRF-based lottery**. The relay computes a Verifiable Random Function output over the packet, producing a deterministic but unpredictable result that anyone can verify:
 
 ```
-Relay reward lottery:
-  1. Relay node generates random nonce for each forwarded packet
-  2. Check: hash(nonce || packet_hash || relay_id) < difficulty_target
+Relay reward lottery (VRF-based):
+  1. Relay computes: (vrf_output, vrf_proof) = VRF_prove(relay_private_key, packet_hash)
+  2. Check: vrf_output < difficulty_target
   3. If win: reward = per_packet_cost × (1 / win_probability)
   4. Expected value per packet = reward × probability = per_packet_cost ✓
+  5. Verification: VRF_verify(relay_public_key, packet_hash, vrf_output, vrf_proof)
 ```
+
+**Why VRF, not a random nonce?** If the relay chose its own nonce, it could grind through values until it found a winner for every packet, extracting the maximum reward every time. The VRF produces exactly **one valid output** per (relay key, packet) pair — the relay cannot influence the lottery outcome. The proof lets any party verify the result without the relay's private key.
+
+The VRF used is **ECVRF-ED25519-SHA512-TAI** ([RFC 9381](https://www.rfc-editor.org/rfc/rfc9381)), which reuses the relay's existing Ed25519 keypair. VRF proof size is 80 bytes, included only in winning lottery claims (not in every packet).
 
 ### Example
 
@@ -85,7 +90,7 @@ ChannelState {
 
 ## Multi-Hop Payment
 
-When Alice sends a packet through Bob → Carol → Dave, each relay independently runs the lottery:
+When Alice sends a packet through Bob → Carol → Dave, each relay independently runs the VRF lottery:
 
 ```
 Alice ──→ Bob ──→ Carol ──→ Dave
@@ -93,11 +98,12 @@ Alice ──→ Bob ──→ Carol ──→ Dave
         lottery?  lottery?
 ```
 
-- If Bob wins the lottery for this packet, Alice's channel with Bob debits the reward
-- If Carol wins, Bob's channel with Carol debits
-- Most packets trigger no channel update at all
+A lottery win triggers compensation through one or both mechanisms:
 
-Each hop is independent. No end-to-end payment coordination.
+1. **Channel debit** (if a channel exists with the upstream sender): Bob's win debits Alice's channel with Bob; Carol's win debits Bob's channel with Carol. This is the steady-state mechanism once NXS is circulating.
+2. **Mining proof** (always): The VRF proof is accumulated as a service proof entitling the relay to a share of the epoch's [minting reward](nxs-token#proof-of-service-mining-nxs-genesis). This is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
+
+Most packets trigger no channel update at all. Each hop is independent — no end-to-end payment coordination.
 
 ## Efficiency on Constrained Links
 

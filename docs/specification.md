@@ -17,10 +17,10 @@ The specification covers the following areas, each of which has a dedicated docu
 | 1. Layer 0: Physical Transport | [Physical Transport](protocol/physical-transport) |
 | 2. Layer 1: Network Protocol | [Network Protocol](protocol/network-protocol) |
 | 3. Layer 2: Security | [Security](protocol/security) |
-| 4. Layer 3: Economic Protocol | [NXS Token](economics/nxs-token), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Trust & Neighborhoods](economics/community-zones) |
+| 4. Layer 3: Economic Protocol | [NXS Token](economics/nxs-token), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Trust & Neighborhoods](economics/community-zones), [Real-World Economics](economics/real-world-impact) |
 | 5. Layer 4: Capability Marketplace | [Overview](marketplace/overview), [Discovery](marketplace/discovery), [Agreements](marketplace/agreements), [Verification](marketplace/verification) |
 | 6. Layer 5: Service Primitives | [NXS-Store](services/nxs-store), [NXS-DHT](services/nxs-dht), [NXS-Pub](services/nxs-pub), [NXS-Compute](services/nxs-compute) |
-| 7. Layer 6: Applications | [Messaging](applications/messaging), [Social](applications/social), [Voice](applications/voice), [Naming](applications/naming), [Community Apps](applications/community-apps) |
+| 7. Layer 6: Applications | [Messaging](applications/messaging), [Social](applications/social), [Voice](applications/voice), [Naming](applications/naming), [Community Apps](applications/community-apps), [Hosting](applications/hosting) |
 | 8. Hardware Reference | [Reference Designs](hardware/reference-designs), [Device Tiers](hardware/device-tiers) |
 | 9. Implementation Roadmap | [Roadmap](development/roadmap) |
 | 10. Design Decisions | [Design Decisions](development/design-decisions) |

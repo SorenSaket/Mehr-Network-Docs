@@ -25,23 +25,29 @@ A relay node can only earn routing fees by actually delivering packets to their 
 
 ## Storage Verification
 
-**Method**: Periodic challenge-response
+**Method**: Merkle-proof challenge-response (see [NXS-Store](../services/nxs-store#proof-of-storage) for full details)
 
-The consumer picks a random offset in the stored data and asks the provider to return the hash of bytes at that offset:
+The consumer challenges a random chunk and the provider returns a Blake3 hash plus a Merkle proof:
 
 ```
 Challenge-Response Protocol:
-1. Consumer stores data with provider
-2. Periodically, consumer sends: Challenge(random_offset, chunk_size)
-3. Provider responds: Response(hash_of_bytes_at_offset)
-4. Consumer verifies against their local record of the data
+1. At storage time, consumer builds a Merkle tree over 4 KB chunks
+   and stores only the merkle_root locally
+2. Periodically, consumer sends:
+   Challenge(data_hash, random_chunk_index, nonce)
+3. Provider responds:
+   Proof(Blake3(chunk_data || nonce), merkle_siblings)
+4. Consumer recomputes merkle root from proof — if it matches, data is verified
 ```
 
 This is:
-- **Pre-computable**: Consumer can pre-compute expected hashes at multiple offsets
-- **Cheap to verify**: Only a hash comparison
-- **Hard to fake**: Provider must actually have the data to produce correct hashes
-- **Bandwidth-efficient**: Only hashes are exchanged, not the actual data
+- **Lightweight**: Runs on ESP32 in under 10ms — no GPU, no heavy crypto
+- **Nonce-protected**: The random nonce prevents pre-computation of responses
+- **Merkle-verified**: Consumer only stores the root hash, not the full data
+- **Bandwidth-efficient**: ~320 bytes per proof (for a 1 MB file)
+- **Partition-safe**: Works between any two directly connected nodes, no chain needed
+
+Three consecutive failed challenges trigger [repair](../services/nxs-store#repair) — the consumer reconstructs the lost shard from erasure-coded replicas and stores it on a replacement node.
 
 ## Compute Verification
 

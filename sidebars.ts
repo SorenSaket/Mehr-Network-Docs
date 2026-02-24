@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
         'economics/payment-channels',
         'economics/crdt-ledger',
         'economics/community-zones',
+        'economics/real-world-impact',
       ],
     },
     {
@@ -56,6 +57,7 @@ const sidebars: SidebarsConfig = {
         'applications/voice',
         'applications/naming',
         'applications/community-apps',
+        'applications/hosting',
       ],
     },
     {

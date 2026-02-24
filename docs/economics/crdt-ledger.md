@@ -80,9 +80,13 @@ Epoch {
     // Bloom filter of ALL settlement hashes included
     included_settlements: BloomFilter,
 
+    // Active set: defines the 67% threshold denominator
+    active_set_hash: Blake3Hash,    // hash of sorted NodeIDs active in last 2 epochs
+    active_set_size: u32,           // number of nodes in the active set
+
     // Acknowledgment tracking
     ack_count: u32,
-    ack_threshold: u32,         // 67% of known active nodes
+    ack_threshold: u32,             // 67% of active_set_size
     status: enum { Proposed, Active, Finalized, Archived },
 }
 ```
@@ -101,9 +105,9 @@ Epoch proposals are rate-limited to one per node per epoch period. Proposals tha
 
 ### Epoch Lifecycle
 
-1. **Propose**: An eligible node proposes a new epoch with a snapshot of current state
-2. **Acknowledge**: Nodes compare against their local state. If they've seen the same or more settlements, they ACK. If they have unseen settlements, they gossip those first.
-3. **Activate**: At 67% acknowledgment (of nodes that have participated in settlement within the last 2 epochs), the epoch becomes active. Nodes can discard individual settlement records and use only the bloom filter for dedup.
+1. **Propose**: An eligible node proposes a new epoch with a snapshot of current state. The proposal includes an `active_set_hash` — a Blake3 hash of the sorted list of NodeIDs that have participated in settlement within the last 2 epochs, as observed by the proposer. This fixes the denominator for the 67% threshold.
+2. **Acknowledge**: Nodes compare against their local state. If they've seen the same or more settlements, they ACK. If they have unseen settlements, they gossip those first. A node ACKs the proposal's `active_set_hash` — even if its own view differs slightly, it agrees to use the proposer's set as the threshold denominator for this epoch.
+3. **Activate**: At 67% acknowledgment (of the active set defined in the proposal), the epoch becomes active. Nodes can discard individual settlement records and use only the bloom filter for dedup. If a significant fraction of nodes reject the active set (NAK), the proposer must re-propose with an updated set after further gossip convergence.
 4. **Verification window**: During the grace period (4 epochs after activation), any node can submit a **settlement proof** — the full `SettlementRecord` — for any settlement it believes was missed. If the settlement is valid (signatures check) and NOT in the epoch's bloom filter, it is applied on top of the snapshot.
 5. **Finalize**: After the grace period, previous epoch data is fully discarded. The bloom filter is the final word.
 
@@ -123,6 +127,8 @@ When a node reconnects after an epoch has been compacted, it checks its unproces
 | Per-node storage target | Under 5 MB |
 
 The false positive rate is set to **0.01% (1 in 10,000)** rather than 1%, because false positives cause legitimate settlements to be silently treated as duplicates. At 0.01%, the expected loss is negligible (~1 settlement per 10,000), and the verification window provides a recovery mechanism for any that are caught.
+
+**Critical retention rule**: Both parties to a settlement **must retain the full `SettlementRecord`** until the epoch's verification window closes (4 epochs after activation). If both parties discard the record after epoch activation (believing it was included) and a bloom filter false positive caused it to be missed, the settlement would be permanently lost. During the verification window, each party independently checks that its settlements are reflected in the snapshot; if any are missing, it submits a settlement proof. Only after the window closes may the full record be discarded.
 
 ### LoRa Nodes
 
