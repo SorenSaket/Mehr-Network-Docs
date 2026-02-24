@@ -5,50 +5,76 @@ import styles from './styles.module.css';
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
   description: ReactNode;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Transport Agnostic',
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Works on any medium that can move bytes — from 500 bps LoRa radio to
+        10 Gbps fiber. A single node can bridge between multiple transports
+        simultaneously.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Partition Tolerant',
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Network fragmentation is expected operation, not an error. A village on
+        LoRa is a partition. A country with internet cut is a partition. Every
+        layer converges correctly when partitions heal.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Capability Marketplace',
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Every resource — bandwidth, compute, storage, connectivity — is
+        discoverable, negotiable, verifiable, and payable. Hardware determines
+        capability; the market determines role.
+      </>
+    ),
+  },
+  {
+    title: 'Free Local, Paid Routed',
+    description: (
+      <>
+        Direct neighbors communicate for free. You pay only when your packets
+        traverse other people's infrastructure. Micropayments flow through
+        bilateral payment channels.
+      </>
+    ),
+  },
+  {
+    title: 'No Trusted Infrastructure',
+    description: (
+      <>
+        No certificate authorities, no DNS, no central servers. Identity is a
+        cryptographic keypair. Security is structural — Ed25519 signing,
+        X25519 key exchange, ChaCha20-Poly1305 encryption.
+      </>
+    ),
+  },
+  {
+    title: '$30 to $500+',
+    description: (
+      <>
+        From a solar-powered ESP32 relay to a GPU inference node, every device
+        participates at whatever level its hardware allows. Nothing is required
+        except a keypair.
       </>
     ),
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({title, description}: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
-      <div className="text--center">
-        <Svg className={styles.featureSvg} role="img" />
-      </div>
-      <div className="text--center padding-horiz--md">
+      <div className="text--center padding-horiz--md" style={{paddingTop: '2rem'}}>
         <Heading as="h3">{title}</Heading>
         <p>{description}</p>
       </div>
