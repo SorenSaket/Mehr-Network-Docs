@@ -5,11 +5,24 @@ title: Social
 
 # Social
 
-A decentralized social network built on Mehr primitives. No central servers, no algorithmic recommendations, no ads. Authors pay to post — skin in the game. Readers pay bandwidth to access — infrastructure sustains itself. Popular content self-funds and propagates wider. Unpopular content expires. Economics replaces algorithms.
+A decentralized content distribution network built on Mehr primitives. No central servers, no algorithmic recommendations, no ads. Authors pay to publish — skin in the game. Readers pay bandwidth to access — infrastructure sustains itself. Popular content self-funds and propagates wider. Unpopular content expires. Economics replaces algorithms.
+
+While "social" implies short text posts, the same architecture handles **any content type**: music albums, scientific papers, video courses, games, software, journalism, podcasts — anything that can be stored as a DataObject. The envelope/post split, kickback economics, and propagation rules are content-agnostic.
+
+| Content Type | Envelope Shows | Paid Content | Typical Kickback |
+|-------------|---------------|-------------|-----------------|
+| Text post | Full text (under 280 chars) | Full text + links | Low (cheap to read) |
+| Photo essay | Summary + blurhash thumbnails | Full-resolution images | Moderate |
+| Music album | Track listing + artist + duration | Audio files | High (large files) |
+| Video course | Lesson titles + descriptions | Video files | High |
+| Scientific paper | Title + abstract + authors | Full PDF | Moderate |
+| Game / software | Name + description + screenshots | Binary + assets | High |
+| Podcast episode | Title + show notes | Audio file | Moderate |
+| Curated collection | Curator notes per item | References to originals | Curator earns on collection; authors earn on items |
 
 ## Architecture
 
-Every post on Mehr has two layers: a **free envelope** that propagates everywhere (browsable at zero cost), and **paid content** that requires retrieval fees. Users browse envelopes to decide what's worth reading, then pay only for content they actually want.
+Every publication on Mehr has two layers: a **free envelope** that propagates everywhere (browsable at zero cost), and **paid content** that requires retrieval fees. Users browse envelopes to decide what's worth accessing, then pay only for content they actually want.
 
 ### PostEnvelope (Free Layer)
 
@@ -17,15 +30,16 @@ The envelope is a lightweight, separate [DataObject](../services/mhr-store) that
 
 ```
 PostEnvelope {
-    post_hash: Blake3Hash,                  // hash of the full SocialPost
+    post_hash: Option<Blake3Hash>,          // hash of the full SocialPost (None for boost-only envelopes)
     author: NodeID,
     headline: Option<String>,               // title (~100 chars, author-set)
-    summary: String,                        // first ~280 chars of text, or author-written summary
+    summary: Option<String>,                // author-written preview (None for boosts — use the original's)
     media_hints: Vec<MediaHint>,            // lightweight descriptions of attachments
     scopes: Vec<HierarchicalScope>,         // geographic + interest tags
     reply_to: Option<Blake3Hash>,           // parent post hash (threading)
     boost_of: Option<Blake3Hash>,           // boosted/reposted content hash
-    content_size: u32,                      // full post size in bytes
+    references: Vec<Blake3Hash>,            // related posts (bidirectional content graph)
+    content_size: u32,                      // full post size in bytes (0 for boost-only)
     created: Timestamp,
     kickback_rate: u8,                      // author's desired share of retrieval fees (0-255)
     signature: Ed25519Sig,                  // signed by author (proves authenticity)
@@ -48,7 +62,6 @@ The full post is an immutable [DataObject](../services/mhr-store) containing the
 ```
 SocialPost {
     author: NodeID,
-    envelope_hash: Blake3Hash,              // reference back to the PostEnvelope
     content: PostContent {
         text: Option<String>,               // full post body (UTF-8)
         media: Vec<Blake3Hash>,             // references to media DataObjects
@@ -58,7 +71,7 @@ SocialPost {
 }
 ```
 
-The SocialPost itself is lean — scopes, timestamps, and metadata live on the envelope. The post contains only the content that costs money to retrieve.
+The SocialPost itself is lean — scopes, timestamps, and metadata live on the envelope. The post contains only the content that costs money to retrieve. There is no back-reference from post to envelope; the envelope's `post_hash` is the only link between them. Going from post to envelope (if ever needed) is a DHT lookup for envelopes containing a given `post_hash`.
 
 ### Profile
 
@@ -150,9 +163,10 @@ CuratedFeed {
     curator: NodeID,
     name: String,                           // "Portland's Best", "Quantum Physics Weekly"
     description: String,
-    entries: Vec<CuratedEntry>,
+    entries: Vec<CuratedEntry>,             // max 256 entries per feed page
     scope: HierarchicalScope,               // what this feed covers
     updated: Timestamp,
+    sequence: u64,                          // monotonic version counter
     kickback_rate: u8,                      // curator's share of retrieval fees
     signature: Ed25519Sig,
 }
@@ -163,6 +177,8 @@ CuratedEntry {
     note: Option<String>,                   // curator's commentary
 }
 ```
+
+A single CuratedFeed holds at most **256 entries**. For larger archives, the curator publishes multiple feed pages as separate DataObjects, each covering a time period or sub-topic. This keeps individual feed objects small enough for constrained devices to fetch and parse.
 
 **How curation works:**
 
@@ -205,16 +221,17 @@ When an author creates a post, two DataObjects are published:
 
 ```
 1. Author writes post content + sets headline/summary
-2. Client generates PostEnvelope (free layer):
+2. Client generates SocialPost (paid layer) first:
+     → hashed to produce post_hash
+     → stored as DataObject with normal storage agreement
+     → only fetched when a reader requests the full content
+3. Client generates PostEnvelope (free layer) using post_hash:
      → stored as DataObject with min_bandwidth: 0
      → propagates via MHR-Pub to scope subscribers
      → no storage agreement needed within trust network
-3. Client generates SocialPost (paid layer):
-     → stored as DataObject with normal storage agreement
-     → only fetched when a reader requests the full content
 ```
 
-The envelope costs almost nothing to store and propagate (under 500 bytes). The full post costs proportional to its size. Authors pay for content storage, not for letting people know the content exists.
+The SocialPost is created and hashed first so the envelope can reference it via `post_hash`. The envelope costs almost nothing to store and propagate (under 500 bytes). The full post costs proportional to its size. Authors pay for content storage, not for letting people know the content exists.
 
 ## Content Economics
 
@@ -367,6 +384,8 @@ Reply to a post:
 
 Thread assembly is local — each client collects reply envelopes by querying the DHT for envelopes referencing a given hash. Threads are assembled client-side in chronological order. The envelope's summary is enough to display the thread tree — full posts are fetched only when a reader opens a specific reply.
 
+Clients should limit thread traversal depth (recommended: 64 levels). Deeply nested reply chains beyond the limit are still accessible — the client just stops auto-fetching and shows a "load more" prompt. At mesh scale, threads rarely go deep; the economics of reply storage naturally limits chain length.
+
 ### Boosts
 
 A boost (repost) references the original via `boost_of` on the envelope:
@@ -374,13 +393,53 @@ A boost (repost) references the original via `boost_of` on the envelope:
 ```
 Boost a post:
     PostEnvelope {
+        post_hash: None,                      // no SocialPost — boost is envelope-only
         boost_of: Some(original_post_hash),
-        summary: "",                          // or add commentary
+        summary: None,                        // original's envelope has the summary
+        content_size: 0,
         ...
     }
 ```
 
-Boosts are envelope-only — no SocialPost needed (the content is the original post). When a reader fetches the boosted content, the original author receives kickback — not the booster. Boosts are a way to amplify content without capturing its revenue.
+Boosts are envelope-only — `post_hash` is None and no SocialPost is created. When a reader fetches the boosted content, the original author receives kickback — not the booster. Boosts are pure amplification without capturing revenue.
+
+### References
+
+References declare that a post is **related to** other posts — without threading (reply) or amplification (boost). They create a queryable content graph: the DHT can answer "what other posts reference this one?", enabling discovery of related discussions, counterarguments, and follow-ups across communities.
+
+```
+Reference other posts:
+    PostEnvelope {
+        references: [post_hash_a, post_hash_b, post_hash_c],
+        headline: "Why the bike lane debate misses the point",
+        summary: "Alice, Bob, and Carol each analyzed the new bike lanes...",
+        ...
+    }
+```
+
+**What references enable:**
+
+- **Related discussions**: Query the DHT for all envelopes where `references` contains a given hash. A reader viewing a popular post can discover every post that references it — counterarguments, analyses, translations, remixes.
+- **Cross-community linking**: A Portland post referenced by a Tokyo post creates a connection between geographic communities. Interest relay nodes can surface cross-references.
+- **Knowledge webs**: Scientific papers referencing other papers, course lessons linking to prerequisites, music remixes pointing to originals — any content type benefits from declared relationships.
+
+**How clients render references** is application-dependent. A client might:
+
+1. Show referenced envelopes as linked cards below the post (free — envelope fetch)
+2. Show a "referenced by N posts" count with expandable list
+3. Build a graph visualization of connected posts
+4. Ignore references entirely (minimal client)
+
+When a reader fetches a referenced post's full content, the **referenced author** gets kickback — same as any retrieval.
+
+| | Reply | Boost | Reference |
+|---|---|---|---|
+| Creates new content | Yes | No (envelope-only) | Yes |
+| Relationship | Vertical (parent → child) | Amplification (repost) | Horizontal (related posts) |
+| Protocol-level field | `reply_to` on envelope | `boost_of` on envelope | `references` on envelope |
+| Queryable via DHT | "What replied to X?" | "Who boosted X?" | "What references X?" |
+| Who earns kickback on original | Original author | Original author | Original author |
+| Multiple targets | No (one parent) | No (one target) | Yes (any number) |
 
 ## Scoped Content
 
@@ -441,6 +500,8 @@ PostEnvelope {
 
 Visible only within trust neighborhood. No propagation beyond trusted peers. The most private form of social posting. Since the audience is trusted peers only, the envelope and full post are both free to access.
 
+Privacy depends on [MHR-Pub](../services/mhr-pub) scope routing: an envelope with no declared scopes matches no `Scope(...)` subscriptions, so it is never forwarded beyond direct MHR-Pub gossip between trusted peers. Nodes only gossip unscoped envelopes to their trusted peer set.
+
 ## Media Tiering
 
 The envelope/post split naturally creates a tiered browsing experience. Envelopes carry blurhash thumbnails via `MediaHint`; full media lives in the paid SocialPost as separate DataObjects with `min_bandwidth` constraints:
@@ -452,7 +513,7 @@ The envelope/post split naturally creates a tiered browsing experience. Envelope
 | Post | Full text body | ~200 bytes - 10 KB | Retrieval fee | Everywhere |
 | Post | Compressed image | ~50 KB | Retrieval fee | WiFi and above |
 | Post | Full resolution image | ~500 KB | Retrieval fee | WiFi and above |
-| Post | Video | greater than 1 MB | Retrieval fee | High-bandwidth links only |
+| Post | Video | 1+ MB | Retrieval fee | High-bandwidth links only |
 
 The application decides what to fetch based on current link quality:
 
