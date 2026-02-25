@@ -35,7 +35,7 @@ Capabilities are summarized to reduce gossip bandwidth. Instead of full advertis
 CapabilitySummary {
     type: u8,           // matches beacon bitfield (0=relay, 1=gateway, 2=storage, etc.)
     count: u8,          // number of providers of this type (capped at 255)
-    min_cost: u16,      // cheapest provider (log₂-encoded μNXS/byte)
+    min_cost: u16,      // cheapest provider (log₂-encoded μMHR/byte)
     avg_cost: u16,      // average cost across providers (log₂-encoded)
     min_hops: u8,       // nearest provider (hop count)
     max_hops: u8,       // farthest provider (hop count)
@@ -47,7 +47,7 @@ Cost encoding: identical to CompactPathCost log₂ formula:
   decoded = (2 ^ (encoded / 16.0)) - 1
 
 Special values:
-  0x0000 = free (0 μNXS) — valid for trusted-peer services
+  0x0000 = free (0 μMHR) — valid for trusted-peer services
   0xFFFF = cost unknown or unavailable
 ```
 
@@ -105,7 +105,7 @@ When a mobile node (phone, laptop, vehicle) moves between areas, its Ring 0 neig
 
 ### Presence Beacons
 
-NEXUS nodes periodically broadcast a lightweight presence beacon on all their interfaces:
+Mehr nodes periodically broadcast a lightweight presence beacon on all their interfaces:
 
 ```
 PresenceBeacon {
@@ -119,16 +119,16 @@ PresenceBeacon {
 Capability bitfield assignments:
   Bit 0:  relay (L1+ — will forward packets)
   Bit 1:  gateway (internet uplink available)
-  Bit 2:  storage (NXS-Store provider)
-  Bit 3:  compute_byte (NXS-Byte interpreter)
+  Bit 2:  storage (MHR-Store provider)
+  Bit 3:  compute_byte (MHR-Byte interpreter)
   Bit 4:  compute_wasm (WASM runtime — Light or Full)
-  Bit 5:  pubsub (NXS-Pub hub)
-  Bit 6:  dht (NXS-DHT participant)
-  Bit 7:  naming (NXS-Name resolver)
+  Bit 5:  pubsub (MHR-Pub hub)
+  Bit 6:  dht (MHR-DHT participant)
+  Bit 7:  naming (MHR-Name resolver)
   Bits 8-15: reserved (must be 0; future: inference, bridge, etc.)
 ```
 
-Beacons are transport-agnostic — they go out over whatever interfaces the node has (LoRa, WiFi, BLE, etc.). A mobile node passively receives beacons to discover local NEXUS nodes before initiating any connection. This is the decentralized equivalent of a cellular tower scan.
+Beacons are transport-agnostic — they go out over whatever interfaces the node has (LoRa, WiFi, BLE, etc.). A mobile node passively receives beacons to discover local Mehr nodes before initiating any connection. This is the decentralized equivalent of a cellular tower scan.
 
 **Beacon propagation rules**:
 - Beacons are broadcast by the originating node only — **not relayed** by others
@@ -163,7 +163,7 @@ CreditGrant {
     credit_limit_bytes: u32,      // relay allowance before channel required
     valid_for_ms: u16,            // credit window (default: 30 seconds)
     condition: enum {
-        VisibleBalance(min_nxs),  // grantee has balance on CRDT ledger
+        VisibleBalance(min_mhr),  // grantee has balance on CRDT ledger
         TrustGraph,               // grantee is in grantor's trust graph
         Unconditional,            // free initial credit (attract users)
     },

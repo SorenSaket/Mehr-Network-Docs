@@ -5,7 +5,7 @@ title: Verification
 
 # Verification
 
-The capability marketplace requires that consumers can verify providers are actually delivering the agreed service. NEXUS uses different verification methods depending on the type of capability.
+The capability marketplace requires that consumers can verify providers are actually delivering the agreed service. Mehr uses different verification methods depending on the type of capability.
 
 ## Relay / Bandwidth Verification
 
@@ -25,7 +25,7 @@ A relay node can only earn routing fees by actually delivering packets to their 
 
 ## Storage Verification
 
-**Method**: Merkle-proof challenge-response (see [NXS-Store](../services/nxs-store#proof-of-storage) for full details)
+**Method**: Merkle-proof challenge-response (see [MHR-Store](../services/mhr-store#proof-of-storage) for full details)
 
 The consumer challenges a random chunk and the provider returns a Blake3 hash plus a Merkle proof:
 
@@ -47,7 +47,7 @@ This is:
 - **Bandwidth-efficient**: ~320 bytes per proof (for a 1 MB file)
 - **Partition-safe**: Works between any two directly connected nodes, no chain needed
 
-Three consecutive failed challenges trigger [repair](../services/nxs-store#repair) — the consumer reconstructs the lost shard from erasure-coded replicas and stores it on a replacement node.
+Three consecutive failed challenges trigger [repair](../services/mhr-store#repair) — the consumer reconstructs the lost shard from erasure-coded replicas and stores it on a replacement node.
 
 ## Compute Verification
 

@@ -5,18 +5,18 @@ title: "Layer 2: Security"
 
 # Layer 2: Security
 
-Security in NEXUS is structural, not bolted on. Every layer of the protocol incorporates cryptographic protections. There is no trusted infrastructure — no certificate authorities, no trusted servers, no DNS.
+Security in Mehr is structural, not bolted on. Every layer of the protocol incorporates cryptographic protections. There is no trusted infrastructure — no certificate authorities, no trusted servers, no DNS.
 
 ## Threat Model
 
-NEXUS assumes the worst:
+Mehr assumes the worst:
 
 - **Open network**: Any node can join. Nodes may be malicious.
 - **Hostile observers**: All link-layer traffic may be monitored (especially radio).
 - **No trusted infrastructure**: No certificate authorities, no trusted servers, no DNS.
 - **State-level adversaries**: Governments may control internet gateways and operate nodes within the mesh.
 
-NEXUS does **not** attempt to defend against:
+Mehr does **not** attempt to defend against:
 
 - **Global traffic analysis**: A sufficiently powerful adversary monitoring all links simultaneously can correlate traffic patterns. [Opt-in onion routing](#onion-routing-opt-in) mitigates this for individual packets but does not defeat a global adversary.
 - **Physical compromise**: If an adversary physically captures a node, they obtain its private key and all local state.
@@ -78,7 +78,7 @@ Node identity is **self-certifying**. A node proves it owns a destination hash b
 
 - **Payment channels**: Both parties sign every state update. Forgery requires the other party's private key.
 - **Capability agreements**: Both provider and consumer sign. Neither can forge the other's commitment.
-- **Announcements**: Path announcements are signed by the announcing node. Relay nodes update the [CompactPathCost](network-protocol#nexus-extension-compact-path-cost) running totals (not individually signed — link-layer authentication at each hop is sufficient). Malicious relays can lie about costs, but the economic model disincentivizes this — overpriced nodes are routed around, underpriced nodes lose money.
+- **Announcements**: Path announcements are signed by the announcing node. Relay nodes update the [CompactPathCost](network-protocol#mehr-extension-compact-path-cost) running totals (not individually signed — link-layer authentication at each hop is sufficient). Malicious relays can lie about costs, but the economic model disincentivizes this — overpriced nodes are routed around, underpriced nodes lose money.
 
 ## Privacy
 
@@ -88,7 +88,7 @@ Packets do not carry source addresses. A relay node knows which neighbor sent it
 
 ### Recipient Privacy
 
-Destination hashes are pseudonymous. A hash is not linked to a real-world identity unless the user chooses to publish that association (e.g., via NXS-Name).
+Destination hashes are pseudonymous. A hash is not linked to a real-world identity unless the user chooses to publish that association (e.g., via MHR-Name).
 
 ### Traffic Analysis Resistance
 
@@ -127,7 +127,7 @@ Key properties:
 
 ## Sybil Resistance
 
-An attacker can generate unlimited identities (Sybil attack). NEXUS mitigates this through economic mechanisms rather than identity verification:
+An attacker can generate unlimited identities (Sybil attack). Mehr mitigates this through economic mechanisms rather than identity verification:
 
 1. **Payment channel deposits**: Opening a channel requires visible balance. Sybil nodes with no balance cannot participate in the economy.
 2. **Reputation accumulation**: Reputation is earned through verified service delivery over time. New identities start with zero reputation. Creating many identities dilutes rather than concentrates reputation.
@@ -254,7 +254,7 @@ This does not prevent an attacker from continuing to use the stolen key. It prov
 
 ### Hash Algorithm Split
 
-NEXUS uses two hash algorithms for distinct purposes:
+Mehr uses two hash algorithms for distinct purposes:
 
 - **Blake2b** — Identity derivation and key derivation. Chosen for compatibility with the Ed25519/X25519 ecosystem and its proven security margin. Used in: `destination_hash`, `session_key` derivation.
 - **Blake3** — Content addressing and general hashing. Chosen for speed (3x faster than Blake2b on general data) and built-in Merkle tree support for streaming verification. Used in: `DataObject` hash, contract hash, DHT keys, `ChannelState` hash.

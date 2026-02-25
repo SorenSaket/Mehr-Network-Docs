@@ -1,27 +1,27 @@
 ---
 sidebar_position: 4
-title: "NXS-Compute: Contract Execution"
+title: "MHR-Compute: Contract Execution"
 ---
 
-# NXS-Compute: Contract Execution
+# MHR-Compute: Contract Execution
 
-NXS-Compute provides a restricted execution environment for data validation, state transitions, and access control. It supports two execution tiers: NXS-Byte (a minimal bytecode for constrained devices) and WASM (for capable nodes).
+MHR-Compute provides a restricted execution environment for data validation, state transitions, and access control. It supports two execution tiers: MHR-Byte (a minimal bytecode for constrained devices) and WASM (for capable nodes).
 
-## NXS-Byte: Minimal Bytecode
+## MHR-Byte: Minimal Bytecode
 
 ```
-NXS-Contract {
+MHR-Contract {
     hash: Blake3Hash,
-    code: Vec<u8>,              // NXS-Byte bytecode
+    code: Vec<u8>,              // MHR-Byte bytecode
     max_memory: u32,
     max_cycles: u64,
     max_state_size: u32,
-    state_key: Hash,            // current state in NXS-Store
+    state_key: Hash,            // current state in MHR-Store
     functions: [FunctionSignature],
 }
 ```
 
-NXS-Byte is a minimal bytecode with a ~50 KB interpreter, designed to run on constrained devices like the ESP32. It supports:
+MHR-Byte is a minimal bytecode with a ~50 KB interpreter, designed to run on constrained devices like the ESP32. It supports:
 
 | Capability | Description |
 |-----------|-------------|
@@ -30,7 +30,7 @@ NXS-Byte is a minimal bytecode with a ~50 KB interpreter, designed to run on con
 | **CBOR/JSON manipulation** | Structured data processing |
 | **Bounded control flow** | Loops with hard cycle limits |
 
-NXS-Byte explicitly **does not** support:
+MHR-Byte explicitly **does not** support:
 - I/O operations
 - Network access
 - Filesystem access
@@ -50,7 +50,7 @@ All execution is **pure deterministic computation**. Given the same inputs, any 
 | **Crypto** (3) | HASH, VERIFY_SIG, VERIFY_VRF | 500–2000 | Blake3, Ed25519, ECVRF |
 | **System** (10) | BALANCE, SENDER, SELF, EPOCH, TRANSFER, LOG, LOAD, STORE, MSIZE, EMIT | 2–50 | State access and side effects |
 
-**Cycle cost model**: The base unit is 1 cycle ≈ 1 μs on ESP32 (the reference platform). Faster hardware executes more cycles per wall-clock second but charges the same cycle cost per opcode. Gas price in μNXS/cycle is set by each compute provider in their capability advertisement.
+**Cycle cost model**: The base unit is 1 cycle ≈ 1 μs on ESP32 (the reference platform). Faster hardware executes more cycles per wall-clock second but charges the same cycle cost per opcode. Gas price in μMHR/cycle is set by each compute provider in their capability advertisement.
 
 **Specification approach**: The reference interpreter (in Rust) serves as the authoritative specification. A comprehensive test vector suite ensures cross-platform conformance. Formal specification (Yellow Paper-style) is deferred until the opcode set stabilizes through real-world usage.
 
@@ -61,7 +61,7 @@ Gateway nodes and more capable hardware can offer full WASM (WebAssembly) execut
 ```
 Contract execution path:
   1. Contract specifies: wasm_tier: None
-     → Can run on any node with NXS-Byte interpreter (~50 KB)
+     → Can run on any node with MHR-Byte interpreter (~50 KB)
 
   2. Contract specifies: wasm_tier: Light
      → Requires Community-tier or above (Pi Zero 2W+)
@@ -75,31 +75,31 @@ Contract execution path:
 
 ### WASM Sandbox
 
-The WASM execution environment uses **Wasmtime** (Bytecode Alliance, Rust-native) as the reference runtime. Wasmtime provides AOT compilation on Gateway+ nodes, fuel-based execution metering that maps to NXS-Byte cycle accounting, and configurable memory limits per contract.
+The WASM execution environment uses **Wasmtime** (Bytecode Alliance, Rust-native) as the reference runtime. Wasmtime provides AOT compilation on Gateway+ nodes, fuel-based execution metering that maps to MHR-Byte cycle accounting, and configurable memory limits per contract.
 
 ```
 WasmSandbox {
     runtime: Wasmtime,
     max_memory: u32,             // from contract's max_memory field
-    max_fuel: u64,               // from contract's max_cycles (1 fuel ≈ 1 NXS-Byte cycle)
+    max_fuel: u64,               // from contract's max_cycles (1 fuel ≈ 1 MHR-Byte cycle)
     max_wall_time_ms: u32,       // 5,000 (Light) or 30,000 (Full)
 }
 ```
 
-**Host imports**: WASM contracts call back into the NEXUS system through a restricted host API mirroring the NXS-Byte System opcodes:
+**Host imports**: WASM contracts call back into the Mehr system through a restricted host API mirroring the MHR-Byte System opcodes:
 
-| Host Function | NXS-Byte Equivalent | Fuel Cost |
+| Host Function | MHR-Byte Equivalent | Fuel Cost |
 |--------------|---------------------|-----------|
-| `nexus_balance(node_id) → u64` | BALANCE | 10 |
-| `nexus_sender() → [u8; 16]` | SENDER | 2 |
-| `nexus_self() → [u8; 16]` | SELF | 2 |
-| `nexus_epoch() → u64` | EPOCH | 5 |
-| `nexus_transfer(to, amount) → bool` | TRANSFER | 50 |
-| `nexus_log(data)` | LOG | 10 |
-| `nexus_store_load(key) → Vec<u8>` | LOAD | 3 |
-| `nexus_store_save(key, value)` | STORE | 3 |
-| `nexus_hash(data) → [u8; 32]` | HASH | 500 |
-| `nexus_verify_sig(pubkey, msg, sig) → bool` | VERIFY_SIG | 1000 |
+| `mehr_balance(node_id) → u64` | BALANCE | 10 |
+| `mehr_sender() → [u8; 16]` | SENDER | 2 |
+| `mehr_self() → [u8; 16]` | SELF | 2 |
+| `mehr_epoch() → u64` | EPOCH | 5 |
+| `mehr_transfer(to, amount) → bool` | TRANSFER | 50 |
+| `mehr_log(data)` | LOG | 10 |
+| `mehr_store_load(key) → Vec<u8>` | LOAD | 3 |
+| `mehr_store_save(key, value)` | STORE | 3 |
+| `mehr_hash(data) → [u8; 32]` | HASH | 500 |
+| `mehr_verify_sig(pubkey, msg, sig) → bool` | VERIFY_SIG | 1000 |
 
 No other host imports are available. WASM contracts cannot access the filesystem, network, clock, or random number generator — all execution remains pure and deterministic.
 
@@ -130,8 +130,8 @@ ML inference, transcription, translation, text-to-speech, and any other heavy co
 ```
 A GPU node advertises:
   offered_functions: [
-    { function_id: hash("whisper-small"), cost: 50 μNXS/minute },
-    { function_id: hash("piper-tts"), cost: 30 μNXS/minute },
+    { function_id: hash("whisper-small"), cost: 50 μMHR/minute },
+    { function_id: hash("piper-tts"), cost: 30 μMHR/minute },
   ]
 ```
 

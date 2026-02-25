@@ -3,9 +3,9 @@ sidebar_position: 4
 title: Naming
 ---
 
-# Naming (NXS-Name)
+# Naming (MHR-Name)
 
-NXS-Name provides human-readable names scoped to community labels. There is no global namespace — names resolve locally based on proximity and trust.
+MHR-Name provides human-readable names scoped to community labels. There is no global namespace — names resolve locally based on proximity and trust.
 
 ## Community-Scoped Names
 
@@ -26,7 +26,7 @@ Resolution works by proximity:
 
 ## Why No Global Namespace?
 
-A global namespace requires global consensus on name ownership. Global consensus contradicts NEXUS's partition tolerance requirement. If two partitioned networks both register the name "alice," there is no partition-safe way to resolve the conflict.
+A global namespace requires global consensus on name ownership. Global consensus contradicts Mehr's partition tolerance requirement. If two partitioned networks both register the name "alice," there is no partition-safe way to resolve the conflict.
 
 Community-scoped names solve this:
 - Names are locally consistent within their trust neighborhood

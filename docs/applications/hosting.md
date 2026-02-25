@@ -3,13 +3,13 @@ sidebar_position: 6
 title: Hosting & Websites
 ---
 
-# Hosting on NEXUS
+# Hosting on Mehr
 
-Traditional web hosting requires a server, a domain name, a certificate, and ongoing payment to a hosting provider. On NEXUS, hosting is just storing DataObjects and letting the network serve them. No server. No DNS. No certificate authority.
+Traditional web hosting requires a server, a domain name, a certificate, and ongoing payment to a hosting provider. On Mehr, hosting is just storing DataObjects and letting the network serve them. No server. No DNS. No certificate authority.
 
 ## Hosting a Website
 
-A "website" on NEXUS is a collection of [DataObjects](../services/nxs-store) — HTML, CSS, JavaScript, images — stored in NXS-Store and addressed by content hash or human-readable [NXS-Name](naming).
+A "website" on Mehr is a collection of [DataObjects](../services/mhr-store) — HTML, CSS, JavaScript, images — stored in MHR-Store and addressed by content hash or human-readable [MHR-Name](naming).
 
 ### Static Site
 
@@ -34,9 +34,9 @@ A visitor retrieves the root DataObject by name (`mysite@portland-mesh`) or by h
 
 ```
 Access flow:
-  1. Visitor queries NXS-Name: "mysite@portland-mesh"
+  1. Visitor queries MHR-Name: "mysite@portland-mesh"
   2. Name resolves to root DataObject hash
-  3. Visitor's node fetches root from nearest NXS-Store replica
+  3. Visitor's node fetches root from nearest MHR-Store replica
   4. Root contains hashes of sub-objects (CSS, images, etc.)
   5. Visitor's node fetches sub-objects (in parallel, from different replicas)
   6. Local browser or app renders the content
@@ -50,7 +50,7 @@ Content-addressed storage means:
 
 ### Updating Your Site
 
-For static content, publish new DataObjects and update the NXS-Name binding to point to the new root hash. Old content remains available at its hash (immutable), but the name now resolves to the new version.
+For static content, publish new DataObjects and update the MHR-Name binding to point to the new root hash. Old content remains available at its hash (immutable), but the name now resolves to the new version.
 
 For dynamic content (blog, profile, etc.), use **mutable DataObjects**:
 
@@ -67,14 +67,14 @@ Blog post feed:
 
 ## Hosting a Social Feed
 
-A social feed is an append-only log of posts, served via [NXS-Pub](../services/nxs-pub):
+A social feed is an append-only log of posts, served via [MHR-Pub](../services/mhr-pub):
 
 ```
 Your feed:
   1. Profile: Mutable DataObject (name, bio, avatar hash)
   2. Posts: Immutable DataObjects (each post is permanent)
   3. Feed index: Mutable DataObject listing post hashes in order
-  4. Subscriber notifications via NXS-Pub
+  4. Subscriber notifications via MHR-Pub
 ```
 
 ### Publishing a Post
@@ -82,16 +82,16 @@ Your feed:
 ```
 Publishing flow:
   1. Create an immutable DataObject for the post content
-  2. Store it in NXS-Store with replication
+  2. Store it in MHR-Store with replication
   3. Update your feed index (mutable) to include the new post hash
-  4. NXS-Pub notifies all subscribers of the update
+  4. MHR-Pub notifies all subscribers of the update
 ```
 
 ### Following Someone
 
 ```
 Following flow:
-  1. Subscribe to their feed via NXS-Pub (topic: Node(their_node_id))
+  1. Subscribe to their feed via MHR-Pub (topic: Node(their_node_id))
   2. Choose delivery mode based on your link quality:
      - WiFi: Push (full content immediately)
      - Moderate: Digest (batched summaries)
@@ -105,19 +105,19 @@ No server assembles your feed. No algorithm decides what you see. Your device pu
 
 | What | Cost | Notes |
 |------|------|-------|
-| Store a 10 KB page | ~50 μNXS/month | With 5 replicas |
-| Store a 1 MB image | ~5,000 μNXS/month | With 3 replicas |
-| NXS-Name registration | Free | First-seen-wins within your community label |
+| Store a 10 KB page | ~50 μMHR/month | With 5 replicas |
+| Store a 1 MB image | ~5,000 μMHR/month | With 3 replicas |
+| MHR-Name registration | Free | First-seen-wins within your community label |
 | Bandwidth when someone views your page | Paid by the viewer | You don't pay for serving — viewers pay relay costs |
 
 The key economic difference from traditional hosting: **you pay for storage, not for traffic.** The viewer pays the relay cost to reach your content. Popular content is cheaper to host because it gets widely cached.
 
 ## Comparison with Traditional Hosting
 
-| Aspect | Traditional Web | NEXUS Hosting |
+| Aspect | Traditional Web | Mehr Hosting |
 |--------|----------------|---------------|
 | **Server** | Required (or hosting provider) | None — content lives in the mesh |
-| **Domain name** | Rent from registrar ($10-50/year) | NXS-Name (free, self-registered) |
+| **Domain name** | Rent from registrar ($10-50/year) | MHR-Name (free, self-registered) |
 | **SSL certificate** | Required (free via Let's Encrypt, or paid) | Not needed — all links encrypted, content verified by hash |
 | **Uptime** | Depends on your server/provider | Depends on replica count — more replicas = higher availability |
 | **Bandwidth costs** | You pay for traffic spikes | Viewers pay their own relay costs |
@@ -134,17 +134,17 @@ Forum structure:
   Topic list: Mutable DataObject (list of topic hashes)
   Each topic: Mutable DataObject (list of post hashes)
   Each post: Immutable DataObject (content + author signature)
-  Moderation: NXS-Compute contract enforcing community rules
+  Moderation: MHR-Compute contract enforcing community rules
 ```
 
-New posts are published as DataObjects, appended to the topic log, and propagated via neighborhood-scoped NXS-Pub to all subscribers. Moderation rules are enforced by an NXS-Compute contract — see [Community Apps](community-apps) for details.
+New posts are published as DataObjects, appended to the topic log, and propagated via neighborhood-scoped MHR-Pub to all subscribers. Moderation rules are enforced by an MHR-Compute contract — see [Community Apps](community-apps) for details.
 
 ## Running a Service
 
 Beyond static hosting, you can run persistent services on the network:
 
-- **API endpoint**: An NXS-Compute contract that responds to requests
+- **API endpoint**: An MHR-Compute contract that responds to requests
 - **Bot/automation**: A node running custom logic, discoverable via the capability marketplace
-- **Proxy service**: Bridge NEXUS to the traditional web (serve NEXUS content via HTTP, or fetch web content for mesh users)
+- **Proxy service**: Bridge Mehr to the traditional web (serve Mehr content via HTTP, or fetch web content for mesh users)
 
 Services are advertised as capabilities and discovered through the [marketplace](../marketplace/overview). Consumers find your service, form agreements, and pay via payment channels — all handled by the protocol.

@@ -14,17 +14,17 @@ Agreements use a discriminated cost model that adapts to different capability ty
 ```
 CostStructure: enum {
     PerByte {
-        cost_per_byte: u64,         // μNXS per byte transferred
+        cost_per_byte: u64,         // μMHR per byte transferred
     },
     PerInvocation {
-        cost_per_call: u64,         // μNXS per function invocation
+        cost_per_call: u64,         // μMHR per function invocation
         max_input_bytes: u32,       // cost covers up to this input size
     },
     PerDuration {
-        cost_per_epoch: u64,        // μNXS per epoch of service
+        cost_per_epoch: u64,        // μMHR per epoch of service
     },
     PerCycle {
-        cost_per_million_cycles: u64, // μNXS per million compute cycles
+        cost_per_million_cycles: u64, // μMHR per million compute cycles
         max_cycles: u64,             // hard limit
     },
 }
@@ -98,7 +98,7 @@ Agreement states:
 | Capability | On Expiry | Grace Period |
 |-----------|-----------|-------------|
 | **Relay/Bandwidth** | No new packets routed after `valid_until` | In-flight packets in queue are delivered (up to 60s drain) |
-| **Storage** | No new writes accepted | Data remains stored for 1 additional epoch; then subject to [garbage collection](../services/nxs-store#garbage-collection) |
+| **Storage** | No new writes accepted | Data remains stored for 1 additional epoch; then subject to [garbage collection](../services/mhr-store#garbage-collection) |
 | **Compute** | No new invocations accepted | Running invocations complete; results remain retrievable for 60s |
 | **Internet Gateway** | Connection torn down at `valid_until` | In-flight TCP streams drained for up to 60s |
 

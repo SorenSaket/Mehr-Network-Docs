@@ -5,7 +5,7 @@ title: Social
 
 # Social
 
-A decentralized social network built on NEXUS primitives. No central servers, no algorithmic recommendations — just chronological feeds assembled locally from followed users.
+A decentralized social network built on Mehr primitives. No central servers, no algorithmic recommendations — just chronological feeds assembled locally from followed users.
 
 ## Architecture
 
@@ -13,14 +13,14 @@ Each user has:
 
 - **Profile**: A mutable DataObject containing display name, bio, avatar hash, etc.
 - **Feed**: An append-only log of posts, where each post is an immutable DataObject
-- **Followers**: Subscribers are tracked via NXS-Pub subscriptions
+- **Followers**: Subscribers are tracked via MHR-Pub subscriptions
 
 ## Feed Assembly
 
 Feed aggregation is entirely local. Each device:
 
 1. Maintains a list of followed users (NodeIDs)
-2. Subscribes to each followed user via [NXS-Pub](../services/nxs-pub)
+2. Subscribes to each followed user via [MHR-Pub](../services/mhr-pub)
 3. Receives notifications when followed users publish new posts
 4. Assembles the timeline locally in chronological order
 

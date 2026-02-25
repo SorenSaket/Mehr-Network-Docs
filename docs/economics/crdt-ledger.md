@@ -5,11 +5,11 @@ title: CRDT Ledger
 
 # CRDT Ledger
 
-The global balance sheet in NEXUS is a CRDT-based distributed ledger. Not a blockchain. No consensus protocol. No mining. CRDTs (Conflict-free Replicated Data Types) provide automatic, deterministic convergence without coordination — exactly what a partition-tolerant network requires.
+The global balance sheet in Mehr is a CRDT-based distributed ledger. Not a blockchain. No consensus protocol. No mining. CRDTs (Conflict-free Replicated Data Types) provide automatic, deterministic convergence without coordination — exactly what a partition-tolerant network requires.
 
 ## Why Not a Blockchain?
 
-Blockchains require global consensus: all nodes must agree on the order of transactions. This is fundamentally incompatible with NEXUS's partition tolerance requirement. When a village mesh is disconnected from the wider network for days or weeks, it must still process payments internally. CRDTs make this possible.
+Blockchains require global consensus: all nodes must agree on the order of transactions. This is fundamentally incompatible with Mehr's partition tolerance requirement. When a village mesh is disconnected from the wider network for days or weeks, it must still process payments internally. CRDTs make this possible.
 
 ## Account State
 
@@ -75,7 +75,7 @@ With [stochastic relay rewards](payment-channels), settlements happen far less f
 
 ## Double-Spend Prevention
 
-Double-spend prevention is **probabilistic, not perfect**. Perfect prevention requires global consensus, which contradicts partition tolerance. NEXUS mitigates double-spending through multiple layers:
+Double-spend prevention is **probabilistic, not perfect**. Perfect prevention requires global consensus, which contradicts partition tolerance. Mehr mitigates double-spending through multiple layers:
 
 1. **Channel deposits**: Both parties must have visible balance to open a channel
 2. **Credit limits**: Based on locally-known balance
@@ -85,14 +85,14 @@ Double-spend prevention is **probabilistic, not perfect**. Perfect prevention re
 
 ## Partition Minting and Supply Convergence
 
-When the network is partitioned, each partition independently runs the emission schedule and mints NXS proportional to local relay work. On merge, the GCounter merge (pointwise max per account) preserves individual balance correctness — no one loses earned NXS. However, **total minted supply across all partitions exceeds what a single-partition emission schedule would have produced.**
+When the network is partitioned, each partition independently runs the emission schedule and mints MHR proportional to local relay work. On merge, the GCounter merge (pointwise max per account) preserves individual balance correctness — no one loses earned MHR. However, **total minted supply across all partitions exceeds what a single-partition emission schedule would have produced.**
 
 ```
 Example:
-  Epoch 5 emission schedule: 1000 NXS total
-  Partition A (60% of nodes): mints 1000 NXS to its relays
-  Partition B (40% of nodes): mints 1000 NXS to its relays
-  On merge: total minted in epoch 5 = 2000 NXS (not 1000)
+  Epoch 5 emission schedule: 1000 MHR total
+  Partition A (60% of nodes): mints 1000 MHR to its relays
+  Partition B (40% of nodes): mints 1000 MHR to its relays
+  On merge: total minted in epoch 5 = 2000 MHR (not 1000)
 ```
 
 This is an accepted tradeoff of partition tolerance — the alternative (coordinated minting) requires global consensus, which is incompatible with the design. The overminting is bounded:
@@ -229,7 +229,7 @@ Bloom filter hash construction:
   For 1M settlements: m = 19.2M bits ≈ 2.4 MB
 ```
 
-The Merkle tree over the account snapshot also uses Blake3 (consistent with all content hashing in NEXUS). Leaf nodes are `Blake3(NodeID || total_earned || total_spent)`, and internal nodes are `Blake3(left_child || right_child)`.
+The Merkle tree over the account snapshot also uses Blake3 (consistent with all content hashing in Mehr). Leaf nodes are `Blake3(NodeID || total_earned || total_spent)`, and internal nodes are `Blake3(left_child || right_child)`.
 
 **Critical retention rule**: Both parties to a settlement **must retain the full `SettlementRecord`** until the epoch's verification window closes (4 epochs after activation). If both parties discard the record after epoch activation (believing it was included) and a bloom filter false positive caused it to be missed, the settlement would be permanently lost. During the verification window, each party independently checks that its settlements are reflected in the snapshot; if any are missing, it submits a settlement proof. Only after the window closes may the full record be discarded.
 

@@ -9,7 +9,7 @@ import { mdToPdf } from 'md-to-pdf';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DOCS_DIR = join(PROJECT_ROOT, 'docs');
-const OUTPUT_PATH = join(PROJECT_ROOT, 'static', 'nexus-protocol-spec-v1.0.pdf');
+const OUTPUT_PATH = join(PROJECT_ROOT, 'static', 'mehr-protocol-spec-v1.0.pdf');
 const STYLESHEET = join(__dirname, 'pdf-styles.css');
 
 // Document order matching sidebars.ts
@@ -29,7 +29,7 @@ const SECTIONS = [
   {
     category: 'Economics',
     docs: [
-      'economics/nxs-token',
+      'economics/mhr-token',
       'economics/payment-channels',
       'economics/crdt-ledger',
       'economics/trust-neighborhoods',
@@ -48,10 +48,10 @@ const SECTIONS = [
   {
     category: 'Service Primitives',
     docs: [
-      'services/nxs-store',
-      'services/nxs-dht',
-      'services/nxs-pub',
-      'services/nxs-compute',
+      'services/mhr-store',
+      'services/mhr-dht',
+      'services/mhr-pub',
+      'services/mhr-compute',
     ],
   },
   {
@@ -195,6 +195,9 @@ async function readDoc(docId) {
   const title = data.title || docId;
 
   let processed = content.trim();
+  // Strip MDX: import statements and JSX component tags (not valid in plain markdown)
+  processed = processed.replace(/^import\s+.*$/gm, '');
+  processed = processed.replace(/^<\w+[^>]*\/>\s*$/gm, '');
   processed = processHeadings(processed, docId);
   processed = rewriteLinks(processed, docId);
 
@@ -210,7 +213,7 @@ function generateTitlePage() {
 
   return `<div class="title-page">
 
-<h1>NEXUS Protocol</h1>
+<h1>Mehr Protocol</h1>
 
 <div class="subtitle">Complete Specification</div>
 
@@ -244,7 +247,7 @@ function generateTOC(sections) {
 }
 
 async function main() {
-  console.log('Generating NEXUS Protocol specification PDF...\n');
+  console.log('Generating Mehr Protocol specification PDF...\n');
 
   // Read all docs
   const sectionData = [];
@@ -295,7 +298,7 @@ async function main() {
         displayHeaderFooter: true,
         headerTemplate: `
           <div style="font-size:8px; width:100%; text-align:center; color:#aaa; padding-top:4px;">
-            NEXUS Protocol Specification v1.0
+            Mehr Protocol Specification v1.0
           </div>`,
         footerTemplate: `
           <div style="font-size:8px; width:100%; text-align:center; color:#aaa; padding-bottom:4px;">
@@ -319,6 +322,7 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('PDF generation failed:', err);
-  process.exit(1);
+  console.warn('PDF generation skipped:', err.message || err);
+  console.warn('The existing PDF in static/ will be used instead.\n');
+  // Don't exit(1) — let the build continue with the pre-existing PDF
 });

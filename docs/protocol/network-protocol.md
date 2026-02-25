@@ -9,7 +9,7 @@ The network protocol handles identity, addressing, routing, and state propagatio
 
 ## Identity and Addressing
 
-NEXUS uses Reticulum's identity model. Every node has a cryptographic identity generated locally with no registrar:
+Mehr uses Reticulum's identity model. Every node has a cryptographic identity generated locally with no registrar:
 
 ```
 NodeIdentity {
@@ -33,7 +33,7 @@ A single node can generate **multiple destination hashes** for different purpose
 
 ## Packet Format
 
-NEXUS uses the [Reticulum packet format](https://reticulum.network/manual/understanding.html):
+Mehr uses the [Reticulum packet format](https://reticulum.network/manual/understanding.html):
 
 ```
 [HEADER 2 bytes] [ADDRESSES 16/32 bytes] [CONTEXT 1 byte] [DATA 0-465 bytes]
@@ -43,13 +43,13 @@ Header flags encode: propagation type (broadcast/transport), destination type (s
 
 **Critical property** (inherited from Reticulum): The source address is **NOT** in the header. Packets carry only the destination. Sender anonymity is structural.
 
-### NEXUS Extension: Compact Path Cost
+### Mehr Extension: Compact Path Cost
 
-NEXUS extends announces with a constant-size cost summary that each relay updates in-place as it forwards the announce:
+Mehr extends announces with a constant-size cost summary that each relay updates in-place as it forwards the announce:
 
 ```
 CompactPathCost {
-    cumulative_cost: u16,    // log₂-encoded μNXS/byte (2 bytes)
+    cumulative_cost: u16,    // log₂-encoded μMHR/byte (2 bytes)
     worst_latency_ms: u16,   // max latency on any hop in path (2 bytes)
     bottleneck_bps: u8,      // log₂-encoded min bandwidth on path (1 byte)
     hop_count: u8,           // number of relays traversed (1 byte)
@@ -70,8 +70,8 @@ Each relay updates the running totals as it forwards:
 The CompactPathCost is carried in the announce DATA field using a TLV envelope:
 
 ```
-NexusExtension {
-    magic: u8 = 0x4E,           // 'N' — identifies NEXUS extension presence
+MehrExtension {
+    magic: u8 = 0x4E,           // 'N' — identifies Mehr extension presence
     version: u8,                 // extension format version
     path_cost: CompactPathCost,  // 6 bytes
     extensions: [{               // future extensions via TLV pairs
@@ -83,7 +83,7 @@ NexusExtension {
 // Minimum size: 8 bytes (magic + version + path_cost)
 ```
 
-Nodes that don't understand the `0x4E` magic byte forward the DATA field as opaque payload. NEXUS-aware nodes parse and update it.
+Nodes that don't understand the `0x4E` magic byte forward the DATA field as opaque payload. Mehr-aware nodes parse and update it.
 
 #### Why No Per-Relay Signatures
 
@@ -105,7 +105,7 @@ RoutingEntry {
     next_hop: InterfaceID + LinkAddress, // which interface, which neighbor
 
     // From CompactPathCost (6 bytes in announce)
-    cumulative_cost: u16,                // log₂-encoded μNXS/byte
+    cumulative_cost: u16,                // log₂-encoded μMHR/byte
     worst_latency_ms: u16,              // max latency on path
     bottleneck_bps: u8,                 // log₂-encoded min bandwidth
     hop_count: u8,                      // relay count
@@ -120,7 +120,7 @@ RoutingEntry {
 
 ### Small-World Routing Model
 
-NEXUS routing is based on the **Kleinberg small-world model**, adapted for a physical mesh with heterogeneous transports. This provides a formal basis for routing scalability.
+Mehr routing is based on the **Kleinberg small-world model**, adapted for a physical mesh with heterogeneous transports. This provides a formal basis for routing scalability.
 
 #### The Network as a Small-World Graph
 
@@ -180,9 +180,9 @@ Applications specify their preferred policy:
 
 With N nodes where each has O(1) long-range links (typical for relay nodes), expected path length is **O(log² N)**. Backbone nodes with O(log N) connections reduce this to **O(log N)**.
 
-#### Why NEXUS Does Not Need Location Swapping
+#### Why Mehr Does Not Need Location Swapping
 
-Unlike Freenet/Hyphanet, which uses location swapping to arrange nodes into a navigable topology, NEXUS does not need this mechanism:
+Unlike Freenet/Hyphanet, which uses location swapping to arrange nodes into a navigable topology, Mehr does not need this mechanism:
 
 1. **Destination hashes are self-assigned** — each node's position on the ring is fixed by its Ed25519 keypair.
 2. **Announcements build routing tables** — when a node announces itself, it creates routing table entries across the mesh that function as navigable links.
@@ -195,7 +195,7 @@ The announcement propagation itself creates the navigable topology. Each announc
 Path discovery works via announcements:
 
 1. A node announces its destination hash to the network, signed with its Ed25519 key
-2. The announcement propagates through the mesh via greedy forwarding, with each relay updating the [CompactPathCost](#nexus-extension-compact-path-cost) running totals in-place (no per-relay signatures — link-layer authentication is sufficient)
+2. The announcement propagates through the mesh via greedy forwarding, with each relay updating the [CompactPathCost](#mehr-extension-compact-path-cost) running totals in-place (no per-relay signatures — link-layer authentication is sufficient)
 3. Receiving nodes record the path (or multiple paths) and select based on the scoring function above
 4. Multiple paths are retained and scored — the best path per policy is used, with fallback to alternatives on failure
 
@@ -344,7 +344,7 @@ Four priority levels for user data, scheduled with strict priority and starvatio
 |----------|-------------|----------|--------------|
 | P0 | Real-time | Voice (Codec2), interactive control | Tail-drop at 500ms deadline |
 | P1 | Interactive | Messaging, DHT lookups, link establishment | FIFO, 5s max queue time |
-| P2 | Standard | Social posts, pub/sub, NXS-Name | FIFO, 30s max queue time |
+| P2 | Standard | Social posts, pub/sub, MHR-Name | FIFO, 30s max queue time |
 | P3 | Bulk | Storage replication, large file transfer | FIFO, unbounded patience |
 
 Within a priority level, round-robin across neighbors. On half-duplex links, preemption occurs at packet boundaries only.
@@ -386,7 +386,7 @@ The quadratic term ensures gentle increase at moderate load and sharp increase n
 
 ## Time Model
 
-NEXUS does not require global clock synchronization. Time is handled through three mechanisms:
+Mehr does not require global clock synchronization. Time is handled through three mechanisms:
 
 ### Logical Clocks
 

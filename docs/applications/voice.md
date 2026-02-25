@@ -5,7 +5,7 @@ title: Voice
 
 # Voice
 
-Voice communication in NEXUS ranges from push-to-talk over LoRa to full-duplex calls over WiFi, adapting to available bandwidth.
+Voice communication in Mehr ranges from push-to-talk over LoRa to full-duplex calls over WiFi, adapting to available bandwidth.
 
 ## Codec Selection by Link Quality
 

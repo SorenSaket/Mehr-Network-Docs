@@ -1,15 +1,15 @@
 ---
 sidebar_position: 2
-title: "NXS-DHT: Distributed Hash Table"
+title: "MHR-DHT: Distributed Hash Table"
 ---
 
-# NXS-DHT: Distributed Hash Table
+# MHR-DHT: Distributed Hash Table
 
-NXS-DHT maps keys to the nodes that store the corresponding data. It uses proximity-weighted gossip rather than Kademlia-style strict XOR routing, because link quality varies wildly on a mesh network.
+MHR-DHT maps keys to the nodes that store the corresponding data. It uses proximity-weighted gossip rather than Kademlia-style strict XOR routing, because link quality varies wildly on a mesh network.
 
 ### Distance Metrics: Routing vs. DHT
 
-NEXUS uses two different distance metrics for different purposes:
+Mehr uses two different distance metrics for different purposes:
 
 - **Ring distance** (routing layer): `min(|a - b|, 2^128 - |a - b|)` over the destination hash space. Used for [greedy forwarding](../protocol/network-protocol#small-world-routing-model) to route packets toward their destination. This is the Kleinberg small-world model.
 - **XOR distance** (DHT layer): `a ⊕ b` over DHT key space. Used for determining storage responsibility — which nodes are "closest" to a given key and should store its data.
@@ -18,13 +18,13 @@ Both operate over 128-bit spaces derived from the same hash functions, but they 
 
 ## Why Not Kademlia?
 
-Traditional Kademlia routes lookups based on XOR distance between node IDs and key hashes, assuming roughly uniform latency between any two nodes. On a NEXUS mesh:
+Traditional Kademlia routes lookups based on XOR distance between node IDs and key hashes, assuming roughly uniform latency between any two nodes. On a Mehr mesh:
 
 - A node 1 XOR-hop away might be 10 LoRa hops away
 - A node 10 XOR-hops away might be a direct WiFi neighbor
 - Link quality varies by orders of magnitude
 
-NXS-DHT uses **proximity-weighted gossip** that considers both XOR distance and actual network cost when deciding where to route lookups. XOR distance determines the **target** (which nodes should store a key); network cost determines the **path** (how to reach those nodes efficiently).
+MHR-DHT uses **proximity-weighted gossip** that considers both XOR distance and actual network cost when deciding where to route lookups. XOR distance determines the **target** (which nodes should store a key); network cost determines the **path** (how to reach those nodes efficiently).
 
 ## Routing Algorithm
 
@@ -167,7 +167,7 @@ No extra bandwidth, no extra queries. The hash the client already knows is the p
 
 ### Tier 2 — Signed Object Lookups (Signature Check)
 
-For mutable data (NXS-Name records, capability advertisements, profile updates), objects carry the owner's Ed25519 signature:
+For mutable data (MHR-Name records, capability advertisements, profile updates), objects carry the owner's Ed25519 signature:
 
 ```
 Light client lookup for mutable object:

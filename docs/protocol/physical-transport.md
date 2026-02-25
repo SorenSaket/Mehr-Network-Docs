@@ -5,7 +5,7 @@ title: "Layer 0: Physical Transport"
 
 # Layer 0: Physical Transport
 
-NEXUS requires a transport layer that provides transport-agnostic networking over any medium supporting at least a half-duplex channel with ≥5 bps throughput and ≥500 byte MTU. The transport layer is a swappable implementation detail — NEXUS defines the interface it needs, not the implementation.
+Mehr requires a transport layer that provides transport-agnostic networking over any medium supporting at least a half-duplex channel with ≥5 bps throughput and ≥500 byte MTU. The transport layer is a swappable implementation detail — Mehr defines the interface it needs, not the implementation.
 
 ## Transport Requirements
 
@@ -20,23 +20,23 @@ The transport layer must provide:
 
 ## Current Implementation: Reticulum
 
-The current transport implementation uses the [Reticulum Network Stack](https://reticulum.network/), which satisfies all requirements above and is proven on links as slow as 5 bps. NEXUS extends it with [CompactPathCost](network-protocol#nexus-extension-compact-path-cost) annotations on announces and an economic layer above.
+The current transport implementation uses the [Reticulum Network Stack](https://reticulum.network/), which satisfies all requirements above and is proven on links as slow as 5 bps. Mehr extends it with [CompactPathCost](network-protocol#mehr-extension-compact-path-cost) annotations on announces and an economic layer above.
 
-Reticulum is an implementation choice, not an architectural dependency. NEXUS extensions are carried as opaque payload data within Reticulum's announce DATA field — a clean separation that allows the transport to be replaced with a clean-room implementation in the future without affecting any layer above.
+Reticulum is an implementation choice, not an architectural dependency. Mehr extensions are carried as opaque payload data within Reticulum's announce DATA field — a clean separation that allows the transport to be replaced with a clean-room implementation in the future without affecting any layer above.
 
 ### Participation Levels
 
-Not all nodes need to understand NEXUS extensions. Three participation levels coexist on the same mesh:
+Not all nodes need to understand Mehr extensions. Three participation levels coexist on the same mesh:
 
-| Level | Node Type | Understands | Earns NXS | Marketplace |
+| Level | Node Type | Understands | Earns MHR | Marketplace |
 |-------|-----------|-------------|-----------|-------------|
 | **L0** | Transport-only | Wire protocol only | No | No |
-| **L1** | NEXUS Relay | L0 + CompactPathCost + stochastic rewards | Yes (relay only) | No |
-| **L2** | Full NEXUS | Everything | Yes | Yes |
+| **L1** | Mehr Relay | L0 + CompactPathCost + stochastic rewards | Yes (relay only) | No |
+| **L2** | Full Mehr | Everything | Yes | Yes |
 
-**L0 nodes** relay packets and forward announces (including NEXUS extensions as opaque bytes) but do not parse economic extensions, earn rewards, or participate in the marketplace. They are zero-cost hops from NEXUS's perspective. This ensures the mesh works even when some nodes run the transport layer alone.
+**L0 nodes** relay packets and forward announces (including Mehr extensions as opaque bytes) but do not parse economic extensions, earn rewards, or participate in the marketplace. They are zero-cost hops from Mehr's perspective. This ensures the mesh works even when some nodes run the transport layer alone.
 
-**L1 nodes** are the minimum viable NEXUS implementation — they parse CompactPathCost, run the VRF relay lottery, and maintain payment channels. This is the target for ESP32 firmware.
+**L1 nodes** are the minimum viable Mehr implementation — they parse CompactPathCost, run the VRF relay lottery, and maintain payment channels. This is the target for ESP32 firmware.
 
 **L2 nodes** implement the full protocol stack including capability marketplace, storage, compute, and application services.
 
@@ -95,15 +95,15 @@ The 20,000x range between the slowest and fastest supported transports (500 bps 
 
 Residential nodes behind NATs (common for WiFi and Ethernet interfaces) are handled at the transport layer. The Reticulum transport uses its link establishment protocol to traverse NATs — an outbound connection from behind the NAT establishes a bidirectional link without requiring port forwarding or STUN/TURN servers.
 
-For nodes that cannot establish outbound connections (rare), the announce mechanism still propagates their presence. Traffic destined for a NATed node is routed through a neighbor that does have a direct link — functionally equivalent to standard relay forwarding. No special NAT-awareness is needed at the NEXUS protocol layers above transport.
+For nodes that cannot establish outbound connections (rare), the announce mechanism still propagates their presence. Traffic destined for a NATed node is routed through a neighbor that does have a direct link — functionally equivalent to standard relay forwarding. No special NAT-awareness is needed at the Mehr protocol layers above transport.
 
-## What NEXUS Adds Above Transport
+## What Mehr Adds Above Transport
 
-The transport layer provides packet delivery, routing, and encryption. NEXUS adds everything above:
+The transport layer provides packet delivery, routing, and encryption. Mehr adds everything above:
 
 | Extension | Purpose |
 |---|---|
-| **[CompactPathCost](network-protocol#nexus-extension-compact-path-cost) on announces** | Enables economic routing — cheapest, fastest, or balanced path selection |
+| **[CompactPathCost](network-protocol#mehr-extension-compact-path-cost) on announces** | Enables economic routing — cheapest, fastest, or balanced path selection |
 | **[Stochastic relay rewards](../economics/payment-channels)** | Incentivizes relay operators without per-packet payment overhead |
 | **[Capability advertisements](../marketplace/overview)** | Makes compute, storage, and connectivity discoverable and purchasable |
 | **[CRDT economic ledger](../economics/crdt-ledger)** | Tracks balances without consensus or blockchain |

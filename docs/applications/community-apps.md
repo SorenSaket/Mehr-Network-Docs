@@ -5,14 +5,14 @@ title: Forums, Marketplace & Wiki
 
 # Community Applications
 
-Community applications — forums, marketplaces, and wikis — are built on [NXS-Compute](../services/nxs-compute) contracts managing CRDT state. All degrade gracefully to text-only on constrained links.
+Community applications — forums, marketplaces, and wikis — are built on [MHR-Compute](../services/mhr-compute) contracts managing CRDT state. All degrade gracefully to text-only on constrained links.
 
 ## Forums
 
 Forums are append-only logs managed by moderation contracts:
 
 - **Posts** are immutable DataObjects, appended to a topic log
-- **Moderation** is handled by an NXS-Compute contract that enforces community rules
+- **Moderation** is handled by an MHR-Compute contract that enforces community rules
 - **Threading** is local — each client assembles thread views from the flat log
 - **Propagation** uses neighborhood-scoped gossip for local forums, or wider replication for public forums
 
@@ -32,14 +32,14 @@ Marketplace listings are DataObjects with neighborhood-scoped propagation:
 
 - **Listings** are mutable DataObjects (sellers can update price, availability)
 - **Search** is local — each node indexes listings it has received
-- **Transactions** happen off-protocol (physical exchange, external payment) or through NXS escrow contracts
+- **Transactions** happen off-protocol (physical exchange, external payment) or through MHR escrow contracts
 - **Reputation** feeds back into the node's general [reputation score](../protocol/security#sybil-resistance)
 
 ### Escrow
 
-For NXS-denominated transactions, an escrow contract can hold payment:
+For MHR-denominated transactions, an escrow contract can hold payment:
 
-1. Buyer deposits NXS into escrow contract
+1. Buyer deposits MHR into escrow contract
 2. Seller delivers goods/services
 3. Buyer confirms delivery
 4. Contract releases payment to seller
@@ -52,7 +52,7 @@ Wikis are CRDT-merged collaborative documents:
 - **Pages** are mutable DataObjects using CRDT merge rules
 - **Concurrent edits** merge automatically without conflicts (using operational transforms or CRDT text types)
 - **History** is preserved as a chain of immutable snapshots
-- **Permissions** managed by an NXS-Compute contract (who can edit, who can view)
+- **Permissions** managed by an MHR-Compute contract (who can edit, who can view)
 
 ## Bandwidth Degradation
 

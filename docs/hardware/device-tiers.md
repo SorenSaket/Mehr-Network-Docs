@@ -5,7 +5,7 @@ title: Device Capabilities by Tier
 
 # Device Capabilities by Tier
 
-Each hardware tier has different capabilities, which determine what the node can do on the network and how it earns NXS.
+Each hardware tier has different capabilities, which determine what the node can do on the network and how it earns MHR.
 
 ## Capability Matrix
 
@@ -16,10 +16,10 @@ Each hardware tier has different capabilities, which determine what the node can
 | WiFi transport | No | Yes | Yes | Yes (directional) | Optional |
 | Cellular transport | No | No | Yes | No | No |
 | Ethernet/Fiber | No | No | Optional | Yes | Yes |
-| NXS-Byte contracts | Yes | Yes | Yes | Yes | Yes |
+| MHR-Byte contracts | Yes | Yes | Yes | Yes | Yes |
 | WASM contracts | No | Light | Full | Full | Full |
-| NXS-Store storage | No | ~16 GB | ~256 GB | ~1 TB | ~512 GB |
-| NXS-DHT participation | Minimal | Yes | Backbone | Backbone | Yes |
+| MHR-Store storage | No | ~16 GB | ~256 GB | ~1 TB | ~512 GB |
+| MHR-DHT participation | Minimal | Yes | Backbone | Backbone | Yes |
 | Epoch consensus | No | No | Yes | Yes | Yes |
 | Internet gateway | No | No | Yes | Optional | Optional |
 | ML inference | No | No | No | No | Yes |

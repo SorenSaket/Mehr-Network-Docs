@@ -1,11 +1,11 @@
 ---
 sidebar_position: 3
-title: "NXS-Pub: Publish/Subscribe"
+title: "MHR-Pub: Publish/Subscribe"
 ---
 
-# NXS-Pub: Publish/Subscribe
+# MHR-Pub: Publish/Subscribe
 
-NXS-Pub provides a publish/subscribe system for real-time notifications across the mesh. It supports multiple subscription types and delivery modes, allowing applications to choose the right tradeoff between immediacy and bandwidth.
+MHR-Pub provides a publish/subscribe system for real-time notifications across the mesh. It supports multiple subscription types and delivery modes, allowing applications to choose the right tradeoff between immediacy and bandwidth.
 
 ## Subscriptions
 

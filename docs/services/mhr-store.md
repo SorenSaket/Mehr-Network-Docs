@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-title: "NXS-Store: Content-Addressed Storage"
+title: "MHR-Store: Content-Addressed Storage"
 ---
 
-# NXS-Store: Content-Addressed Storage
+# MHR-Store: Content-Addressed Storage
 
-NXS-Store is the storage layer of NEXUS. Every piece of data is addressed by its content hash — if you know the hash, you can retrieve the data from anywhere in the network. Storage is maintained through bilateral agreements, verified through lightweight challenge-response proofs, and protected against data loss through erasure coding.
+MHR-Store is the storage layer of Mehr. Every piece of data is addressed by its content hash — if you know the hash, you can retrieve the data from anywhere in the network. Storage is maintained through bilateral agreements, verified through lightweight challenge-response proofs, and protected against data loss through erasure coding.
 
 ## Data Objects
 
@@ -67,7 +67,7 @@ Data with a time-to-live (TTL). Automatically garbage-collected after expiration
 
 ## Storage Agreements
 
-Storage on NEXUS is maintained through **bilateral agreements** between data owners and storage nodes. This is how data stays alive on the network.
+Storage on Mehr is maintained through **bilateral agreements** between data owners and storage nodes. This is how data stays alive on the network.
 
 ```
 StorageAgreement {
@@ -76,7 +76,7 @@ StorageAgreement {
     provider: NodeID,               // who stores it
     consumer: NodeID,               // who pays for it
     payment_channel: ChannelID,     // bilateral channel
-    cost_per_epoch: u64,            // NXS per epoch
+    cost_per_epoch: u64,            // MHR per epoch
     duration_epochs: u32,           // how long
     challenge_interval: u32,        // how often to verify (in gossip rounds)
     erasure_role: Option<ShardInfo>,// if part of an erasure-coded set
@@ -179,7 +179,7 @@ Full replication is wasteful. Storing 3 complete copies of a file costs 3x the s
 
 ### Reed-Solomon Coding
 
-NEXUS uses Reed-Solomon erasure coding to split data into **k data shards + m parity shards**, where any k of (k + m) shards can reconstruct the original:
+Mehr uses Reed-Solomon erasure coding to split data into **k data shards + m parity shards**, where any k of (k + m) shards can reconstruct the original:
 
 ```
 Erasure coding example (4, 2):
@@ -250,7 +250,7 @@ RepairAgent {
 }
 ```
 
-A RepairAgent is an [NXS-Compute contract](nxs-compute) that periodically challenges storage nodes on behalf of the data owner. If a shard is lost, it handles reconstruction and re-storage automatically, spending from the owner's pre-authorized budget.
+A RepairAgent is an [MHR-Compute contract](mhr-compute) that periodically challenges storage nodes on behalf of the data owner. If a shard is lost, it handles reconstruction and re-storage automatically, spending from the owner's pre-authorized budget.
 
 ## Bandwidth Adaptation
 
@@ -326,7 +326,7 @@ Fragment reassembly protocol:
 
 ## Comparison with Other Storage Protocols
 
-| Aspect | Filecoin | Arweave | NEXUS (NXS-Store) |
+| Aspect | Filecoin | Arweave | Mehr (MHR-Store) |
 |--------|----------|---------|-------------------|
 | **Payment** | Per-deal, on-chain | One-time endowment | Per-duration, bilateral channels |
 | **Proof** | PoRep + PoSt (GPU-heavy, minutes to seal) | SPoRA (mining-integrated) | Challenge-response (milliseconds, runs on ESP32) |
@@ -337,7 +337,7 @@ Fragment reassembly protocol:
 | **Partition tolerance** | No (needs chain access) | No (needs chain access) | Yes (bilateral proofs work offline) |
 | **Free tier** | No | No | Yes (trusted peer storage) |
 
-NEXUS deliberately chooses lightweight proofs over heavy cryptographic guarantees. The tradeoff: a storage node could store the same data once and claim to store it twice (unlike Filecoin's Proof of Replication). This is acceptable because:
+Mehr deliberately chooses lightweight proofs over heavy cryptographic guarantees. The tradeoff: a storage node could store the same data once and claim to store it twice (unlike Filecoin's Proof of Replication). This is acceptable because:
 
 1. The economic incentive is weak — the node earns the same fee either way
 2. The data owner doesn't care *how* the node stores the data, only that it can return it on demand

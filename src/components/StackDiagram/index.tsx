@@ -20,8 +20,8 @@ const layers: LayerData[] = [
   {
     number: 5,
     name: 'Service Primitives',
-    items: ['NXS-Store', 'NXS-DHT', 'NXS-Pub', 'NXS-Compute'],
-    link: 'services/nxs-store',
+    items: ['MHR-Store', 'MHR-DHT', 'MHR-Pub', 'MHR-Compute'],
+    link: 'services/mhr-store',
     group: 'services',
   },
   {
@@ -34,8 +34,8 @@ const layers: LayerData[] = [
   {
     number: 3,
     name: 'Economic Protocol',
-    items: ['NXS Token', 'Payment Channels', 'CRDT Ledger', 'Trust'],
-    link: 'economics/nxs-token',
+    items: ['MHR Token', 'Payment Channels', 'CRDT Ledger', 'Trust'],
+    link: 'economics/mhr-token',
     group: 'economics',
   },
   {

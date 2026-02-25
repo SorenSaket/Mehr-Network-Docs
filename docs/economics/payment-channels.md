@@ -32,10 +32,10 @@ The VRF used is **ECVRF-ED25519-SHA512-TAI** ([RFC 9381](https://www.rfc-editor.
 
 | Parameter | Value |
 |-----------|-------|
-| Per-packet relay cost | 5 μNXS |
+| Per-packet relay cost | 5 μMHR |
 | Win probability | 1/100 |
-| Reward per win | 500 μNXS |
-| Expected value per packet | 5 μNXS (same) |
+| Reward per win | 500 μMHR |
+| Expected value per packet | 5 μMHR (same) |
 | Channel updates needed | 1 per ~100 packets (vs. every batch) |
 
 A relay handling 10 packets/minute triggers a channel update approximately once every 10 minutes — a **10x reduction** in payment overhead compared to per-minute batching.
@@ -67,7 +67,7 @@ Low-traffic links use higher win probability to reduce variance — a relay hand
 
 ## Bilateral Payment Channels
 
-Rewards are settled through bilateral channels between direct neighbors. Unlike Lightning-style multi-hop payment routing, NEXUS uses simple per-hop channels:
+Rewards are settled through bilateral channels between direct neighbors. Unlike Lightning-style multi-hop payment routing, Mehr uses simple per-hop channels:
 
 - Only two parties need to coordinate
 - Both parties are direct neighbors (by definition)
@@ -136,8 +136,8 @@ Alice ──→ Bob ──→ Carol ──→ Dave
 
 A lottery win triggers compensation through one or both mechanisms:
 
-1. **Channel debit** (if a channel exists with the upstream sender): Bob's win debits Alice's channel with Bob; Carol's win debits Bob's channel with Carol. This is the steady-state mechanism once NXS is circulating.
-2. **Mining proof** (always): The VRF proof is accumulated as a service proof entitling the relay to a share of the epoch's [minting reward](nxs-token#proof-of-service-mining-nxs-genesis). This is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
+1. **Channel debit** (if a channel exists with the upstream sender): Bob's win debits Alice's channel with Bob; Carol's win debits Bob's channel with Carol. This is the steady-state mechanism once MHR is circulating.
+2. **Mining proof** (always): The VRF proof is accumulated as a service proof entitling the relay to a share of the epoch's [minting reward](mhr-token#proof-of-service-mining-mhr-genesis). This is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
 
 Most packets trigger no channel update at all. Each hop is independent — no end-to-end payment coordination.
 

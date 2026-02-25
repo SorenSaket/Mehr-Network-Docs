@@ -5,13 +5,13 @@ title: Marketplace Overview
 
 # Layer 4: Capability Marketplace
 
-The capability marketplace is the unifying abstraction of NEXUS. Every node advertises what it can do. Every node can request capabilities it lacks. The marketplace matches supply and demand through local, bilateral negotiation — no central coordinator.
+The capability marketplace is the unifying abstraction of Mehr. Every node advertises what it can do. Every node can request capabilities it lacks. The marketplace matches supply and demand through local, bilateral negotiation — no central coordinator.
 
-This is the layer that makes NEXUS a **distributed computer** rather than just a network.
+This is the layer that makes Mehr a **distributed computer** rather than just a network.
 
 ## The Unifying Abstraction
 
-In NEXUS, there are no fixed node roles. Instead:
+In Mehr, there are no fixed node roles. Instead:
 
 - A node with a LoRa radio and solar panel advertises: *"I can relay packets 24/7"*
 - A node with a GPU advertises: *"I can run Whisper speech-to-text"*
@@ -44,7 +44,7 @@ NodeCapabilities {
     compute: {
         cpu_class: enum { Micro, Low, Medium, High },
         available_memory_mb: u32,
-        nxs_byte: bool,            // can run basic contracts
+        mhr_byte: bool,            // can run basic contracts
         wasm: bool,                // can run full WASM
         cost_per_cycle: u64,
         offered_functions: [{

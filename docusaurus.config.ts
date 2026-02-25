@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'NEXUS Protocol',
+  title: 'Mehr Network',
   tagline: 'A Decentralized Capability Marketplace Over Transport-Agnostic Mesh',
   favicon: 'img/favicon.ico',
 
@@ -11,7 +11,7 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://nexus-protocol.org',
+  url: 'https://mehr.network',
   baseUrl: '/',
 
   onBrokenLinks: 'throw',
@@ -42,7 +42,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'NEXUS',
+      title: 'Mehr',
       items: [
         {
           type: 'docSidebar',
@@ -51,7 +51,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://github.com/nexus-protocol',
+          href: 'https://github.com/mehr-protocol',
           label: 'GitHub',
           position: 'right',
         },
@@ -82,7 +82,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/nexus-protocol',
+              href: 'https://github.com/mehr-protocol',
             },
           ],
         },
@@ -96,7 +96,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} NEXUS Protocol Contributors.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Mehr Network Contributors.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -5,7 +5,7 @@ title: Reference Designs
 
 # Hardware Reference Designs
 
-NEXUS is designed to run on hardware ranging from $30 solar-powered relays to GPU workstations. Every device participates at whatever level its hardware allows.
+Mehr is designed to run on hardware ranging from $30 solar-powered relays to GPU workstations. Every device participates at whatever level its hardware allows.
 
 ## Device Tiers Overview
 
@@ -30,18 +30,18 @@ Components:
 
 Capabilities:
   - Packet relay only
-  - NXS-Byte interpreter (~50 KB)
+  - MHR-Byte interpreter (~50 KB)
   - No storage beyond routing tables
   - 24/7 operation on solar power
 
 Software:
-  - NEXUS firmware (Rust, no_std)
+  - Mehr firmware (Rust, no_std)
   - Transport: LoRa only
   - Runs: routing, payment channels, gossip
   - Cannot run: WASM, storage, heavy compute
 ```
 
-**Earns from**: Routing fees (1-5 μNXS per packet relayed)
+**Earns from**: Routing fees (1-5 μMHR per packet relayed)
 
 **Range**: 2-15 km line-of-sight with LoRa
 
@@ -59,13 +59,13 @@ Components:
 
 Capabilities:
   - LoRa ↔ WiFi bridging
-  - Basic NXS-Compute (NXS-Byte + light WASM)
+  - Basic MHR-Compute (MHR-Byte + light WASM)
   - Local storage (~16 GB usable)
-  - NXS-DHT participation
+  - MHR-DHT participation
   - Message caching for offline nodes
 
 Software:
-  - NEXUS daemon (Rust, Linux)
+  - Mehr daemon (Rust, Linux)
   - Dual transport: LoRa + WiFi
   - Full protocol stack
 ```
@@ -86,13 +86,13 @@ Components:
 
 Capabilities:
   - Internet gateway (HTTP proxy, DNS relay)
-  - Full NXS-Store storage node
-  - NXS-DHT backbone participation
+  - Full MHR-Store storage node
+  - MHR-DHT backbone participation
   - Full WASM compute
   - Epoch consensus participation
 
 Software:
-  - Full NEXUS stack
+  - Full Mehr stack
   - Triple transport: LoRa + WiFi + Cellular/Ethernet
   - Gateway proxy services
 ```
@@ -119,7 +119,7 @@ Capabilities:
   - Epoch consensus coordination
 
 Software:
-  - Full NEXUS stack, optimized for throughput
+  - Full Mehr stack, optimized for throughput
   - Transport: Directional WiFi + Fiber + Ethernet
 ```
 
@@ -144,7 +144,7 @@ Capabilities:
   - Any GPU-accelerated computation
 
 Software:
-  - Full NEXUS stack
+  - Full Mehr stack
   - WASM runtime + native GPU compute
   - Model serving framework
   - Advertises offered_functions with pricing

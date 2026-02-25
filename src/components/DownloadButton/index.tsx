@@ -8,7 +8,7 @@ interface DownloadButtonProps {
 
 export default function DownloadButton({
   label = 'Download Full Specification (PDF)',
-  href = '/nexus-protocol-spec-v1.0.pdf',
+  href = '/mehr-protocol-spec-v1.0.pdf',
 }: DownloadButtonProps): ReactNode {
   return (
     <a href={href} download className={styles.downloadButton}>

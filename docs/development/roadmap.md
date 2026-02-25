@@ -5,7 +5,7 @@ title: Roadmap
 
 # Implementation Roadmap
 
-The NEXUS implementation is organized into four phases, progressing from core networking fundamentals to a full ecosystem. Each phase has concrete milestones with acceptance criteria.
+The Mehr implementation is organized into four phases, progressing from core networking fundamentals to a full ecosystem. Each phase has concrete milestones with acceptance criteria.
 
 ## Phase 1: Foundation
 
@@ -66,7 +66,7 @@ The NEXUS implementation is organized into four phases, progressing from core ne
 
 - ESP32 + LoRa firmware (relay only: transport, routing, gossip, payment channels, CRDT ledger)
 - Raspberry Pi software (bridge: all ESP32 capabilities + multi-interface bridging + basic CLI)
-- CLI tools: `nexus-keygen`, `nexus-node` (start/stop), `nexus-status` (routing table, channels, balances), `nexus-peer` (add/remove trusted peers)
+- CLI tools: `mehr-keygen`, `mehr-node` (start/stop), `mehr-status` (routing table, channels, balances), `mehr-peer` (add/remove trusted peers)
 
 **Acceptance**: An ESP32 node relays packets and earns VRF lottery wins. A Raspberry Pi bridges LoRa to WiFi. CLI tools show correct routing table, channel states, and balances. ESP32 firmware fits in flash and runs within 520 KB RAM.
 
@@ -142,7 +142,7 @@ Test networks with functioning trust-based economics, epoch compaction, capabili
 
 **Focus**: Service primitives and first applications.
 
-### Milestone 3.1: NXS-Store
+### Milestone 3.1: MHR-Store
 
 - `DataObject` types (Immutable, Mutable, Ephemeral)
 - Storage agreements (bilateral, pay-per-duration)
@@ -151,7 +151,7 @@ Test networks with functioning trust-based economics, epoch compaction, capabili
 - Repair protocol (detect failure → assess → reconstruct → re-store)
 - Garbage collection (7-tier priority)
 
-### Milestone 3.2: NXS-DHT
+### Milestone 3.2: MHR-DHT
 
 - DHT routing (XOR distance + cost weighting, α=0.7)
 - k=3 replication with cost-bounded storage set
@@ -159,13 +159,13 @@ Test networks with functioning trust-based economics, epoch compaction, capabili
 - Cache management (publisher TTL, 24-hour local cap, LRU eviction)
 - Light client verification (3-tier: content-hash, signature, multi-source)
 
-### Milestone 3.3: NXS-Pub
+### Milestone 3.3: MHR-Pub
 
 - Subscription types (Key, Prefix, Node, Neighborhood)
 - Delivery modes (Push, Digest, PullHint)
 - Bandwidth-adaptive mode selection
 
-### Milestone 3.4: NXS-Compute (NXS-Byte)
+### Milestone 3.4: MHR-Compute (MHR-Byte)
 
 - 47-opcode interpreter implementation in Rust
 - Cycle cost enforcement (ESP32-calibrated)
@@ -177,7 +177,7 @@ Test networks with functioning trust-based economics, epoch compaction, capabili
 
 - Messaging (E2E encrypted, store-and-forward, group messaging with co-admin delegation)
 - Social (profiles, feeds, followers, media tiering)
-- NXS-Name (community-label-scoped naming, conflict resolution, petnames)
+- MHR-Name (community-label-scoped naming, conflict resolution, petnames)
 
 ### Phase 3 Deliverable
 
@@ -243,7 +243,7 @@ Phase 1 is **fully implementable** with the current specification. All protocol-
 | Component | Spec Status | Key References |
 |-----------|------------|----------------|
 | Identity + Encryption | Complete | [Security](../protocol/security) |
-| Packet format + CompactPathCost | Complete (wire format specified) | [Network Protocol](../protocol/network-protocol#nexus-extension-compact-path-cost) |
+| Packet format + CompactPathCost | Complete (wire format specified) | [Network Protocol](../protocol/network-protocol#mehr-extension-compact-path-cost) |
 | Routing + Announce propagation | Complete (scoring, announce rules, expiry, failure detection) | [Network Protocol](../protocol/network-protocol#routing) |
 | Gossip protocol | Complete (bloom filter, bandwidth budget, 4-tier) | [Network Protocol](../protocol/network-protocol#gossip-protocol) |
 | Congestion control | Complete (3-layer, priority levels, backpressure) | [Network Protocol](../protocol/network-protocol#congestion-control) |

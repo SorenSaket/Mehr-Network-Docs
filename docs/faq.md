@@ -9,9 +9,9 @@ Plain-language answers. No jargon.
 
 ## The Basics
 
-### What is NEXUS?
+### What is Mehr?
 
-NEXUS is a network that lets devices talk to each other directly — without relying on a phone company, an ISP, or a cloud server. Your phone, laptop, or a cheap radio module can join the mesh and communicate with anyone nearby. Think of it like a community-owned telephone system that nobody controls.
+Mehr is a network that lets devices talk to each other directly — without relying on a phone company, an ISP, or a cloud server. Your phone, laptop, or a cheap radio module can join the mesh and communicate with anyone nearby. Think of it like a community-owned telephone system that nobody controls.
 
 ### How do I join?
 
@@ -25,11 +25,11 @@ Anything from a [$30 solar-powered radio relay](hardware/reference-designs) to a
 
 **Talking to your friends and neighbors: always free.** You mark people as "trusted" (like adding a contact), and all communication between trusted people costs nothing.
 
-**Reaching strangers or distant nodes:** costs a tiny amount of NXS (the network's internal token). You earn NXS automatically by helping relay other people's traffic — so for most people, the system is self-sustaining. You earn by participating, and you spend by using.
+**Reaching strangers or distant nodes:** costs a tiny amount of MHR (the network's internal token). You earn MHR automatically by helping relay other people's traffic — so for most people, the system is self-sustaining. You earn by participating, and you spend by using.
 
 ### Do I need to buy tokens?
 
-No. You earn NXS by relaying traffic for others, which happens automatically in the background. The more your device helps the network, the more you earn. You can start using the network with zero tokens — free communication between trusted peers works immediately.
+No. You earn MHR by relaying traffic for others, which happens automatically in the background. The more your device helps the network, the more you earn. You can start using the network with zero tokens — free communication between trusted peers works immediately.
 
 ---
 
@@ -66,7 +66,7 @@ On a good connection you get full images and video. On a weak radio link, you ge
 
 ### Can I browse websites?
 
-Yes. People host websites on NEXUS just like on the regular internet, but without needing a server or domain name. You visit them by name (`mysite@portland-mesh`) or by direct link. Popular sites load fast because copies are cached throughout the network automatically.
+Yes. People host websites on Mehr just like on the regular internet, but without needing a server or domain name. You visit them by name (`mysite@portland-mesh`) or by direct link. Popular sites load fast because copies are cached throughout the network automatically.
 
 ---
 
@@ -96,7 +96,7 @@ You never need to think about this — the app handles it automatically.
 
 Your device automatically handles roaming. It constantly listens for nearby nodes on all its radios (WiFi, Bluetooth, LoRa) and connects to the best one available — no manual switching required.
 
-- **Walk into a cafe with a NEXUS WiFi node?** Your device connects in under a second.
+- **Walk into a cafe with a Mehr WiFi node?** Your device connects in under a second.
 - **Walk out of WiFi range?** Traffic shifts to LoRa automatically. Apps adapt (images become text previews).
 - **Visit the same cafe tomorrow?** Your device remembers it and reconnects instantly — no setup.
 - **On a voice call while moving?** The call hands off between nodes with less than a second of interruption. Quality may change (WiFi → LoRa = high-fidelity → walkie-talkie) but the call doesn't drop.
@@ -119,20 +119,20 @@ Yes. A forum is just a shared space where community members post. A moderator co
 
 ### Can I sell things on a local marketplace?
 
-Yes. Post a listing (text, photos, price), and it's visible to your neighborhood. Buyers contact you directly. Payment can happen in person, through an external service, or through NXS escrow (the network holds the payment until both sides confirm the deal).
+Yes. Post a listing (text, photos, price), and it's visible to your neighborhood. Buyers contact you directly. Payment can happen in person, through an external service, or through MHR escrow (the network holds the payment until both sides confirm the deal).
 
 ### Can I host a website or blog?
 
 Yes, and it's much simpler than traditional hosting:
 
-| Traditional web | NEXUS |
+| Traditional web | Mehr |
 |----------------|-------|
 | Rent a server | Not needed — content lives in the mesh |
 | Buy a domain name ($10–50/year) | Pick a name for free (`myblog@mumbai-mesh`) |
 | Get an SSL certificate | Not needed — everything is encrypted and verified automatically |
 | Pay for traffic spikes | Visitors pay their own relay costs, not you |
 
-You pay only for storage (tiny amounts of NXS), and popular content gets cheaper because it's cached everywhere.
+You pay only for storage (tiny amounts of MHR), and popular content gets cheaper because it's cached everywhere.
 
 ---
 
@@ -154,21 +154,21 @@ No single point of failure. There's no server to seize, no company to shut down,
 
 ## Economy
 
-### How does money work on NEXUS?
+### How does money work on Mehr?
 
-NXS is the network's internal token. Think of it like arcade tokens — they're valuable inside the arcade (network services), but they're not meant for trading on an exchange.
+MHR is the network's internal token. Think of it like arcade tokens — they're valuable inside the arcade (network services), but they're not meant for trading on an exchange.
 
-- **You earn NXS** by relaying traffic, storing data, or providing other services
-- **You spend NXS** when your messages cross through untrusted infrastructure
-- **Talking to friends is always free** — NXS only matters at trust boundaries
+- **You earn MHR** by relaying traffic, storing data, or providing other services
+- **You spend MHR** when your messages cross through untrusted infrastructure
+- **Talking to friends is always free** — MHR only matters at trust boundaries
 
 ### What's it worth in real money?
 
-NXS has no official exchange rate with any fiat currency. Its value comes from what it buys on the network — relay time, storage space, compute. The prices of these services float based on supply and demand, like any market. But you never need to convert NXS to dollars — it's a closed-loop system.
+MHR has no official exchange rate with any fiat currency. Its value comes from what it buys on the network — relay time, storage space, compute. The prices of these services float based on supply and demand, like any market. But you never need to convert MHR to dollars — it's a closed-loop system.
 
-### Can I get rich from NXS?
+### Can I get rich from MHR?
 
-That's not the point. NXS is designed to be spent on services, not hoarded or traded. There's no ICO, no pre-mine, no exchange listing. You earn it by contributing, you spend it by consuming. The goal is a functioning economy, not a speculative asset.
+That's not the point. MHR is designed to be spent on services, not hoarded or traded. There's no ICO, no pre-mine, no exchange listing. You earn it by contributing, you spend it by consuming. The goal is a functioning economy, not a speculative asset.
 
 ---
 
@@ -176,7 +176,7 @@ That's not the point. NXS is designed to be spent on services, not hoarded or tr
 
 ### How is this different from the regular internet?
 
-| | Regular Internet | NEXUS |
+| | Regular Internet | Mehr |
 |--|----------------|-------|
 | **Works without ISP** | No | Yes — radio, WiFi, anything |
 | **Works during internet shutdown** | No | Yes — local mesh continues |
@@ -185,27 +185,27 @@ That's not the point. NXS is designed to be spent on services, not hoarded or tr
 | **Can be censored** | Yes — ISPs, DNS, app stores | Extremely difficult — no central control point |
 | **Needs an account** | Email, phone number, ID | Just a cryptographic key (anonymous) |
 
-### Can NEXUS replace my internet connection?
+### Can Mehr replace my internet connection?
 
 **It depends on where you live.**
 
 In a **dense area** (apartment building, neighborhood, campus) where many nodes run WiFi, the mesh delivers 10–300 Mbps per hop — comparable to cable internet. Add a few shared internet uplinks (Starlink, fiber, cellular) and the community mesh handles distribution. Most people would save 50–75% on connectivity costs. You can browse, stream, video call — normal internet use.
 
-In a **rural or remote area** with only LoRa radio coverage, NEXUS delivers 0.3–50 kbps — enough for text messaging, basic social feeds, and push-to-talk voice, but not video streaming or modern web browsing. Here, NEXUS isn't replacing your internet — it's providing communication where there was none, or sharing one expensive satellite connection across an entire village.
+In a **rural or remote area** with only LoRa radio coverage, Mehr delivers 0.3–50 kbps — enough for text messaging, basic social feeds, and push-to-talk voice, but not video streaming or modern web browsing. Here, Mehr isn't replacing your internet — it's providing communication where there was none, or sharing one expensive satellite connection across an entire village.
 
-| Your situation | What NEXUS does |
+| Your situation | What Mehr does |
 |---------------|-----------------|
 | Dense urban, many WiFi nodes | Replaces individual ISP subscriptions — share uplinks, save money |
 | Suburban, mixed WiFi + LoRa | Supplements your connection — free local communication, shared backup uplink |
 | Rural, LoRa only | Provides communication where there is none — text, voice, local services |
 | No infrastructure at all | Only option that works — $30 solar radio nodes, no towers needed |
 
-The key insight: NEXUS doesn't compete with Starlink or cellular on raw speed. It **uses** them as transport — one Starlink dish becomes a shared community gateway. The mesh handles the local distribution and economics. Everyone gets internet access; the gateway operator earns; residents save.
+The key insight: Mehr doesn't compete with Starlink or cellular on raw speed. It **uses** them as transport — one Starlink dish becomes a shared community gateway. The mesh handles the local distribution and economics. Everyone gets internet access; the gateway operator earns; residents save.
 
 ### How is this different from Signal or WhatsApp?
 
-Signal and WhatsApp need internet access and rely on central servers for delivery. NEXUS works without internet, stores messages across the mesh (not one company's servers), and the network itself is decentralized. Nobody can block your access because there's nothing to block.
+Signal and WhatsApp need internet access and rely on central servers for delivery. Mehr works without internet, stores messages across the mesh (not one company's servers), and the network itself is decentralized. Nobody can block your access because there's nothing to block.
 
 ### How is this different from Bitcoin?
 
-Bitcoin is money designed for global financial transactions. NXS is an internal utility token for paying network services. They share some concepts (cryptographic keys, no central authority) but serve completely different purposes. NXS is more like "bus tokens for the network" than a cryptocurrency.
+Bitcoin is money designed for global financial transactions. MHR is an internal utility token for paying network services. They share some concepts (cryptographic keys, no central authority) but serve completely different purposes. MHR is more like "bus tokens for the network" than a cryptocurrency.

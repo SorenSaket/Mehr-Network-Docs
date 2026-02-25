@@ -7,9 +7,9 @@ import DownloadButton from '@site/src/components/DownloadButton';
 
 <DownloadButton />
 
-# NEXUS Protocol Specification v1.0
+# Mehr Protocol Specification v1.0
 
-This page is the normative reference for the NEXUS protocol. Individual documentation pages provide detailed explanations; this page summarizes the protocol constants, wire formats, and layer dependencies in one place.
+This page is the normative reference for the Mehr protocol. Individual documentation pages provide detailed explanations; this page summarizes the protocol constants, wire formats, and layer dependencies in one place.
 
 ## Status
 
@@ -26,11 +26,11 @@ This page is the normative reference for the NEXUS protocol. Individual document
 |----------|-------|-----------|
 | Gossip interval | 60 seconds | [Network Protocol](protocol/network-protocol#gossip-protocol) |
 | Protocol overhead budget | ≤10% of link bandwidth | [Bandwidth Budget](protocol/network-protocol#bandwidth-budget) |
-| CompactPathCost size | 6 bytes (constant) | [Network Protocol](protocol/network-protocol#nexus-extension-compact-path-cost) |
-| NexusExtension magic byte | `0x4E` ('N') | [Network Protocol](protocol/network-protocol#nexus-extension-compact-path-cost) |
+| CompactPathCost size | 6 bytes (constant) | [Network Protocol](protocol/network-protocol#mehr-extension-compact-path-cost) |
+| MehrExtension magic byte | `0x4E` ('N') | [Network Protocol](protocol/network-protocol#mehr-extension-compact-path-cost) |
 | Destination hash size | 16 bytes (128-bit) | [Network Protocol](protocol/network-protocol#identity-and-addressing) |
-| Smallest NXS unit | 1 μNXS | [NXS Token](economics/nxs-token#properties) |
-| Supply ceiling | 2^64 μNXS (asymptotic) | [NXS Token](economics/nxs-token#supply-model) |
+| Smallest MHR unit | 1 μMHR | [MHR Token](economics/mhr-token#properties) |
+| Supply ceiling | 2^64 μMHR (asymptotic) | [MHR Token](economics/mhr-token#supply-model) |
 | Default relay lottery probability | 1/100 | [Stochastic Rewards](economics/payment-channels#example) |
 | Payment channel state size | 200 bytes | [Payment Channels](economics/payment-channels#channel-state) |
 | Dispute challenge window | 2,880 gossip rounds (~48h) | [Payment Channels](economics/payment-channels#channel-lifecycle) |
@@ -40,9 +40,9 @@ This page is the normative reference for the NEXUS protocol. Individual document
 | Epoch acknowledgment threshold | 67% of active set | [CRDT Ledger](economics/crdt-ledger#epoch-lifecycle) |
 | Epoch verification window | 4 epochs after activation | [CRDT Ledger](economics/crdt-ledger#epoch-lifecycle) |
 | Bloom filter FPR (epoch) | 0.01% | [CRDT Ledger](economics/crdt-ledger#bloom-filter-sizing) |
-| DHT replication factor | k=3 | [NXS-DHT](services/nxs-dht#replication-factor) |
-| DHT XOR weight (w_xor) | 0.7 | [NXS-DHT](services/nxs-dht#lookup-scoring-function) |
-| Storage chunk size | 4 KB | [NXS-Store](services/nxs-store#chunking) |
+| DHT replication factor | k=3 | [MHR-DHT](services/mhr-dht#replication-factor) |
+| DHT XOR weight (w_xor) | 0.7 | [MHR-DHT](services/mhr-dht#lookup-scoring-function) |
+| Storage chunk size | 4 KB | [MHR-Store](services/mhr-store#chunking) |
 | Presence beacon size | 20 bytes | [Discovery](marketplace/discovery#presence-beacons) |
 | Presence beacon interval | 10 seconds | [Discovery](marketplace/discovery#presence-beacons) |
 | Transitive credit limit | 10% per hop, max 2 hops | [Trust & Neighborhoods](economics/trust-neighborhoods#trust-based-credit) |
@@ -67,7 +67,7 @@ Layer 6: Applications
   └── depends on ↓
 
 Layer 5: Service Primitives
-  ├── NXS-Store, NXS-DHT, NXS-Pub, NXS-Compute
+  ├── MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute
   └── depends on ↓
 
 Layer 4: Capability Marketplace
@@ -75,7 +75,7 @@ Layer 4: Capability Marketplace
   └── depends on ↓
 
 Layer 3: Economic Protocol
-  ├── NXS Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods
+  ├── MHR Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods
   └── depends on ↓
 
 Layer 2: Security
@@ -94,13 +94,13 @@ Each layer depends **only** on the layer directly below it. Applications never t
 
 ## Serialization Rules
 
-All NEXUS wire formats use the following conventions:
+All Mehr wire formats use the following conventions:
 
 | Rule | Value |
 |------|-------|
 | **Byte order** | Little-endian for all multi-byte integers (u16, u32, u64, i64) |
 | **Encoding** | Fixed-size binary fields; no self-describing framing (not CBOR, not JSON) |
-| **TLV extensions** | Type (u8), Length (u8, max 255), Data (variable). Used in NexusExtension only |
+| **TLV extensions** | Type (u8), Length (u8, max 255), Data (variable). Used in MehrExtension only |
 | **Strings** | UTF-8, length-prefixed with u16 (community labels, function IDs) |
 | **Hashes** | Raw bytes, no hex encoding on the wire |
 | **Signatures** | Raw 64-byte Ed25519 signatures, no ASN.1/DER wrapping |
@@ -116,7 +116,7 @@ Max packet size: 484 bytes
 Source address: NOT PRESENT (structural sender anonymity)
 ```
 
-### NEXUS Announce Extension
+### Mehr Announce Extension
 
 ```
 [MAGIC 1B: 0x4E] [VERSION 1B] [CompactPathCost 6B] [TLV extensions...]
@@ -146,9 +146,9 @@ Total: 200 bytes
 | 1. Layer 0: Physical Transport | [Physical Transport](protocol/physical-transport) |
 | 2. Layer 1: Network Protocol | [Network Protocol](protocol/network-protocol) |
 | 3. Layer 2: Security | [Security](protocol/security) |
-| 4. Layer 3: Economic Protocol | [NXS Token](economics/nxs-token), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Trust & Neighborhoods](economics/trust-neighborhoods), [Real-World Economics](economics/real-world-impact) |
+| 4. Layer 3: Economic Protocol | [MHR Token](economics/mhr-token), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Trust & Neighborhoods](economics/trust-neighborhoods), [Real-World Economics](economics/real-world-impact) |
 | 5. Layer 4: Capability Marketplace | [Overview](marketplace/overview), [Discovery](marketplace/discovery), [Agreements](marketplace/agreements), [Verification](marketplace/verification) |
-| 6. Layer 5: Service Primitives | [NXS-Store](services/nxs-store), [NXS-DHT](services/nxs-dht), [NXS-Pub](services/nxs-pub), [NXS-Compute](services/nxs-compute) |
+| 6. Layer 5: Service Primitives | [MHR-Store](services/mhr-store), [MHR-DHT](services/mhr-dht), [MHR-Pub](services/mhr-pub), [MHR-Compute](services/mhr-compute) |
 | 7. Layer 6: Applications | [Messaging](applications/messaging), [Social](applications/social), [Voice](applications/voice), [Naming](applications/naming), [Community Apps](applications/community-apps), [Hosting](applications/hosting) |
 | 8. Hardware Reference | [Reference Designs](hardware/reference-designs), [Device Tiers](hardware/device-tiers) |
 | 9. Implementation Roadmap | [Roadmap](development/roadmap) |

@@ -5,7 +5,7 @@ title: Trust & Neighborhoods
 
 # Trust & Neighborhoods
 
-Communities in NEXUS are **emergent, not declared**. There are no admin-created "zones" to join, no governance to negotiate, no artificial boundaries between groups. Instead, communities form naturally from a trust graph — just like in the real world.
+Communities in Mehr are **emergent, not declared**. There are no admin-created "zones" to join, no governance to negotiate, no artificial boundaries between groups. Instead, communities form naturally from a trust graph — just like in the real world.
 
 ## The Trust Graph
 
@@ -27,9 +27,9 @@ TrustConfig {
 }
 ```
 
-**Adding a trusted peer is the only social action in NEXUS.** Everything else — free local communication, community identity, credit lines — emerges from the trust graph.
+**Adding a trusted peer is the only social action in Mehr.** Everything else — free local communication, community identity, credit lines — emerges from the trust graph.
 
-Trust relationships are **asymmetric and revocable at any time**. Removing a node from `trusted_peers` immediately ends free relay for that node and downgrades any stored data from "trusted peer" to normal priority in the [garbage collection policy](../services/nxs-store#garbage-collection). Cost overrides are unidirectional — they apply to outbound traffic pricing from the configuring node only.
+Trust relationships are **asymmetric and revocable at any time**. Removing a node from `trusted_peers` immediately ends free relay for that node and downgrades any stored data from "trusted peer" to normal priority in the [garbage collection policy](../services/mhr-store#garbage-collection). Cost overrides are unidirectional — they apply to outbound traffic pricing from the configuring node only.
 
 ## How Communities Emerge
 
@@ -70,7 +70,7 @@ This means a village mesh where everyone trusts each other operates with **zero 
 
 ## Trust-Based Credit
 
-When a node needs NXS (e.g., to reach beyond its trusted neighborhood), its trusted peers can vouch for it:
+When a node needs MHR (e.g., to reach beyond its trusted neighborhood), its trusted peers can vouch for it:
 
 ```
 Transitive credit:
@@ -97,7 +97,7 @@ Credit accounting:
 
   CreditState {
       grantee: NodeID,
-      credit_limit: u64,              // max outstanding μNXS
+      credit_limit: u64,              // max outstanding μMHR
       outstanding: u64,               // currently extended
       granted_this_epoch: u64,        // epoch-scoped rate limit
       last_grant_epoch: u64,          // for epoch-boundary reset
@@ -127,7 +127,7 @@ This label is:
 - **Self-assigned** — no one approves it, no authority enforces uniqueness
 - **Not authoritative** — it carries no protocol-level privileges (it cannot grant access, waive fees, or modify trust)
 - **Not unique** — multiple disjoint clusters can use the same label
-- **Used by services** — [NXS-Name](../applications/naming) scopes human-readable names by label, [NXS-Pub](../services/nxs-pub) supports `Neighborhood(label)` subscriptions, and [NXS-DHT](../services/nxs-dht#neighborhood-scoped-dht) uses labels for content scoping
+- **Used by services** — [MHR-Name](../applications/naming) scopes human-readable names by label, [MHR-Pub](../services/mhr-pub) supports `Neighborhood(label)` subscriptions, and [MHR-DHT](../services/mhr-dht#neighborhood-scoped-dht) uses labels for content scoping
 - **Useful for discovery** — "find nodes labeled 'portland-mesh' near me"
 
 Community labels enable human-readable naming and discovery without any of the governance overhead of explicit zones.
@@ -156,7 +156,7 @@ The trust graph provides natural Sybil resistance:
 
 ## Real-World Parallels
 
-| Real World | NEXUS Trust |
+| Real World | Mehr Trust |
 |-----------|------------|
 | Talk to your neighbor for free | Free relay between trusted peers |
 | Lend money to a friend | Transitive credit via trust |

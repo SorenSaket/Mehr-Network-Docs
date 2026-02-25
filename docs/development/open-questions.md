@@ -15,11 +15,11 @@ Implementation-level questions resolved with concrete specifications added to th
 |---|----------|------------|----------|
 | 1 | Token Bucket Bandwidth Measurement | EMA with 60-second half-life; reset on transport change; 10% protocol overhead reserve | [Network Protocol](../protocol/network-protocol#congestion-control) |
 | 2 | Epoch Active Set Conflict Resolution | 5% settlement count threshold for ACK vs NAK; 3-round wait before re-propose; post-merge reconciliation | [CRDT Ledger](../economics/crdt-ledger#epoch-proposer-selection) |
-| 3 | Mutable Object Fork Detection Reporting | 5-step protocol: record, block 24h, gossip advisory, 7-day dedup, resolution via KeyCompromiseAdvisory | [NXS-Store](../services/nxs-store#mutable) |
+| 3 | Mutable Object Fork Detection Reporting | 5-step protocol: record, block 24h, gossip advisory, 7-day dedup, resolution via KeyCompromiseAdvisory | [MHR-Store](../services/mhr-store#mutable) |
 | 4 | CongestionSignal on Multi-Interface Nodes | Replaced link_id with scope enum (ThisLink/AllOutbound); 3 bytes total | [Network Protocol](../protocol/network-protocol#congestion-control) |
-| 5 | DHT Rebalancing Timing | 2 gossip rounds convergence on join; 6 additional missed rounds before re-replication; graceful degradation | [NXS-DHT](../services/nxs-dht#rebalancing) |
+| 5 | DHT Rebalancing Timing | 2 gossip rounds convergence on join; 6 additional missed rounds before re-replication; graceful degradation | [MHR-DHT](../services/mhr-dht#rebalancing) |
 | 6 | Beacon Collision Handling | Density adaptation: interval doubles at 50% utilization, triples at 75%; Ring 1 gossip provides redundancy | [Discovery](../marketplace/discovery#presence-beacons) |
-| 7 | Fragment Reassembly | 30s per-chunk timeout, exponential backoff (3 retries), 5-min overall, resumable via ChunkRequest | [NXS-Store](../services/nxs-store#reassembly) |
+| 7 | Fragment Reassembly | 30s per-chunk timeout, exponential backoff (3 retries), 5-min overall, resumable via ChunkRequest | [MHR-Store](../services/mhr-store#reassembly) |
 | 8 | Transitive Credit Rate-Limiting | Per-epoch, per-grantee tracking via CreditState struct; epoch-boundary reset; vouching peer absorbs defaults | [Trust Neighborhoods](../economics/trust-neighborhoods#trust-based-credit) |
 
 ## Resolved in v1.0 Spec Review (Round 3)
@@ -41,10 +41,10 @@ Protocol-level gaps identified in the third comprehensive review, resolved inlin
 
 | # | Question | Resolution | Location |
 |---|----------|------------|----------|
-| 1 | WASM Sandbox Specification | Wasmtime runtime; Light (16 MB, 10^8 fuel, 5s) and Full (256 MB, 10^10 fuel, 30s) tiers; 10 host imports mirroring NXS-Byte System opcodes | [NXS-Compute](../services/nxs-compute#wasm-full-execution) |
+| 1 | WASM Sandbox Specification | Wasmtime runtime; Light (16 MB, 10^8 fuel, 5s) and Full (256 MB, 10^10 fuel, 30s) tiers; 10 host imports mirroring MHR-Byte System opcodes | [MHR-Compute](../services/mhr-compute#wasm-full-execution) |
 | 2 | Presence Beacon Capability Bitfield | 8 assigned bits (relay, gateway, storage, compute-byte, compute-wasm, pubsub, dht, naming); bits 8-15 reserved | [Discovery](../marketplace/discovery#presence-beacons) |
 | 3 | Ring 1 Capability Aggregation Format | `CapabilitySummary` struct: 8 bytes per type (type, count, min/avg cost, min/max hops) | [Discovery](../marketplace/discovery#ring-1--2-3-hops) |
-| 4 | DHT Metadata Format | `DHTMetadata` struct: 129 bytes (key, size, content_type, owner, ttl, lamport_ts, Ed25519 signature) | [NXS-DHT](../services/nxs-dht#metadata-format) |
+| 4 | DHT Metadata Format | `DHTMetadata` struct: 129 bytes (key, size, content_type, owner, ttl, lamport_ts, Ed25519 signature) | [MHR-DHT](../services/mhr-dht#metadata-format) |
 | 5 | Negotiation Protocol Wire Format | Single-round take-it-or-leave-it; 30-second timeout; `CapabilityRequest` + `CapabilityOffer` with nonce replay prevention | [Agreements](../marketplace/agreements#negotiation) |
 
 ## Resolved in v1.0 Spec Review
@@ -54,9 +54,9 @@ Protocol-level gaps identified in the third comprehensive review, resolved inlin
 | 1 | Multi-admin group messaging | Delegated co-admin model (up to 3 co-admins, no threshold signatures) | [Design Decisions](design-decisions#group-admin-delegated-co-admin-no-threshold-signatures) |
 | 2 | Reputation gossip vs. first-hand only | Bounded 1-hop trust-weighted referrals, capped at 50%, advisory only | [Design Decisions](design-decisions#reputation-bounded-trust-weighted-referrals) |
 | 3 | Onion routing for high-threat environments | Per-packet layered encryption, opt-in via PathPolicy, 3 hops default, 21% overhead on LoRa | [Design Decisions](design-decisions#onion-routing-per-packet-layered-encryption-opt-in) |
-| 4 | NXS-Byte full opcode specification | 47 opcodes in 7 categories, reference interpreter in Rust, ESP32-calibrated cycle costs | [Design Decisions](design-decisions#nxs-byte-47-opcodes-with-reference-interpreter) |
-| 5 | Bootstrap emission schedule parameters | 10^12 μNXS/epoch initial, discrete halving every 100K epochs, 0.1% tail floor | [Design Decisions](design-decisions#emission-schedule-epoch-counted-discrete-halving) |
-| 6 | Protocol bridge design (SSB, Matrix, Briar) | Standalone gateway services, identity attestation, bridge operator pays NEXUS costs | [Design Decisions](design-decisions#protocol-bridges-standalone-gateway-services) |
+| 4 | MHR-Byte full opcode specification | 47 opcodes in 7 categories, reference interpreter in Rust, ESP32-calibrated cycle costs | [Design Decisions](design-decisions#mhr-byte-47-opcodes-with-reference-interpreter) |
+| 5 | Bootstrap emission schedule parameters | 10^12 μMHR/epoch initial, discrete halving every 100K epochs, 0.1% tail floor | [Design Decisions](design-decisions#emission-schedule-epoch-counted-discrete-halving) |
+| 6 | Protocol bridge design (SSB, Matrix, Briar) | Standalone gateway services, identity attestation, bridge operator pays Mehr costs | [Design Decisions](design-decisions#protocol-bridges-standalone-gateway-services) |
 | 7 | Formal verification targets | TLA+ priority-ordered: CRDT merge, payment channels, epoch checkpoints; composition deferred | [Design Decisions](design-decisions#formal-verification-priority-ordered-tla-targets) |
 
 ## Resolved in v1.0 Spec Hardening

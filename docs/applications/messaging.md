@@ -5,7 +5,7 @@ title: Messaging
 
 # Messaging
 
-End-to-end encrypted, store-and-forward messaging built on the NEXUS service primitives.
+End-to-end encrypted, store-and-forward messaging built on the Mehr service primitives.
 
 ## Architecture
 
@@ -13,8 +13,8 @@ Messaging composes multiple service layers:
 
 | Component | Built On |
 |-----------|----------|
-| Message storage & persistence | [NXS-Store](../services/nxs-store) |
-| Delivery notifications | [NXS-Pub](../services/nxs-pub) |
+| Message storage & persistence | [MHR-Store](../services/mhr-store) |
+| Delivery notifications | [MHR-Pub](../services/mhr-pub) |
 | Transport encryption | Link-layer encryption (Reticulum-derived) |
 | End-to-end encryption | [E2E encryption](../protocol/security#end-to-end-encryption-data-payloads) |
 
@@ -22,8 +22,8 @@ Messaging composes multiple service layers:
 
 1. **Compose**: Alice writes a message to Bob
 2. **Encrypt**: Message encrypted end-to-end for Bob's public key
-3. **Store**: Encrypted message stored as an immutable DataObject in NXS-Store
-4. **Notify**: NXS-Pub sends a notification to Bob (or his relay nodes)
+3. **Store**: Encrypted message stored as an immutable DataObject in MHR-Store
+4. **Notify**: MHR-Pub sends a notification to Bob (or his relay nodes)
 5. **Deliver**: If Bob is online, he retrieves immediately. If offline, relay nodes cache the message for later delivery.
 6. **Pay**: Relay and storage fees paid automatically via [payment channels](../economics/payment-channels)
 
@@ -39,7 +39,7 @@ This is store-and-forward messaging — similar to email, but encrypted and dece
 
 ## Group Messaging
 
-Group messages use shared symmetric keys managed by an NXS-Compute contract:
+Group messages use shared symmetric keys managed by an MHR-Compute contract:
 
 ```
 GroupState {

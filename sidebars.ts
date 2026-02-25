@@ -19,7 +19,7 @@ const sidebars: SidebarsConfig = {
       label: 'Economics',
       collapsed: false,
       items: [
-        'economics/nxs-token',
+        'economics/mhr-token',
         'economics/payment-channels',
         'economics/crdt-ledger',
         'economics/trust-neighborhoods',
@@ -42,10 +42,10 @@ const sidebars: SidebarsConfig = {
       label: 'Service Primitives',
       collapsed: false,
       items: [
-        'services/nxs-store',
-        'services/nxs-dht',
-        'services/nxs-pub',
-        'services/nxs-compute',
+        'services/mhr-store',
+        'services/mhr-dht',
+        'services/mhr-pub',
+        'services/mhr-compute',
       ],
     },
     {
