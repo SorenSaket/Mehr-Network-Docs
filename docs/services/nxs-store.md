@@ -43,7 +43,23 @@ The owner can publish updated versions, signed with their key. The highest seque
 **Versioning rules**:
 - Sequence numbers must be **strictly monotonic** — each update must have a higher sequence number than the previous one
 - Updates are only valid when signed by the owner's Ed25519 key
-- **Fork detection**: If two updates with the same sequence number but different content are observed (both validly signed), this is treated as evidence of key compromise or device cloning. Nodes that detect a fork should flag the object's owner identity as potentially compromised and refuse further updates until the conflict is resolved via a [KeyCompromiseAdvisory](../protocol/security#key-compromise-advisory)
+- **Fork detection**: If two updates with the same sequence number but different content are observed (both validly signed), this is treated as evidence of key compromise or device cloning
+
+**Fork handling**:
+
+```
+When a fork is detected (sequence N, two different content hashes, both validly signed):
+  1. Record: store (object_key, sequence, both content hashes, detection_time)
+  2. Block: reject new updates to this object from this owner for 24 hours
+     or until a KeyCompromiseAdvisory with SignedByBoth evidence is received
+  3. Gossip: include the fork evidence in the next gossip round as advisory
+     metadata (both conflicting hashes + sequence). This is informational —
+     receiving nodes independently verify and may apply their own block
+  4. Dedup: fork records are retained for 7 days to prevent re-reporting
+  5. Resolution: a KeyCompromiseAdvisory with SignedByBoth clears the block
+     and allows the new key's updates to proceed. SignedByOldOnly does NOT
+     clear the block (could be the attacker)
+```
 
 ### Ephemeral
 
@@ -291,6 +307,22 @@ Chunking enables:
 - Resumable transfers on unreliable links
 - Fine-grained storage proofs (challenge any individual chunk)
 - Erasure coding at the chunk level for large objects
+
+### Reassembly
+
+```
+Fragment reassembly protocol:
+  Per-chunk timeout: 30 seconds (configurable per StorageAgreement)
+  Retry policy: exponential backoff (2s, 4s, 8s, max 30s), up to 3 retries
+  After 3 retries: mark chunk provider as unreliable, try alternate via DHT
+  Overall timeout: 5 minutes (all chunks must arrive within this window)
+
+  Resumable downloads:
+    Consumer tracks received chunk indices. To resume, send:
+      ChunkRequest { data_hash: Blake3Hash, chunk_indices: Vec<u32> }
+    Provider responds with only the requested chunks, avoiding
+    retransmission of already-received data.
+```
 
 ## Comparison with Other Storage Protocols
 

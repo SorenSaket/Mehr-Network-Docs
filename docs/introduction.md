@@ -4,6 +4,8 @@ slug: /introduction
 title: Introduction
 ---
 
+import StackDiagram from '@site/src/components/StackDiagram';
+
 # NEXUS Protocol
 
 **A Decentralized Capability Marketplace Over Transport-Agnostic Mesh**
@@ -67,17 +69,9 @@ Each layer depends only on the layer below it. Applications never touch transpor
 
 ## Protocol Stack Overview
 
-NEXUS is organized into seven layers, each building on the one below:
+NEXUS is organized into seven layers, each building on the one below. Click any layer to read its full specification.
 
-| Layer | Name | Purpose |
-|-------|------|---------|
-| 0 | [Physical Transport](protocol/physical-transport) | Wraps existing transports (LoRa, WiFi, cellular, etc.) behind a uniform interface |
-| 1 | [Network Protocol](protocol/network-protocol) | Identity, addressing, routing, and gossip |
-| 2 | [Security](protocol/security) | Encryption, authentication, and privacy |
-| 3 | [Economic Protocol](economics/nxs-token) | NXS token, stochastic relay rewards, CRDT ledger, trust neighborhoods |
-| 4 | [Capability Marketplace](marketplace/overview) | Capability advertisement, discovery, agreements, and verification |
-| 5 | [Service Primitives](services/nxs-store) | NXS-Store, NXS-DHT, NXS-Pub, NXS-Compute |
-| 6 | [Applications](applications/messaging) | Messaging, social, voice, naming, forums |
+<StackDiagram />
 
 ## How It Works — A Simple Example
 

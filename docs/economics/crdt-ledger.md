@@ -169,6 +169,22 @@ In a 20-node partition, a node needs only 3 direct links (not 10) and 200 proces
 
 **Conflict resolution**: If multiple proposals for the same `epoch_number` arrive, nodes ACK the one with the **highest settlement count** (most complete state). Ties broken by lowest proposer `destination_hash`.
 
+**Active set divergence** (post-partition): Two partitions may propose epochs with different `active_set_hash` values because they've seen different settlement participants. Resolution:
+
+```
+Active set conflict handling:
+  1. If your local settlement count is within 5% of the proposal's count:
+     ACK the proposal's active_set_hash (defer to proposer — close enough)
+  2. If your local settlement count exceeds the proposal's by >5%:
+     NAK the proposal. Wait 3 gossip rounds for further convergence,
+     then propose your own epoch if no better proposal arrives
+  3. After partition merge: the epoch with the highest settlement count
+     is accepted by all nodes. The losing partition's active set members
+     that were missing from the winning proposal are included in the
+     NEXT epoch's active set (no settlements are lost — they are applied
+     on top of the winning snapshot during the verification window)
+```
+
 Epoch proposals are rate-limited to one per node per epoch period. Proposals that don't meet eligibility are silently ignored.
 
 ### Epoch Lifecycle

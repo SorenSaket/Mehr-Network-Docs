@@ -85,11 +85,33 @@ Transitive credit:
 
 The credit line is **rate-limited** for safety:
 
-| Trust Distance | Max Credit Rate |
-|---------------|----------------|
-| Direct trusted peer | Configurable by trusting node |
-| Friend-of-friend | 10% of direct limit |
-| Beyond 2 hops | No transitive credit |
+| Trust Distance | Max Credit | Rate Limit |
+|---------------|-----------|-----------|
+| Direct trusted peer | Configurable by trusting node | Per-epoch (configurable) |
+| Friend-of-friend | 10% of direct limit | Per-epoch, per friend-of-friend |
+| Beyond 2 hops | None | N/A |
+
+```
+Credit accounting:
+  Each trusting node tracks outstanding credit per grantee:
+
+  CreditState {
+      grantee: NodeID,
+      credit_limit: u64,              // max outstanding μNXS
+      outstanding: u64,               // currently extended
+      granted_this_epoch: u64,        // epoch-scoped rate limit
+      last_grant_epoch: u64,          // for epoch-boundary reset
+  }
+
+  Rules:
+    - Direct peers: each gets a separate credit_limit (set in TrustConfig)
+    - Friend-of-friend: each gets 10% of the vouching peer's direct limit,
+      tracked independently per grantee
+    - granted_this_epoch resets to 0 at each epoch boundary
+    - Outstanding credit that exceeds limit: no new grants until repaid
+    - Default handling: vouching peer's outstanding balance increases by
+      the defaulted amount (absorbs debt); grantee is flagged
+```
 
 ## Community Labels
 

@@ -1,0 +1,212 @@
+.wrapper {
+  margin: 2rem 0;
+  font-family: var(--ifm-font-family-base);
+}
+
+/* ── Stack container ── */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 720px;
+}
+
+/* ── Group labels (side brackets) ── */
+
+.groupLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.3rem 0.75rem 0.15rem;
+  border-radius: 6px 6px 0 0;
+  color: #fff;
+  max-width: 720px;
+}
+
+.groupLabel.protocol { background: #1565c0; }
+.groupLabel.economics { background: #00796b; }
+.groupLabel.marketplace { background: #e65100; }
+.groupLabel.services { background: #6a1b9a; }
+.groupLabel.applications { background: #c62828; }
+
+/* ── Layer rows ── */
+
+.layer {
+  display: flex;
+  align-items: stretch;
+  text-decoration: none !important;
+  color: inherit !important;
+  border-left: 4px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  max-width: 720px;
+}
+
+.layer:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1;
+}
+
+/* Group colors — left border + background tint */
+
+.layer.protocol {
+  border-left-color: #1565c0;
+  background: rgba(21, 101, 192, 0.06);
+}
+.layer.economics {
+  border-left-color: #00796b;
+  background: rgba(0, 121, 107, 0.06);
+}
+.layer.marketplace {
+  border-left-color: #e65100;
+  background: rgba(230, 81, 0, 0.06);
+}
+.layer.services {
+  border-left-color: #6a1b9a;
+  background: rgba(106, 27, 154, 0.06);
+}
+.layer.applications {
+  border-left-color: #c62828;
+  background: rgba(198, 40, 40, 0.06);
+}
+
+/* ── Layer number badge ── */
+
+.layerNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--ifm-font-family-monospace);
+  color: #546e7a;
+  background: rgba(0, 0, 0, 0.04);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Layer content ── */
+
+.layerContent {
+  flex: 1;
+  padding: 0.65rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.layerName {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.layerItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* ── Chips for sub-items ── */
+
+.chip {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  color: #546e7a;
+  white-space: nowrap;
+}
+
+/* ── Separators between layers in same group ── */
+
+.layer + .layer {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Legend ── */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legendDot.protocol { background: #1565c0; }
+.legendDot.economics { background: #00796b; }
+.legendDot.marketplace { background: #e65100; }
+.legendDot.services { background: #6a1b9a; }
+.legendDot.applications { background: #c62828; }
+
+.legendText {
+  font-size: 0.72rem;
+  color: #78909c;
+  font-weight: 500;
+}
+
+/* ── Dark mode overrides ── */
+
+[data-theme='dark'] .layer.protocol { background: rgba(77, 163, 255, 0.08); }
+[data-theme='dark'] .layer.economics { background: rgba(77, 208, 191, 0.08); }
+[data-theme='dark'] .layer.marketplace { background: rgba(255, 152, 0, 0.08); }
+[data-theme='dark'] .layer.services { background: rgba(186, 104, 255, 0.08); }
+[data-theme='dark'] .layer.applications { background: rgba(255, 99, 99, 0.08); }
+
+[data-theme='dark'] .layerNumber {
+  color: #90a4ae;
+  background: rgba(255, 255, 255, 0.04);
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: #b0bec5;
+}
+
+[data-theme='dark'] .layer + .layer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .legendText {
+  color: #90a4ae;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 600px) {
+  .layerNumber {
+    min-width: 2.2rem;
+    font-size: 0.7rem;
+  }
+
+  .layerContent {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .layerName {
+    font-size: 0.82rem;
+  }
+
+  .chip {
+    font-size: 0.62rem;
+    padding: 0.08rem 0.35rem;
+  }
+}

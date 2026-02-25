@@ -5,95 +5,22 @@ title: Open Questions
 
 # Open Questions
 
-All architectural design questions have been resolved. This page tracks remaining implementation-level questions and the full resolution history.
+All questions — architectural and implementation-level — have been resolved. This page tracks the full resolution history.
 
-## Implementation Questions (Phase 1-2)
+## Resolved in v1.0 Spec Review (Round 4)
 
-### 1. Token Bucket Bandwidth Measurement
+Implementation-level questions resolved with concrete specifications added to the relevant pages:
 
-**Context**: `LinkBucket.refill_rate` is defined as `measured_bandwidth × (1 - protocol_overhead)`, but "measured bandwidth" is unspecified.
-
-**Questions**:
-- Measurement window: trailing 1 minute? 5 minutes? Exponential moving average?
-- On transport change (LoRa to WiFi): how quickly does the bucket adapt?
-- Is there hysteresis to prevent oscillation between two close estimates?
-
-**Phase**: 1 (congestion control implementation)
-
-### 2. Epoch Active Set Conflict Resolution
-
-**Context**: When multiple partitions propose epochs with different `active_set_hash` values (because they've seen different settlement participants), the merge semantics are underspecified.
-
-**Questions**:
-- If two proposals have similar settlement counts but different active sets, which wins?
-- How does a node decide whether to NAK and re-propose vs. accept the proposer's set?
-- After partition merge, how is the active set reconciled?
-
-**Phase**: 2 (CRDT ledger implementation)
-
-### 3. Mutable Object Fork Detection Reporting
-
-**Context**: NXS-Store describes fork detection (same sequence, different content) but doesn't specify the response data structure or gossip behavior.
-
-**Questions**:
-- What data structure records a detected fork?
-- Is there a `ForkAlert` gossip message, or is it purely local?
-- How long is the fork flag retained? How does KeyCompromiseAdvisory clear it?
-
-**Phase**: 2 (NXS-Store implementation)
-
-### 4. CongestionSignal on Multi-Interface Nodes
-
-**Context**: `CongestionSignal.link_id` is a local u8 identifier. When a multi-interface node signals congestion on its WiFi link, upstream LoRa peers receive a `link_id` that's meaningless to them.
-
-**Question**: Should the signal identify the congested transport type (LoRa/WiFi/Cellular) rather than a local link ID? Or should it only indicate "the path through me is congested" without specifying which interface?
-
-**Phase**: 1 (congestion control implementation)
-
-### 5. DHT Rebalancing Timing After Node Churn
-
-**Context**: DHT rebalancing on node join/departure is described at a high level but lacks timing guarantees.
-
-**Questions**:
-- On node join: how many gossip rounds before key push begins? (Proposed: 2 rounds for convergence)
-- On node departure: how long after detection before re-replication starts? (Proposed: 6 additional missed rounds)
-- If no reachable replacement exists, does durability degrade gracefully or block?
-
-**Phase**: 2 (NXS-DHT implementation)
-
-### 6. Beacon Collision Handling in High-Density Deployments
-
-**Context**: Presence beacons broadcast every 10 seconds on all interfaces. In dense deployments (100+ nodes in LoRa range), collisions are likely.
-
-**Questions**:
-- Should beacon interval adapt to density (e.g., 20s when channel utilization exceeds 50%)?
-- Are beacons local-only (not relayed), or can Ring 1 gossip serve as redundancy?
-- What's the expected discovery latency in a 200-node dense mesh?
-
-**Phase**: 1 (discovery implementation)
-
-### 7. Fragment Reassembly for Large Objects
-
-**Context**: NXS-Store chunks large files into 4 KB pieces, but reassembly timeouts and retry behavior are unspecified.
-
-**Questions**:
-- Per-chunk timeout? (Proposed: 30 seconds)
-- Retry policy? (Proposed: exponential backoff, 3 retries, then try alternate provider)
-- Overall reassembly timeout? (Proposed: 5 minutes)
-- Is resumable download supported? (Partial chunk request format)
-
-**Phase**: 2 (NXS-Store implementation)
-
-### 8. Transitive Credit Rate-Limiting Granularity
-
-**Context**: Friend-of-friend credit is capped at 10% of direct limit, but the rate-limiting time window is unspecified.
-
-**Questions**:
-- Is 10% a per-epoch limit, per-gossip-round limit, or an absolute cap?
-- Does each friend-of-friend get a separate 10% allocation?
-- What tracking data structure is needed? (Current `TrustConfig` has no timestamp fields)
-
-**Phase**: 2 (trust neighborhoods implementation)
+| # | Question | Resolution | Location |
+|---|----------|------------|----------|
+| 1 | Token Bucket Bandwidth Measurement | EMA with 60-second half-life; reset on transport change; 10% protocol overhead reserve | [Network Protocol](../protocol/network-protocol#congestion-control) |
+| 2 | Epoch Active Set Conflict Resolution | 5% settlement count threshold for ACK vs NAK; 3-round wait before re-propose; post-merge reconciliation | [CRDT Ledger](../economics/crdt-ledger#epoch-proposer-selection) |
+| 3 | Mutable Object Fork Detection Reporting | 5-step protocol: record, block 24h, gossip advisory, 7-day dedup, resolution via KeyCompromiseAdvisory | [NXS-Store](../services/nxs-store#mutable) |
+| 4 | CongestionSignal on Multi-Interface Nodes | Replaced link_id with scope enum (ThisLink/AllOutbound); 3 bytes total | [Network Protocol](../protocol/network-protocol#congestion-control) |
+| 5 | DHT Rebalancing Timing | 2 gossip rounds convergence on join; 6 additional missed rounds before re-replication; graceful degradation | [NXS-DHT](../services/nxs-dht#rebalancing) |
+| 6 | Beacon Collision Handling | Density adaptation: interval doubles at 50% utilization, triples at 75%; Ring 1 gossip provides redundancy | [Discovery](../marketplace/discovery#presence-beacons) |
+| 7 | Fragment Reassembly | 30s per-chunk timeout, exponential backoff (3 retries), 5-min overall, resumable via ChunkRequest | [NXS-Store](../services/nxs-store#reassembly) |
+| 8 | Transitive Credit Rate-Limiting | Per-epoch, per-grantee tracking via CreditState struct; epoch-boundary reset; vouching peer absorbs defaults | [Trust Neighborhoods](../economics/trust-neighborhoods#trust-based-credit) |
 
 ## Resolved in v1.0 Spec Review (Round 3)
 

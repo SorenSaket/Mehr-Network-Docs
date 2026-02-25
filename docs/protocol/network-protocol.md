@@ -321,9 +321,18 @@ LinkBucket {
     refill_rate: u32,            // bytes/sec = measured_bandwidth × (1 - protocol_overhead)
     per_neighbor_share: Map<NodeID, u32>,
 }
+
+Bandwidth measurement:
+  measured_bandwidth = exponential moving average of successfully-transmitted bytes/sec
+  Half-life: 60 seconds (adapts within ~3 half-lives = 3 minutes)
+  On transport change (e.g., LoRa → WiFi): reset EMA to the new link's nominal rate,
+    then converge from there
+  refill_rate = measured_bandwidth × 0.90  (10% reserved for protocol overhead)
+  per_neighbor_share = refill_rate / num_active_neighbors  (user data only;
+    protocol gossip has its own budget per the bandwidth tiers above)
 ```
 
-Fair share is `link_bandwidth / num_active_neighbors` by default. Neighbors with active payment channels get share weighted proportionally to channel balance — paying for bandwidth earns proportional priority.
+Fair share is `refill_rate / num_active_neighbors` by default. Neighbors with active payment channels get share weighted proportionally to channel balance — paying for bandwidth earns proportional priority.
 
 When a neighbor exceeds its share, packets are queued (not dropped). If the queue exceeds a depth threshold, a backpressure signal is sent.
 
@@ -346,15 +355,23 @@ When an outbound queue exceeds 50% capacity, a 1-hop signal is sent to upstream 
 
 ```
 CongestionSignal {
-    link_id: u8,              // which outbound link is congested
-    severity: enum {
+    severity: enum {          // 2 bits
         Moderate,             // reduce sending rate by 25%
         Severe,               // reduce by 50%, reroute P2/P3 traffic
         Saturated,            // stop P2/P3, throttle P1, P0 only
     },
+    scope: enum {             // 2 bits
+        ThisLink,             // only the link to the signaling neighbor is congested
+        AllOutbound,          // all outbound links on this node are congested
+    },
     estimated_drain_ms: u16,  // estimated time until queue drains
 }
-// Total: 4 bytes
+// Byte 0: [severity (2 bits) | scope (2 bits) | reserved (4 bits)]
+// Bytes 1-2: estimated_drain_ms (u16, little-endian)
+// Total: 3 bytes
+```
+
+The signal does not identify which internal interface is congested — upstream peers only need to know whether to reduce traffic through this node (`ThisLink` for targeted rerouting, `AllOutbound` if the node itself is overloaded). Internal link topology is not exposed.
 ```
 
 ### Dynamic Cost Response

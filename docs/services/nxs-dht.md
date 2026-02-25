@@ -59,8 +59,8 @@ The cost filter prevents a node on the far side of a LoRa link from being assign
 
 ### Rebalancing
 
-- **Node join**: A new node announces itself. Existing nodes whose stored keys are now closer (in XOR) to the new node push those keys via gossip. The new node pulls full data for keys it's now responsible for.
-- **Node departure**: Detected via missed heartbeats (3 consecutive gossip rounds with no response). Remaining storage-set members detect the gap and re-replicate to the next-closest node, restoring k=3.
+- **Node join**: A new node announces itself. Existing nodes check whether any stored keys are now closer (in XOR) to the new node. After **2 gossip rounds** (for announcement convergence), affected keys are pushed via gossip metadata. The new node pulls full data and becomes part of the storage set.
+- **Node departure**: Detected via missed heartbeats (3 consecutive gossip rounds = ~3 minutes). The departed node is immediately marked down — no new writes are sent to it. After **6 additional missed rounds** (~6 minutes total since last response), remaining storage-set members initiate re-replication to the next-closest reachable node, restoring k=3. If no reachable replacement exists within the cost budget, durability is temporarily degraded (k=2 or k=1) and a warning is logged. Normal replication resumes when a suitable node becomes available.
 
 ## Lookup Process
 

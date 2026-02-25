@@ -130,6 +130,14 @@ Capability bitfield assignments:
 
 Beacons are transport-agnostic — they go out over whatever interfaces the node has (LoRa, WiFi, BLE, etc.). A mobile node passively receives beacons to discover local NEXUS nodes before initiating any connection. This is the decentralized equivalent of a cellular tower scan.
 
+**Beacon propagation rules**:
+- Beacons are broadcast by the originating node only — **not relayed** by others
+- Scope: local interface (each transport broadcasts independently)
+- Collision handling: CSMA/CA at the transport layer (listen-before-talk on LoRa)
+- Missed beacons: a node that misses one beacon catches the next in 10 seconds
+- **Density adaptation**: if local channel utilization exceeds 50% (measured via CSMA/CA back-off frequency), beacon interval doubles to 20 seconds. Above 75%, interval increases to 30 seconds. This prevents beacons from consuming excessive bandwidth in dense deployments
+- Redundancy: Ring 1 gossip (CapabilitySummary) provides backup discovery for nodes that miss beacons — discovery is not solely beacon-dependent
+
 ### Handoff Sequence
 
 When a mobile node detects new beacons (new area) or loses contact with its current relay:
