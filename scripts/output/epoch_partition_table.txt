@@ -1,0 +1,122 @@
+======================================================================
+MEHR NETWORK -- EPOCH CONSENSUS UNDER PARTITIONS
+======================================================================
+
+1. LIVENESS THRESHOLD
+   Active set of N nodes: consensus fails if >33% offline
+     N_active  Max offline   Min online
+   --------------------------------------
+           20            6           14
+           50           16           34
+          100           33           67
+          500          165          335
+         1000          330          670
+
+2. PARTITION SCENARIOS (N_active=100)
+        50/50: Short-term: [50%=STALL | 50%=STALL]
+             Long-term:  [50%=OK | 50%=OK]
+        60/40: Short-term: [60%=STALL | 40%=STALL]
+             Long-term:  [60%=OK | 40%=OK]
+        67/33: Short-term: [67%=OK | 33%=STALL]
+             Long-term:  [67%=OK | 33%=OK]
+        70/30: Short-term: [70%=OK | 30%=STALL]
+             Long-term:  [70%=OK | 30%=OK]
+        80/20: Short-term: [80%=OK | 20%=STALL]
+             Long-term:  [80%=OK | 20%=OK]
+     40/30/30: Short-term: [40%=STALL | 30%=STALL | 30%=STALL]
+             Long-term:  [40%=OK | 30%=OK | 30%=OK]
+
+3. GSET MEMORY PRESSURE (time to 500 KB trigger)
+                   Rate   Time to 500KB   Time to 520KB
+   ------------------------------------------------------
+          0.5 settl/min        533.3 hrs        554.7 hrs
+            2 settl/min        133.3 hrs        138.7 hrs
+           10 settl/min         26.7 hrs         27.7 hrs
+           50 settl/min          5.3 hrs          5.5 hrs
+
+4. OVERMINTING BOUNDS
+        Epoch  Partitions     Reward/part          Excess  % of Supply
+   -------------------------------------------------------------------
+            0           2 1,000,000,000,000 1,000,000,000,000    0.000000%
+            0           3 1,000,000,000,000 2,000,000,000,000    0.000000%
+            0           5 1,000,000,000,000 4,000,000,000,000    0.000000%
+            0          10 1,000,000,000,000 9,000,000,000,000    0.000000%
+      100,000           2 500,000,000,000 500,000,000,000    0.000500%
+      100,000           3 500,000,000,000 1,000,000,000,000    0.001000%
+      100,000           5 500,000,000,000 2,000,000,000,000    0.002000%
+      100,000          10 500,000,000,000 4,500,000,000,000    0.004500%
+      500,000           2  31,250,000,000  31,250,000,000    0.000016%
+      500,000           3  31,250,000,000  62,500,000,000    0.000032%
+      500,000           5  31,250,000,000 125,000,000,000    0.000065%
+      500,000          10  31,250,000,000 281,250,000,000    0.000145%
+    1,000,000           2   3,798,568,203   3,798,568,203    0.000002%
+    1,000,000           3   3,798,568,203   7,597,136,406    0.000004%
+    1,000,000           5   3,798,568,203  15,194,272,812    0.000008%
+    1,000,000          10   3,798,568,203  34,187,113,827    0.000017%
+
+5. RECOVERY TIME AFTER PARTITION HEALS
+            N   Best (min)   Normal (min)   Worst (min)
+   -----------------------------------------------------
+          100          7.6           11.6          18.6
+        1,000         11.0           15.0          22.0
+       10,000         14.3           18.3          25.3
+      100,000         17.6           21.6          28.6
+    1,000,000         20.9           24.9          31.9
+
+6. BLOOM FILTER SETTLEMENT LOSSES (0.01% FPR)
+    Settlements  Expected FP   Bloom Size  Permanent Loss
+   -------------------------------------------------------
+          1,000         0.10        2.3 KB          0.0000
+         10,000         1.00       23.4 KB          0.0001
+        100,000        10.00      234.4 KB          0.0010
+      1,000,000       100.00     2343.8 KB          0.0100
+     10,000,000      1000.00    23437.5 KB          0.1000
+
+7. GCOUNTER CONCURRENT REBASE SAFETY
+   Post-rebase: A earns 50K/spends 20K, B earns 30K/spends 10K
+
+   OLD DESIGN (single-value GCounter rebase):
+           Same balance: A_bal= 100,000 B_bal= 100,000 -> merged= 130,000 true= 150,000 -> ERROR: -20,000 uMHR
+             B has more: A_bal= 100,000 B_bal= 200,000 -> merged= 210,000 true= 250,000 -> ERROR: -40,000 uMHR
+             A has more: A_bal= 200,000 B_bal= 100,000 -> merged= 230,000 true= 250,000 -> ERROR: -20,000 uMHR
+        A has much more: A_bal= 500,000 B_bal= 100,000 -> merged= 530,000 true= 550,000 -> ERROR: -20,000 uMHR
+
+   NEW DESIGN (epoch_balance + delta GCounters + settlement proofs):
+           Same balance: A_bal= 100,000 B_bal= 100,000 -> merged= 150,000 true= 150,000 -> CORRECT
+             B has more: A_bal= 100,000 B_bal= 200,000 -> merged= 250,000 true= 250,000 -> CORRECT
+             A has more: A_bal= 200,000 B_bal= 100,000 -> merged= 250,000 true= 250,000 -> CORRECT
+        A has much more: A_bal= 500,000 B_bal= 100,000 -> merged= 550,000 true= 550,000 -> CORRECT
+
+======================================================================
+KEY FINDINGS
+======================================================================
+
+1. CONSENSUS FAILURE:
+   - Any partition where no fragment holds >67% of the original active set
+     will stall SHORT-TERM (first 2 epochs after split)
+   - LONG-TERM: after 2 epochs, each partition redefines its own active set
+     and CAN reach consensus independently (every partition is self-sufficient)
+   - Critical window: the 2-epoch transition period where old active set
+     references stale pre-partition membership
+
+2. MEMORY PRESSURE:
+   - At 2 settl/min, GSet hits 500 KB in ~130 hours (~5.4 days)
+   - Small-partition trigger (200 settlements + 1000 rounds) fires in ~17 hours
+   - The small-partition trigger is the safety valve that prevents GSet exhaustion
+   - Risk: if the small-partition trigger's epoch proposal also stalls at 67%,
+     the GSet continues growing toward the 520 KB ESP32 hard limit
+
+3. OVERMINTING:
+   - 2-partition split: excess = 1 epoch_reward per epoch of partition duration
+   - At bootstrap (epoch 0): ~0.000190% of supply per epoch
+   - Negligible relative to 1-2% annual key loss rate
+   - Overminting decreases over time as emission halves
+
+4. GCOUNTER REBASE (FIXED):
+   - OLD design: pointwise-max merge after rebase lost settlements when
+     partitions rebased to different epoch_balances (up to -40K uMHR error)
+   - NEW design: epoch_balance (frozen scalar) + delta GCounters (per-node
+     entries) + settlement proof recovery from winning epoch's bloom filter
+   - All test cases now pass with zero error
+   - Settlement proofs during verification window check ONLY the winning
+     epoch's bloom filter (not the merged GSet) to avoid double-counting

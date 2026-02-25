@@ -17,35 +17,39 @@ Blockchains require global consensus: all nodes must agree on the order of trans
                     CRDT Ledger Overview
 
    Node A                          Node B
-  ┌──────────────┐               ┌──────────────┐
-  │ earned: 500  │               │ earned: 300  │
-  │ spent:  200  │               │ spent:  100  │
-  │ ────────────-│               │ ──────────── │
-  │ balance: 300 │               │ balance: 200 │
-  └──────┬───────┘               └──────┬───────┘
+  ┌─────────────────┐            ┌─────────────────┐
+  │ epoch_bal: 200  │            │ epoch_bal: 200  │
+  │ Δ earned:  300  │            │ Δ earned:  100  │
+  │ Δ spent:    0   │            │ Δ spent:    0   │
+  │ ─────────────── │            │ ─────────────── │
+  │ balance:   500  │            │ balance:   300  │
+  └──────┬──────────┘            └──────┬──────────┘
          │                              │
          │    SettlementRecord          │
          │    (both signatures)         │
          └──────────┬───────────────────┘
                     │
                     ▼  gossiped to network
-         ┌──────────────────────┐
-         │  Each receiving node │
-         │  validates & merges  │
-         │                      │
-         │  GCounter merge:     │
-         │  pointwise max       │
-         │  (no conflicts ever) │
-         └──────────────────────┘
+         ┌──────────────────────────┐
+         │  Each receiving node     │
+         │  validates & merges      │
+         │                          │
+         │  epoch_balance: frozen   │
+         │  delta GCounters: merge  │
+         │  via pointwise max       │
+         │  (no conflicts ever)     │
+         └──────────────────────────┘
 ```
 
 ```
 AccountState {
     node_id: NodeID,
-    total_earned: GCounter,     // grow-only, per-node entries, merge = pointwise max
-    total_spent: GCounter,      // grow-only, same structure
-    // Balance = earned - spent (derived, never stored)
-    settlements: GSet<SettlementHash>,  // dedup set
+    epoch_number: u64,            // which epoch this state is relative to
+    epoch_balance: u64,           // frozen balance at last epoch compaction
+    delta_earned: GCounter,       // post-epoch earnings (per-node entries, merge = pointwise max)
+    delta_spent: GCounter,        // post-epoch spending (same structure)
+    // Balance = epoch_balance + value(delta_earned) - value(delta_spent)
+    settlements: GSet<SettlementHash>,  // dedup set (post-epoch only)
 }
 ```
 
@@ -57,7 +61,11 @@ A GCounter (grow-only counter) is a CRDT that can only increase. Each node maint
 - Merge result: "Node X has earned 150" (the higher value wins)
 - This works regardless of the order updates arrive
 
-Balance is always derived: `balance = total_earned - total_spent`. It is never stored directly.
+### Why Separate epoch_balance from Deltas?
+
+The `epoch_balance` is a frozen scalar from the authoritative epoch snapshot. The `delta_earned` and `delta_spent` GCounters track only post-epoch activity using per-node entries. This separation is critical for partition safety — see [GCounter Rebase](#gcounter-rebase) for the full analysis.
+
+Balance is always derived: `balance = epoch_balance + value(delta_earned) - value(delta_spent)`. It is never stored directly.
 
 ## Settlement Flow
 
@@ -83,7 +91,7 @@ Settlement flow:
    - Neither party's derived balance goes negative after applying
    - If any check fails: silently drop (do not gossip)
 4. If valid and new:
-   - Increment party_a's spent / party_b's earned (or vice versa)
+   - Increment party_a's delta_spent / party_b's delta_earned (or vice versa)
    - Add settlement_hash to GSet
    - Gossip forward to neighbors
 5. Convergence: O(log N) gossip rounds
@@ -111,7 +119,7 @@ Double-spend prevention is **probabilistic, not perfect**. Perfect prevention re
 
 ## Partition Minting and Supply Convergence
 
-When the network is partitioned, each partition independently runs the emission schedule and mints MHR proportional to local relay work. On merge, the GCounter merge (pointwise max per account) preserves individual balance correctness — no one loses earned MHR. However, **total minted supply across all partitions exceeds what a single-partition emission schedule would have produced.**
+When the network is partitioned, each partition independently runs the emission schedule and mints MHR proportional to local relay work. On merge, the winning epoch's `epoch_balance` snapshot is adopted and the losing partition's settlements are recovered via settlement proofs (see [Partition-Safe Merge Rules](#partition-safe-merge-rules)). Individual balance correctness is preserved — no one loses earned MHR. However, **total minted supply across all partitions exceeds what a single-partition emission schedule would have produced.**
 
 ```
 Example:
@@ -154,8 +162,8 @@ Epoch {
     epoch_number: u64,
     timestamp: u64,
 
-    // Frozen account balances at this epoch (rebased — see below)
-    account_snapshot: Map<NodeID, (total_earned, total_spent)>,
+    // Frozen account balances at this epoch (see GCounter Rebase)
+    account_snapshot: Map<NodeID, epoch_balance>,
 
     // Bloom filter of ALL settlement hashes included
     included_settlements: BloomFilter,
@@ -225,41 +233,87 @@ Epoch proposals are rate-limited to one per node per epoch period. Proposals tha
 
 ### GCounter Rebase
 
-GCounters are grow-only — `total_earned` and `total_spent` increase monotonically. Over very long timescales (centuries), high-throughput nodes could approach the u64 maximum (1.84 × 10^19) due to money velocity: the same tokens are earned, spent, earned again, each cycle growing both counters.
+GCounter `delta_earned` and `delta_spent` grow monotonically between epochs. Over very long timescales (centuries), high-throughput nodes could approach the u64 maximum (1.84 × 10^19) due to money velocity: the same tokens are earned, spent, earned again, each cycle growing both delta counters.
 
-Epoch compaction solves this. At each epoch, the snapshot **rebases** counters to net balance:
+Epoch compaction solves this. At each epoch, the snapshot freezes the balance and resets the deltas:
 
 ```
 GCounter rebase at epoch compaction:
 
-  Before epoch (raw GCounter values):
-    Alice: total_earned = 5,000,000    total_spent = 4,800,000
-    Balance = 200,000
+  Before epoch:
+    Alice: epoch_balance = 200,000    delta_earned = {Y: 3,000,000, Z: 1,800,000}
+    delta_spent = {W: 4,600,000, V: 200,000}
+    Balance = 200,000 + 4,800,000 - 4,800,000 = 200,000
 
   After epoch snapshot (rebased):
-    Alice: total_earned = 200,000      total_spent = 0
+    Alice: epoch_balance = 200,000    epoch_number incremented
+    delta_earned = {}  (zeroed)
+    delta_spent = {}   (zeroed)
     Balance = 200,000 (unchanged)
 
-  Post-epoch settlements apply on top of rebased values:
-    Alice earns 50,000 → total_earned = 250,000
-    Alice spends 30,000 → total_spent = 30,000
-    Balance = 220,000 ✓
+  Post-epoch settlements apply on top:
+    Alice earns 50,000 (processed by node Y) → delta_earned = {Y: 50,000}
+    Alice spends 30,000 (processed by node Z) → delta_spent = {Z: 30,000}
+    Balance = 200,000 + 50,000 - 30,000 = 220,000 ✓
 ```
 
-Rebasing is safe because:
+Without rebase, a node processing 10^10 μMHR/epoch of throughput would overflow u64 after ~1.84 × 10^9 epochs (~35,000 years). With rebase, delta counters never exceed one epoch's worth of activity — the protocol runs indefinitely.
 
-1. **Epoch is a synchronization point** — all pre-epoch settlements are already merged
-2. **GCounter merge still works** — pointwise max on rebased values is correct for any post-epoch settlement order
-3. **No information lost** — the balance is preserved exactly; only the "counter history" above net balance is discarded
-4. **Bloom filter deduplication** — pre-epoch settlements cannot be replayed (they're in the bloom filter regardless of rebase)
+### Partition-Safe Merge Rules
 
-Without rebase, a node processing 10^10 μMHR/epoch of throughput would overflow u64 after ~1.84 × 10^9 epochs (~35,000 years). With rebase, counters never exceed current circulating supply — the protocol runs indefinitely.
+The separation of `epoch_balance` from delta GCounters is critical for correctness during partition merges. When two copies of the same account are merged:
+
+```
+CASE 1: Same epoch_number, same epoch_balance (normal operation)
+  Standard CRDT merge:
+    epoch_balance: unchanged (identical on both sides)
+    delta_earned: GCounter pointwise max
+    delta_spent:  GCounter pointwise max
+    settlements:  GSet union
+
+  This is the common case — both nodes are in the same partition
+  or have received the same epoch snapshot.
+
+CASE 2: Same epoch_number, DIFFERENT epoch_balance (concurrent partition compaction)
+  Two partitions independently compacted to the same epoch number
+  but processed different pre-rebase settlements, producing different
+  epoch_balance values.
+
+  Resolution:
+    1. The epoch with the higher settlement count wins (existing rule)
+    2. Winning epoch's account_snapshot provides epoch_balance for ALL accounts
+    3. Winning partition's delta GCounters are kept as-is
+    4. Losing partition's delta GCounters are discarded
+    5. Losing partition's post-epoch settlements that are NOT in the winning
+       epoch's bloom filter are submitted as settlement proofs during the
+       verification window, which re-applies them to the delta GCounters
+    6. Losing partition's PRE-epoch settlements that are NOT in the winning
+       epoch's bloom filter are ALSO submitted as settlement proofs —
+       these add the amounts that were absorbed into the losing partition's
+       epoch_balance but lost when the winning partition's higher/lower
+       epoch_balance was adopted
+
+CASE 3: DIFFERENT epoch_numbers (one partition is ahead)
+  The higher epoch_number wins entirely.
+    epoch_number: higher value
+    epoch_balance: from the higher-epoch partition
+    delta_earned: from the higher-epoch partition
+    delta_spent:  from the higher-epoch partition
+  The lower-epoch partition's settlements are recovered via
+  settlement proofs against the winning epoch's bloom filter.
+```
+
+**Why this is safe**: The delta GCounters use per-node entries (each processing node writes only to its own entry). Within a single partition, standard CRDT merge (pointwise max) is always correct. Across partitions with conflicting epochs, the settlement proof mechanism — which checks against the winning epoch's bloom filter, NOT the GSet — recovers any settlements that were lost during epoch_balance adoption. The bloom filter check is critical: a settlement may be in the merged GSet (from the losing partition's contribution) but NOT reflected in the winning epoch's delta GCounters, so the GSet must not be used for dedup during settlement proof processing.
+
+**Settlement proof dedup rule**: During the verification window, settlement proofs are checked against the **winning epoch's bloom filter only**. The live GSet is NOT consulted. After successful re-application, the settlement hash is added to the GSet to prevent future re-processing during normal (non-verification-window) operation.
 
 ### Late Arrivals After Compaction
 
 When a node reconnects after an epoch has been compacted, it checks its unprocessed settlements against the epoch's bloom filter:
-- **Present in filter**: Already counted, discard
-- **Absent from filter**: New settlement, apply on top of snapshot. If within the verification window, submit as a settlement proof.
+- **Present in filter**: Already counted in epoch_balance, discard
+- **Absent from filter**: New settlement, apply to delta GCounters on top of epoch_balance. If within the verification window, submit as a settlement proof.
+
+**Important**: During the verification window after a partition merge, settlement proofs are checked against the **winning epoch's bloom filter only** — NOT the merged GSet. This is because a settlement may exist in the merged GSet (contributed by the losing partition) but not be reflected in the delta GCounters (because the losing partition's deltas were discarded during conflict resolution). The bloom-filter-only check ensures such settlements are correctly re-applied.
 
 ### Bloom Filter Sizing
 
@@ -287,7 +341,7 @@ Bloom filter hash construction:
   For 1M settlements: m = 19.2M bits ≈ 2.4 MB
 ```
 
-The Merkle tree over the account snapshot also uses Blake3 (consistent with all content hashing in Mehr). Leaf nodes are `Blake3(NodeID || total_earned || total_spent)`, and internal nodes are `Blake3(left_child || right_child)`.
+The Merkle tree over the account snapshot also uses Blake3 (consistent with all content hashing in Mehr). Leaf nodes are `Blake3(NodeID || epoch_balance)`, and internal nodes are `Blake3(left_child || right_child)`.
 
 **Critical retention rule**: Both parties to a settlement **must retain the full `SettlementRecord`** until the epoch's verification window closes (4 epochs after activation). If both parties discard the record after epoch activation (believing it was included) and a bloom filter false positive caused it to be missed, the settlement would be permanently lost. During the verification window, each party independently checks that its settlements are reflected in the snapshot; if any are missing, it submits a settlement proof. Only after the window closes may the full record be discarded.
 
@@ -295,7 +349,7 @@ The Merkle tree over the account snapshot also uses Blake3 (consistent with all 
 
 At 1M+ nodes, the flat `account_snapshot` is ~32 MB — too large for constrained devices. The solution is a **Merkle-tree snapshot** with sparse views.
 
-**Full snapshot** (backbone/gateway nodes only): The account snapshot is stored as a sorted Merkle tree keyed by NodeID. Only nodes that participate in epoch consensus need the full tree. At 1M nodes and 32 bytes per entry, this is ~32 MB — feasible for nodes with SSDs.
+**Full snapshot** (backbone/gateway nodes only): The account snapshot is stored as a sorted Merkle tree keyed by NodeID. Only nodes that participate in epoch consensus need the full tree. At 1M nodes and 24 bytes per entry (16-byte NodeID + 8-byte epoch_balance), this is ~24 MB — feasible for nodes with SSDs.
 
 **Sparse snapshot** (everyone else): Constrained devices store only:
 - Their own balance
@@ -303,15 +357,14 @@ At 1M+ nodes, the flat `account_snapshot` is ~32 MB — too large for constraine
 - Balances of trust graph neighbors (Ring 0-2)
 - The Merkle root of the full snapshot
 
-For a typical node with ~50 relevant accounts: 50 × 32 bytes = 1.6 KB.
+For a typical node with ~50 relevant accounts: 50 × 24 bytes = 1.2 KB.
 
 **On-demand balance verification**: When a constrained node needs a balance it doesn't have locally (e.g., to extend credit to a new node), it requests a Merkle proof from any capable peer:
 
 ```
 BalanceProof {
     node_id: NodeID,
-    total_earned: u64,
-    total_spent: u64,
+    epoch_balance: u64,
     merkle_siblings: Vec<Blake3Hash>,  // path from leaf to root
     epoch_number: u64,
 }
@@ -330,8 +383,8 @@ EpochSummary {
     merkle_root: Blake3Hash,               // root of full account snapshot
     proposer_id: NodeID,                   // who proposed this epoch
     proposer_sig: Ed25519Signature,        // signature over (epoch_number || merkle_root)
-    my_balance: (u64, u64),                // (total_earned, total_spent)
-    partner_balances: Vec<(NodeID, u64, u64)>, // channel partners + trust neighbors
+    my_epoch_balance: u64,                     // frozen balance at this epoch
+    partner_epoch_balances: Vec<(NodeID, u64)>, // channel partners + trust neighbors
     bloom_segment: BloomFilter,            // relevant portion of settlement bloom
 }
 ```
