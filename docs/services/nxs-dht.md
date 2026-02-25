@@ -95,6 +95,26 @@ DHT Publication:
 
 Publication gossips only metadata — the full data is pulled on demand. This prevents large objects from flooding the gossip channel.
 
+### Metadata Format
+
+```
+DHTMetadata {
+    key: [u8; 32],           // Blake3 content hash (32 bytes)
+    size: u32,               // object size in bytes (4 bytes)
+    content_type: u8,        // 0=Immutable, 1=Mutable, 2=Ephemeral (1 byte)
+    owner: [u8; 16],         // publisher's destination hash (16 bytes)
+    ttl_remaining: u32,      // seconds until expiry (4 bytes)
+    lamport_ts: u64,         // publisher's Lamport timestamp (8 bytes, for mutable ordering)
+    signature: [u8; 64],     // Ed25519 signature over (key || size || content_type || lamport_ts) (64 bytes)
+}
+// Total: 129 bytes per metadata entry
+// Signature prevents metadata forgery; content hash prevents data forgery
+```
+
+For **mutable objects**, `lamport_ts` determines freshness — the highest timestamp with a valid signature wins. For **immutable objects**, `lamport_ts` is the publication time and the content hash is sufficient for verification.
+
+**Cache invalidation**: Mutable objects are invalidated by receiving a metadata entry with a higher `lamport_ts` for the same `owner` and logical key. There is no push-invalidation mechanism — caches rely on TTL expiry and periodic re-query of the storage set for freshness-critical data.
+
 ## Cache TTL
 
 Cache lifetime follows a two-level policy:

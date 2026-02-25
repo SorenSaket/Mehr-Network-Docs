@@ -20,13 +20,29 @@ NXS Properties:
 
 NXS has an **asymptotic supply ceiling** with **decaying emission**:
 
-| Phase | Period | Emission Rate |
-|-------|--------|--------------|
-| Bootstrap | Years 0–2 | Fixed reward per epoch, ~1% of ceiling per year |
-| Maturity | Years 2+ | Reward halves every 2 years (geometric decay) |
-| Tail | Indefinite | Floor of 0.1% annual inflation relative to circulating supply |
+| Phase | Epoch Range | Emission Per Epoch |
+|-------|-------------|-------------------|
+| Bootstrap | 0–99,999 | 10^12 μNXS (1,000,000 NXS) |
+| Halving 1 | 100,000–199,999 | 5 × 10^11 μNXS |
+| Halving 2 | 200,000–299,999 | 2.5 × 10^11 μNXS |
+| Halving N | N × 100,000 – (N+1) × 100,000 − 1 | 10^12 × 2^(−N) μNXS |
+| Tail | When halved reward is below floor | 0.1% of circulating supply / estimated epochs per year |
 
-The theoretical ceiling is 2^64 μNXS, but it is never reached — tail emission asymptotically approaches it. The tail ensures ongoing proof-of-service rewards exist indefinitely, funding relay and storage operators. In practice, lost keys (estimated 1–2% of supply annually) offset tail emission, keeping effective circulating supply roughly stable after year ~10.
+```
+Emission formula:
+  epoch_reward(e) = max(
+    10^12 >> (e / 100_000),              // discrete halving (bit-shift)
+    circulating_supply * 0.001 / E_year  // tail floor
+  )
+
+  E_year = trailing 1,000-epoch moving average of epoch frequency
+  Halving is epoch-counted, not wall-clock (partition-safe)
+  At ~1 epoch per 10 minutes: 100,000 epochs ≈ 1.9 years
+```
+
+The theoretical ceiling is 2^64 μNXS, but it is never reached — tail emission asymptotically approaches it. The initial reward of 10^12 μNXS/epoch yields ~1.5% of the supply ceiling minted in the first halving period, providing strong bootstrap incentive. Discrete halving every 100,000 epochs is epoch-counted (no clock synchronization needed) and trivially computable via bit-shift on integer-only hardware.
+
+The tail ensures ongoing proof-of-service rewards exist indefinitely, funding relay and storage operators. In practice, lost keys (estimated 1–2% of supply annually) offset tail emission, keeping effective circulating supply roughly stable after year ~10.
 
 ### Typical Costs
 
@@ -78,8 +94,9 @@ Both mechanisms coexist. As the economy matures, channel-funded relay payments n
 
 ```
 Relay compensation per epoch:
-  Epoch mint pool: base_reward_schedule(epoch_number)
+  Epoch mint pool: max(10^12 >> (epoch / 100_000), tail_floor)
     → new supply created (not transferred from a pool)
+    → halves every 100,000 epochs; floors at 0.1% annual inflation
 
   Relay R's mint share: epoch_mint_pool × (R_wins / total_wins_in_epoch)
     → proportional to verified VRF lottery wins

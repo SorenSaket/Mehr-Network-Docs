@@ -29,7 +29,29 @@ Detail level: Summarized capabilities, aggregated by type
 Example: "There's a WASM node 2 hops away, cost ~X"
 ```
 
-Capabilities are summarized to reduce gossip bandwidth. Instead of full advertisements, nodes share aggregated summaries: "a storage node with 50 GB available exists 2 hops away at cost Y."
+Capabilities are summarized to reduce gossip bandwidth. Instead of full advertisements, nodes share aggregated summaries using `CapabilitySummary` records:
+
+```
+CapabilitySummary {
+    type: u8,           // matches beacon bitfield (0=relay, 1=gateway, 2=storage, etc.)
+    count: u8,          // number of providers of this type (capped at 255)
+    min_cost: u16,      // cheapest provider (log₂-encoded μNXS/byte)
+    avg_cost: u16,      // average cost across providers (log₂-encoded)
+    min_hops: u8,       // nearest provider (hop count)
+    max_hops: u8,       // farthest provider (hop count)
+}
+// 8 bytes per capability type; typical Ring 1 summary: 5-6 types × 8 = 40-48 bytes
+
+Cost encoding: identical to CompactPathCost log₂ formula:
+  encoded = round(16 × log₂(value + 1))
+  decoded = (2 ^ (encoded / 16.0)) - 1
+
+Special values:
+  0x0000 = free (0 μNXS) — valid for trusted-peer services
+  0xFFFF = cost unknown or unavailable
+```
+
+A Ring 1 gossip message contains one `CapabilitySummary` per capability type present in the 2-3 hop neighborhood. Nodes that appear in multiple capability types are counted in each.
 
 ### Ring 2 — Trust Neighborhood
 
@@ -88,11 +110,22 @@ NEXUS nodes periodically broadcast a lightweight presence beacon on all their in
 ```
 PresenceBeacon {
     node_id: [u8; 16],       // destination hash
-    capabilities: u16,        // bitfield: relay, gateway, storage, compute, etc.
+    capabilities: u16,        // bitfield (see below)
     cost_tier: u8,            // 0=free/trusted, 1=cheap, 2=moderate, 3=expensive
     load: u8,                 // current utilization (0-255)
 }
 // 20 bytes — broadcast every 10 seconds
+
+Capability bitfield assignments:
+  Bit 0:  relay (L1+ — will forward packets)
+  Bit 1:  gateway (internet uplink available)
+  Bit 2:  storage (NXS-Store provider)
+  Bit 3:  compute_byte (NXS-Byte interpreter)
+  Bit 4:  compute_wasm (WASM runtime — Light or Full)
+  Bit 5:  pubsub (NXS-Pub hub)
+  Bit 6:  dht (NXS-DHT participant)
+  Bit 7:  naming (NXS-Name resolver)
+  Bits 8-15: reserved (must be 0; future: inference, bridge, etc.)
 ```
 
 Beacons are transport-agnostic — they go out over whatever interfaces the node has (LoRa, WiFi, BLE, etc.). A mobile node passively receives beacons to discover local NEXUS nodes before initiating any connection. This is the decentralized equivalent of a cellular tower scan.
@@ -131,6 +164,8 @@ CreditGrant {
 
 The relay checks the mobile node's balance on the CRDT ledger (already available via gossip) and extends temporary credit. Packets flow immediately while the channel opens in the background.
 
+**Staleness tolerance**: The relay's CRDT view may be stale (especially after a partition). The credit grant is bounded by `credit_limit_bytes` and `valid_for_ms`, limiting risk to at most one credit window of unpaid traffic. Relays rate-limit fast start grants to **one active grant per unknown node** — a node that exhausts its credit without opening a channel cannot receive another grant for 10 minutes. For `VisibleBalance` grants, the relay requires a balance of at least `2 × credit_limit_bytes × cost_per_byte` to absorb staleness.
+
 If the mobile node has no visible balance and no trust relationship, it must complete the channel open first.
 
 ### Roaming Cache
@@ -152,6 +187,8 @@ RoamingEntry {
 ```
 
 When a mobile node enters a previously visited area, it recognizes the beacon fingerprint and reconnects to a cached relay. If a preserved `ChannelState` exists and the relay is still alive, the old channel resumes with zero handoff latency — no new negotiation needed.
+
+**Fingerprint tolerance**: The area fingerprint is approximate — node churn between visits is expected. The mobile node matches if at least 60% of current beacon node_ids appear in the cached fingerprint's sorted set. This is computed as `|intersection| / |cached_set| >= 0.6`. If below threshold, the area is treated as new (full discovery). Beacon node_ids are sorted by numeric value of the destination hash.
 
 ### Graceful Departure
 

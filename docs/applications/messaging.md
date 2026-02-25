@@ -48,16 +48,33 @@ GroupState {
     current_key: ChaCha20Key,        // current group symmetric key
     key_epoch: u64,                   // increments on every rotation
     admin: NodeID,                    // creator; can add/remove members
+    co_admins: Vec<CoAdminCertificate>,  // up to 3 delegated co-admins
+    admin_sequence: u64,             // monotonic counter for admin operations
+}
+
+CoAdminCertificate {
+    co_admin: NodeID,
+    permissions: enum { Full, MembersOnly, RotationOnly },
+    granted_by: NodeID,              // must be the group creator
+    signature: Ed25519Signature,     // creator's signature over (group_id, co_admin, permissions)
 }
 ```
 
 ### Key Management
 
 - **Creation**: The group creator generates the first symmetric key and encrypts it individually for each member's public key (standard E2E envelope per member)
-- **Rotation**: When a member joins or leaves, the admin generates a new key and distributes it to all current members. The key epoch increments. Old keys are retained locally so members can decrypt historical messages
+- **Rotation**: When a member joins or leaves, the admin (or any authorized co-admin) generates a new key and distributes it to all current members. The key epoch increments. Old keys are retained locally so members can decrypt historical messages
 - **No forward secrecy for groups**: A new member receives only the current key — they cannot decrypt messages sent before they joined. A removed member retains old keys for messages they already received but cannot decrypt new messages (new key was never sent to them)
 - **Maximum group size**: Practical limit of ~100 members, constrained by key distribution bandwidth (each rotation sends one E2E-encrypted key envelope per member, ~100 bytes each)
-- **Admin offline**: If the admin goes offline, the group continues with the current key. No new members can be added and no key rotation occurs until the admin returns. Future work: multi-admin support via threshold signatures
+
+### Co-Admin Delegation
+
+The group creator can delegate admin authority to up to 3 co-admins via signed `CoAdminCertificate` records. This solves the single-admin availability problem without requiring threshold cryptography.
+
+- **Any co-admin can independently**: add/remove members, rotate the group key, and (if granted `Full` permission) promote/demote other co-admins
+- **Conflict resolution**: All admin operations carry a monotonically increasing `admin_sequence` number. If two co-admins issue conflicting operations (e.g., simultaneous key rotations), members accept the operation with the highest sequence number. Ties are broken by lowest admin public key hash
+- **No threshold crypto**: Co-admin delegation uses only Ed25519 signatures — no multi-round key generation protocols, no new cryptographic primitives. Each delegation certificate is ~128 bytes
+- **Graceful degradation**: If all admins go offline, the group continues functioning with its current key. No key rotation or membership changes occur until at least one admin returns
 
 ## Bandwidth on LoRa
 

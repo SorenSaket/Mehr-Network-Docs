@@ -42,19 +42,28 @@ A relay handling 10 packets/minute triggers a channel update approximately once 
 
 ### Adaptive Difficulty
 
-The win probability adjusts based on traffic volume:
+The win probability adjusts based on traffic volume. Each relay computes its own difficulty locally based on its observed traffic rate — no global synchronization needed:
 
 ```
 Difficulty adjustment:
-  High-traffic links (>100 packets/min):   1/1000 probability, larger rewards
-  Medium-traffic links (10-100 packets/min): 1/100 probability
-  Low-traffic links (<10 packets/min):     1/10 probability, smaller rewards
+  target_updates_per_minute = 0.1  (one channel update per ~10 minutes)
+  observed_packets_per_minute = trailing 5-minute moving average
 
-  Adjusted so channel updates happen roughly every 5-15 minutes
-  regardless of traffic level.
+  win_probability = target_updates_per_minute / observed_packets_per_minute
+  win_probability = clamp(win_probability, 1/10000, 1/5)  // bounds
+
+  difficulty_target = MAX_VRF_OUTPUT × win_probability
+
+Traffic tiers (approximate):
+  High-traffic links (>100 packets/min):   ~1/1000 probability, larger rewards
+  Medium-traffic links (10-100 packets/min): ~1/100 probability
+  Low-traffic links (<10 packets/min):     ~1/10 probability, smaller rewards
+
+  Reward on win = per_packet_cost × (1 / win_probability)
+  Expected value per packet = per_packet_cost (always, regardless of difficulty)
 ```
 
-Low-traffic links use higher win probability to reduce variance — a relay handling only a few packets per hour will still receive rewards regularly.
+Low-traffic links use higher win probability to reduce variance — a relay handling only a few packets per hour will still receive rewards regularly. The difficulty is computed independently by each relay per-link, so different links on the same node may have different difficulties.
 
 ## Bilateral Payment Channels
 
@@ -82,11 +91,38 @@ ChannelState {
 
 ### Channel Lifecycle
 
-1. **Open**: Both parties agree on initial balances. Both sign the opening state.
-2. **Update**: On each lottery win, the balance shifts by the reward amount. Channel updates are infrequent — only triggered by wins.
-3. **Settle**: Either party can request settlement. Both sign a `SettlementRecord` that is gossiped to the network and applied to the [CRDT ledger](crdt-ledger).
+1. **Open**: Both parties agree on initial balances. Both sign the opening state (`sequence = 0`).
+2. **Update**: On each lottery win, the balance shifts by the reward amount and `sequence` increments by 1. Both parties sign the updated state. Channel updates are infrequent — only triggered by wins.
+3. **Settle**: Either party can request settlement. Both sign a `SettlementRecord` whose `final_sequence` matches the current channel `sequence`. The record is gossiped to the network and applied to the [CRDT ledger](crdt-ledger). The channel remains open after settlement — subsequent lottery wins continue from the settled point.
 4. **Dispute**: If one party submits an old state, the counterparty can submit a higher-sequence state within a **2,880 gossip round challenge window** (~48 hours at 60-second rounds). The higher sequence always wins.
 5. **Abandonment**: If a channel has no updates for **4 epochs**, either party can unilaterally close with the last mutually-signed state. This prevents permanent fund lockup.
+
+### Settlement Timing
+
+Lottery wins accumulate as local channel state updates (balance shifts + sequence increments). Settlements to the CRDT ledger are **not** created per-win — they are created when either party decides to finalize:
+
+```
+Settlement triggers:
+  - Either party requests cooperative settlement
+  - Channel dispute (one party publishes an old state)
+  - Channel abandonment (4 epochs of inactivity)
+  - Periodic finalization (recommended: once per epoch)
+
+Between settlements, interim balances are NOT gossiped.
+Only the two parties track the current ChannelState locally.
+```
+
+This preserves the stochastic lottery's bandwidth savings: a relay handling 10 packets/minute triggers ~6 local channel updates per hour, but settlements to the CRDT ledger happen much less frequently.
+
+### Sequence Number Semantics
+
+The `sequence` field is a monotonically increasing version number:
+
+- Each update increments `sequence` by 1; both parties must sign the same sequence
+- A `SettlementRecord` references `final_sequence` — the sequence of the state being settled
+- After settlement, the channel continues with `sequence > final_sequence`
+- Dispute resolution: higher `sequence` always wins, regardless of settlement history
+- Replay protection: the CRDT ledger rejects settlements where `final_sequence` is not greater than the last settled sequence for the same `channel_id`
 
 ## Multi-Hop Payment
 

@@ -38,19 +38,74 @@ NXS-Byte explicitly **does not** support:
 
 All execution is **pure deterministic computation**. Given the same inputs, any node running the same contract produces the same output. This is what makes [verification](../marketplace/verification) possible.
 
+### Opcode Set (47 Opcodes)
+
+| Category | Opcodes | Cycle Cost | Description |
+|----------|---------|-----------|-------------|
+| **Stack** (6) | PUSH, POP, DUP, SWAP, OVER, ROT | 1 | Stack manipulation |
+| **Arithmetic** (9) | ADD, SUB, MUL, DIV, MOD, NEG, ABS, MIN, MAX | 1–3 | 64-bit integer, overflow traps |
+| **Bitwise** (6) | AND, OR, XOR, NOT, SHL, SHR | 1 | Bitwise operations |
+| **Comparison** (6) | EQ, NEQ, LT, GT, LTE, GTE | 1 | Pushes 0 or 1 |
+| **Control** (7) | JMP, JZ, JNZ, CALL, RET, HALT, ABORT | 2–5 | Bounded control flow |
+| **Crypto** (3) | HASH, VERIFY_SIG, VERIFY_VRF | 500–2000 | Blake3, Ed25519, ECVRF |
+| **System** (10) | BALANCE, SENDER, SELF, EPOCH, TRANSFER, LOG, LOAD, STORE, MSIZE, EMIT | 2–50 | State access and side effects |
+
+**Cycle cost model**: The base unit is 1 cycle ≈ 1 μs on ESP32 (the reference platform). Faster hardware executes more cycles per wall-clock second but charges the same cycle cost per opcode. Gas price in μNXS/cycle is set by each compute provider in their capability advertisement.
+
+**Specification approach**: The reference interpreter (in Rust) serves as the authoritative specification. A comprehensive test vector suite ensures cross-platform conformance. Formal specification (Yellow Paper-style) is deferred until the opcode set stabilizes through real-world usage.
+
 ## WASM: Full Execution
 
-Gateway nodes and more capable hardware can offer full WASM (WebAssembly) execution as an additional compute capability. A contract declares whether it needs WASM or can run on NXS-Byte.
+Gateway nodes and more capable hardware can offer full WASM (WebAssembly) execution as an additional compute capability. A contract declares its WASM requirement tier:
 
 ```
 Contract execution path:
-  1. Contract specifies: requires_wasm: false
+  1. Contract specifies: wasm_tier: None
      → Can run on any node with NXS-Byte interpreter (~50 KB)
 
-  2. Contract specifies: requires_wasm: true
-     → Requires a node with WASM runtime
+  2. Contract specifies: wasm_tier: Light
+     → Requires Community-tier or above (Pi Zero 2W+)
+     → 16 MB memory limit, 10^8 fuel limit, 5 second wall-clock
+
+  3. Contract specifies: wasm_tier: Full
+     → Requires Gateway-tier or above (Pi 4/5+)
+     → 256 MB memory limit, 10^10 fuel limit, 30 second wall-clock
      → Delegated via capability marketplace if local node can't execute
 ```
+
+### WASM Sandbox
+
+The WASM execution environment uses **Wasmtime** (Bytecode Alliance, Rust-native) as the reference runtime. Wasmtime provides AOT compilation on Gateway+ nodes, fuel-based execution metering that maps to NXS-Byte cycle accounting, and configurable memory limits per contract.
+
+```
+WasmSandbox {
+    runtime: Wasmtime,
+    max_memory: u32,             // from contract's max_memory field
+    max_fuel: u64,               // from contract's max_cycles (1 fuel ≈ 1 NXS-Byte cycle)
+    max_wall_time_ms: u32,       // 5,000 (Light) or 30,000 (Full)
+}
+```
+
+**Host imports**: WASM contracts call back into the NEXUS system through a restricted host API mirroring the NXS-Byte System opcodes:
+
+| Host Function | NXS-Byte Equivalent | Fuel Cost |
+|--------------|---------------------|-----------|
+| `nexus_balance(node_id) → u64` | BALANCE | 10 |
+| `nexus_sender() → [u8; 16]` | SENDER | 2 |
+| `nexus_self() → [u8; 16]` | SELF | 2 |
+| `nexus_epoch() → u64` | EPOCH | 5 |
+| `nexus_transfer(to, amount) → bool` | TRANSFER | 50 |
+| `nexus_log(data)` | LOG | 10 |
+| `nexus_store_load(key) → Vec<u8>` | LOAD | 3 |
+| `nexus_store_save(key, value)` | STORE | 3 |
+| `nexus_hash(data) → [u8; 32]` | HASH | 500 |
+| `nexus_verify_sig(pubkey, msg, sig) → bool` | VERIFY_SIG | 1000 |
+
+No other host imports are available. WASM contracts cannot access the filesystem, network, clock, or random number generator — all execution remains pure and deterministic.
+
+### Light WASM (Community Tier)
+
+Community-tier devices (Pi Zero 2W, 512 MB RAM) support a restricted WASM profile: 16 MB max memory, 10^8 max fuel, 5-second wall-clock limit, interpreted via Cranelift baseline (no AOT). Contracts exceeding Light WASM limits are automatically delegated to a more capable node via [compute delegation](#compute-delegation).
 
 ## Compute Delegation
 

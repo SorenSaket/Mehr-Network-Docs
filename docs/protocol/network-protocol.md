@@ -147,7 +147,20 @@ score(neighbor) = α · norm_ring_distance(neighbor, destination)
                 + γ · norm_worst_latency(neighbor)
 ```
 
-Where `norm_*` normalizes each metric to `[0, 1]` across the candidate set. The weights α, β, γ are derived from the per-packet `PathPolicy`:
+Where `norm_*` normalizes each metric to `[0, 1]` across the candidate set. Normalization is performed on **decoded** values (not the log-encoded wire representation):
+
+```
+Decoding (for normalization):
+  decoded_cost = (2 ^ (encoded / 16.0)) - 1    // inverse of log₂ encoding
+  decoded_bw   = 2 ^ (encoded / 8.0)           // inverse of bandwidth encoding
+
+  norm_cumulative_cost = decoded_cost(neighbor) / max_decoded_cost_in_candidate_set
+  norm_worst_latency   = neighbor.worst_latency_ms / max_latency_in_candidate_set
+```
+
+This preserves the true cost ratios. Log-encoded values compress dynamic range for wire efficiency but must not be used directly in scoring — otherwise a 1000x cost difference would appear as only ~2x.
+
+The weights α, β, γ are derived from the per-packet `PathPolicy`:
 
 ```
 PathPolicy: enum {
@@ -185,6 +198,25 @@ Path discovery works via announcements:
 2. The announcement propagates through the mesh via greedy forwarding, with each relay updating the [CompactPathCost](#nexus-extension-compact-path-cost) running totals in-place (no per-relay signatures — link-layer authentication is sufficient)
 3. Receiving nodes record the path (or multiple paths) and select based on the scoring function above
 4. Multiple paths are retained and scored — the best path per policy is used, with fallback to alternatives on failure
+
+### Announce Propagation Rules
+
+Announces are **event-driven with periodic refresh**, not purely periodic:
+
+```
+Announce triggers:
+  - First boot / new identity: immediate announce
+  - Interface change: announce on new interface within 1 gossip round
+  - Cost change > 25%: re-announce with updated CompactPathCost
+  - Periodic refresh: every 30 minutes (1,800 seconds)
+  - Forced refresh: on peer request (pull-based for constrained links)
+```
+
+**Hop limit**: Announces carry a `max_hops` field (u8, default 128). Each relay decrements by 1; announces at 0 are not forwarded. This prevents unbounded propagation in large meshes while ensuring O(log² N) reachability.
+
+**Expiry**: Routing entries expire at `last_updated + announce_interval × 3` (default 90 minutes). If no refresh is received, the entry is marked stale (still usable at lower priority) for one additional interval, then evicted. On memory pressure, LRU eviction removes the least-recently-used stale entries first, then lowest-reliability active entries.
+
+**Link failure detection**: If a direct neighbor misses 3 consecutive gossip rounds (3 minutes) without response, the link is marked down. All routing entries using that neighbor as next-hop are immediately marked stale (not deleted — the neighbor may return). After 10 missed rounds, entries are evicted.
 
 ## Gossip Protocol
 

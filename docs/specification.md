@@ -3,6 +3,10 @@ sidebar_position: 100
 title: Full Specification
 ---
 
+import DownloadButton from '@site/src/components/DownloadButton';
+
+<DownloadButton />
+
 # NEXUS Protocol Specification v1.0
 
 This page is the normative reference for the NEXUS protocol. Individual documentation pages provide detailed explanations; this page summarizes the protocol constants, wire formats, and layer dependencies in one place.
@@ -87,6 +91,20 @@ Layer 0: Physical Transport
 ```
 
 Each layer depends **only** on the layer directly below it. Applications never touch transport details. Payment never touches routing internals.
+
+## Serialization Rules
+
+All NEXUS wire formats use the following conventions:
+
+| Rule | Value |
+|------|-------|
+| **Byte order** | Little-endian for all multi-byte integers (u16, u32, u64, i64) |
+| **Encoding** | Fixed-size binary fields; no self-describing framing (not CBOR, not JSON) |
+| **TLV extensions** | Type (u8), Length (u8, max 255), Data (variable). Used in NexusExtension only |
+| **Strings** | UTF-8, length-prefixed with u16 (community labels, function IDs) |
+| **Hashes** | Raw bytes, no hex encoding on the wire |
+| **Signatures** | Raw 64-byte Ed25519 signatures, no ASN.1/DER wrapping |
+| **Normalized scores** | Computed on **decoded** values, then divided by the max decoded value in the candidate set. Result is IEEE 754 f32 on nodes that support FP; 16-bit fixed-point (Q0.16, value × 65535) on constrained nodes. Both yield equivalent routing decisions within rounding tolerance |
 
 ## Wire Format Summary
 

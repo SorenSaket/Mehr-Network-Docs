@@ -18,7 +18,7 @@ NEXUS assumes the worst:
 
 NEXUS does **not** attempt to defend against:
 
-- **Global traffic analysis**: A sufficiently powerful adversary monitoring all links simultaneously can correlate traffic patterns. Onion routing (future work) can mitigate this.
+- **Global traffic analysis**: A sufficiently powerful adversary monitoring all links simultaneously can correlate traffic patterns. [Opt-in onion routing](#onion-routing-opt-in) mitigates this for individual packets but does not defeat a global adversary.
 - **Physical compromise**: If an adversary physically captures a node, they obtain its private key and all local state.
 
 ## Encryption Model
@@ -33,9 +33,16 @@ Link establishment:
   2. Both derive shared_secret = X25519(my_ephemeral, their_ephemeral)
   3. session_key = Blake2b(shared_secret || alice_pub || bob_pub)
   4. All traffic on this link encrypted with ChaCha20-Poly1305(session_key)
-  5. Keys rotated periodically (every 1 hour or max(1 MB, bandwidth_bps × 60s),
-     whichever first — this scales the data threshold to ~1 minute of link
-     capacity, preventing excessive rotation on fast links)
+     Nonce: 64-bit counter (zero-padded to 96 bits), incremented per packet
+     Counter is per session_key — reset to 0 on each key rotation
+     No nonce reuse risk: key rotation occurs well before 2^64 packets
+  5. Keys rotated periodically (every 1 hour of local monotonic time, or
+     max(1 MB, bandwidth_bps × 60s) of data, whichever first — this scales
+     the data threshold to ~1 minute of link capacity, preventing excessive
+     rotation on fast links). "1 hour" is measured by each node's local
+     monotonic clock independently — no synchronization needed. Either side
+     of the link can initiate rotation; the peer accepts and derives a new
+     session key via fresh ephemeral key exchange
 ```
 
 This prevents passive observers from reading packet contents or metadata beyond the cleartext header fields needed for routing.
@@ -85,10 +92,32 @@ Destination hashes are pseudonymous. A hash is not linked to a real-world identi
 
 ### Traffic Analysis Resistance
 
-Basic protections include:
+Basic protections (always active):
 - Link-layer encryption prevents content inspection
 - Variable-rate padding on LoRa links obscures traffic patterns
-- Full traffic analysis resistance (onion routing) is deferred to future work
+- No source address in packet headers
+
+### Onion Routing (Opt-In)
+
+For high-threat environments where an adversary monitors multiple links simultaneously, per-packet layered encryption is available as an opt-in privacy upgrade via `PathPolicy.ONION_ROUTE`:
+
+```
+Onion-routed packet (3-hop default):
+  1. Sender selects 3 intermediate relays (at least 1 outside trust neighborhood)
+  2. Wraps message in 3 encryption layers (outermost = first relay)
+  3. Each layer: 16-byte nonce + 16-byte Poly1305 tag = 32 bytes overhead
+  4. Each relay decrypts one layer, reads next-hop destination, forwards
+  5. Final relay decrypts innermost layer and delivers to destination
+
+Overhead: 32 bytes × 3 hops = 96 bytes
+Usable payload on LoRa (465 max): 369 bytes (~79% efficiency)
+```
+
+Key properties:
+- **Stateless**: No circuit establishment, no relay-side state. Each packet is independently routable
+- **Opt-in**: Enabled per-packet via `PathPolicy.ONION_ROUTE` with configurable hop count (default 3)
+- **Cover traffic**: Optional constant-rate dummy packets (1/minute, off by default) for timing analysis resistance on high-threat links
+- **Not for voice**: The payload overhead and additional latency make onion routing unsuitable for real-time voice. Recommended for text messaging in high-threat scenarios
 
 ### Key Rotation
 
@@ -136,8 +165,12 @@ On agreement completion:
   if failed:
     score -= score / 10              // 10% penalty per failure — fast to lose
 
-New nodes start at score = 0. A node with zero interactions
-has zero reputation — not negative, just unknown.
+Initialization:
+  - New peer (no interactions, no referral): score = 0 (unknown)
+  - New peer with trusted referral: score = min(5000, referrer_score × 0.3)
+  - Referral → first-hand transition: after 5 successful interactions,
+    first-hand score fully replaces the referral score
+  - Referral expiry: 500 gossip rounds (~8 hours) without refresh
 ```
 
 ### How Reputation Is Used
@@ -150,9 +183,19 @@ has zero reputation — not negative, just unknown.
 ### Properties
 
 - **Local only**: Each node computes its own reputation scores. No gossip of reputation values — this prevents reputation manipulation by flooding the network with fake endorsements
-- **First-hand only**: Scores are based on direct interactions, not hearsay. A node trusts its own experience, not claims from third parties
-- **Trust-weighted referrals**: When a node has no direct experience with a peer, it can query trusted neighbors for their scores. The response is informational — the querying node applies its own weighting based on how much it trusts the referrer
+- **First-hand primary**: Scores are based primarily on direct interactions. First-hand experience always takes precedence over third-party information
 - **No global score**: There is no way to ask "what is node X's reputation?" There is only "what is my experience with node X?" This makes reputation Sybil-resistant — an attacker can't inflate a score without actually providing good service to the scoring node
+
+### Trust-Weighted Referrals
+
+When a node has no direct experience with a peer, it can query trusted neighbors for their first-hand scores. Referrals help new nodes bootstrap but are tightly bounded to limit manipulation:
+
+- **1-hop only**: Only direct trusted peers can provide referrals. No transitive gossip — a referral from a friend-of-a-friend is not accepted. This limits the manipulation surface to corruption of your direct trusted peers
+- **Weight formula**: `referral_weight = trust_score_of_referrer / max_score × 0.3` — even a maximally trusted referrer's opinion carries only 30% of direct experience weight
+- **Capped at 50%**: A referred reputation score cannot exceed 5000 (50% of max). A referral alone cannot make a peer fully trusted — direct interaction is required to reach higher scores
+- **Overwritten by experience**: Referral scores are advisory. After the first few direct interactions, first-hand experience overwrites the referral entirely
+- **Expiry**: Referral scores expire after 500 gossip rounds (~8 hours at 60-second intervals) without refresh from the referrer
+- **Anti-collusion**: Since only 1-hop referrals are accepted and each is capped, a colluding cluster must corrupt your direct trusted peers to manipulate scores — which already breaks the trust model regardless of reputation
 
 ## Key Management
 
@@ -173,6 +216,7 @@ While there is no revocation, a node that detects its key has been compromised c
 KeyCompromiseAdvisory {
     compromised_key: Ed25519PublicKey,
     new_key: Ed25519PublicKey,          // optional migration target
+    sequence: u64,                      // monotonic counter — prevents replay of old advisories
     evidence: enum {
         SignedByBoth(sig_old, sig_new), // proves control of both keys
         SignedByOldOnly(sig_old),       // can only prove old key ownership
@@ -180,6 +224,8 @@ KeyCompromiseAdvisory {
     timestamp: u64,
 }
 ```
+
+The `sequence` field is monotonically increasing per compromised key. Receiving nodes only accept an advisory if its sequence is strictly greater than any previously seen advisory for the same `compromised_key`. This prevents an attacker from replaying an old advisory to override a newer one.
 
 This is **advisory, not authoritative**. Receiving nodes may:
 - Flag the old identity as potentially compromised

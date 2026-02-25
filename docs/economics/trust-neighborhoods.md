@@ -29,6 +29,8 @@ TrustConfig {
 
 **Adding a trusted peer is the only social action in NEXUS.** Everything else — free local communication, community identity, credit lines — emerges from the trust graph.
 
+Trust relationships are **asymmetric and revocable at any time**. Removing a node from `trusted_peers` immediately ends free relay for that node and downgrades any stored data from "trusted peer" to normal priority in the [garbage collection policy](../services/nxs-store#garbage-collection). Cost overrides are unidirectional — they apply to outbound traffic pricing from the configuring node only.
+
 ## How Communities Emerge
 
 When a cluster of nodes all trust each other, a **neighborhood** forms:
