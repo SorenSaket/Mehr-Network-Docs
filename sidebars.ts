@@ -71,6 +71,18 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Interoperability',
+      collapsed: true,
+      items: [
+        'interoperability/overview',
+        'interoperability/meshtastic',
+        'interoperability/reticulum-ecosystem',
+        'interoperability/scuttlebutt',
+        'interoperability/matrix',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Hardware',
       collapsed: true,
       items: [
