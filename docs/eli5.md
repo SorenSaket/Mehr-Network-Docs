@@ -11,9 +11,9 @@ No jargon. No technical details. Just how it works.
 
 When you send a message to your neighbor across the street, it travels like this:
 
-```
-You ──WiFi──▶ Router ──▶ ISP ──▶ Data center ──▶ ISP ──▶ Router ──▶ Neighbor
-                              (maybe another country)
+```mermaid
+graph LR
+    You -->|WiFi| Router1[Router] -->|ISP| ISP1[ISP] -->|route| DC[Data center\nmaybe another country] -->|route| ISP2[ISP] -->|ISP| Router2[Router] -->|WiFi| Neighbor
 ```
 
 Your message travels hundreds of miles to reach someone 50 feet away. You pay a phone company for this. If the company shuts off your service — or a government tells them to — you can't communicate at all.
@@ -22,8 +22,9 @@ Your message travels hundreds of miles to reach someone 50 feet away. You pay a 
 
 Mehr lets devices talk directly:
 
-```
-You ──radio / WiFi──▶ Neighbor
+```mermaid
+graph LR
+    You -->|radio / WiFi| Neighbor
 ```
 
 No phone company. No data center. No monthly bill. Just devices talking.
@@ -32,18 +33,18 @@ No phone company. No data center. No monthly bill. Just devices talking.
 
 One house talking to another is nice, but not very useful by itself. Mehr gets useful when many devices form a chain:
 
-```
-You ──radio──▶ Neighbor ──WiFi──▶ Cafe ──internet──▶ The World
+```mermaid
+graph LR
+    You -->|radio| Neighbor -->|WiFi| Cafe -->|internet| World[The World]
 ```
 
 Each device passes messages along, like a bucket brigade. Your message hops from device to device until it reaches its destination. This chain of devices is called a **mesh**.
 
-```
-                    ┌──▶ School ──▶ Library ──▶ ...
-                    │
-You ──▶ Neighbor ──▶┤
-                    │
-                    └──▶ Cafe ──▶ Gateway ──▶ Internet
+```mermaid
+graph LR
+    You --> Neighbor
+    Neighbor --> School --> Library --> More[...]
+    Neighbor --> Cafe --> Gateway --> Internet
 ```
 
 Messages find the best path automatically. If the cafe goes offline, traffic routes through the school instead. No single point of failure.
@@ -54,33 +55,29 @@ Messages find the best path automatically. If the cafe goes offline, traffic rou
 
 You mark people as "trusted" — like adding a contact. Your devices help each other automatically, at no cost. A neighborhood where everyone trusts each other communicates completely free.
 
+```mermaid
+graph LR
+    You <-->|trust| Neighbor <-->|trust| Friend
 ```
-  [You] ◀──trust──▶ [Neighbor] ◀──trust──▶ [Friend]
 
-  Messages between these three: always free.
-  No tokens. No payments. No overhead.
-```
+> Messages between these three: always free. No tokens. No payments. No overhead.
 
 **Rule 2: Strangers pay a tiny fee.**
 
 If your message passes through a stranger's device, you pay a tiny fee. This is fair — they're using their electricity and bandwidth to help you.
 
-```
-  [You] ──trust──▶ [Neighbor] ──pay──▶ [Stranger] ──pay──▶ [Destination]
-          (free)                (tiny fee)          (tiny fee)
+```mermaid
+graph LR
+    You -->|"trust (free)"| Neighbor -->|"pay (tiny fee)"| Stranger -->|"pay (tiny fee)"| Destination
 ```
 
 **Rule 3: Helping earns you credit.**
 
 Every time your device passes along someone else's message, you earn credit. This credit is called **MHR**. You spend MHR when you use the network. You earn MHR when others use yours.
 
-```
-        ┌──────────────────────────────────────────┐
-        │                                          │
- You help ──▶ Earn MHR ──▶ Spend MHR ──▶ Others help you
- others       (credit)      (credit)               │
-        │                                          │
-        └──────────────────────────────────────────┘
+```mermaid
+graph LR
+    Help[You help others] --> Earn[Earn MHR] --> Spend[Spend MHR] --> Others[Others help you] --> Help
 ```
 
 ## What You Can Do
@@ -100,32 +97,9 @@ Every time your device passes along someone else's message, you earn credit. Thi
 
 Every post has two layers:
 
-```
-┌───────────────────────────────────────────────────┐
-│ FREE PREVIEW (everyone sees this)                 │
-│                                                   │
-│  📰 "Local farmers market this Saturday!"         │
-│  🎵 "New jazz album — Midnight in Portland"       │
-│  📝 "Why the new bike lanes matter"               │
-│  🎮 "VGC meta analysis after the latest patch"    │
-│                                                   │
-│  Headlines, summaries, blurry thumbnails.         │
-│  Browse as much as you want. Zero cost.           │
-└───────────────────────────────────────────────────┘
-                       │
-                 tap to open
-                       │
-                       ▼
-┌───────────────────────────────────────────────────┐
-│ FULL CONTENT (you pay a tiny fee)                 │
-│                                                   │
-│  The actual article, image, song, video.          │
-│  A portion of your fee goes to the author.        │
-│                                                   │
-│  Text post:  ~25 tokens (very cheap)              │
-│  Image post: ~250 tokens (still cheap)            │
-│  Video:      ~1000+ tokens (meaningful but fair)  │
-└───────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    Preview["FREE PREVIEW\nHeadlines, summaries, thumbnails\nBrowse as much as you want — zero cost"] -->|tap to open| Full["FULL CONTENT\nArticle, image, song, or video\nTiny fee goes to the author"]
 ```
 
 **Popular posts pay for themselves.** If enough people read a post, the author earns more than it cost to publish. Posts nobody reads expire naturally — no moderator needed.
@@ -156,28 +130,26 @@ That's the whole point. Mehr works with:
 
 A village with no internet can communicate over radio. Add one satellite dish and the whole village gets internet access through the mesh — shared, at a fraction of the individual cost.
 
+**Traditional model** (everyone pays separately — total: $1,500/month):
+
+```mermaid
+graph LR
+    H1[House 1] -->|$30/month| ISP1[ISP]
+    H2[House 2] -->|$30/month| ISP2[ISP]
+    H3[House 3] -->|$30/month| ISP3[ISP]
+    H50[House 50] -->|$30/month| ISP50[ISP]
 ```
-Traditional model (everyone pays separately):
 
-  House 1 ──▶ ISP subscription ($30/month)
-  House 2 ──▶ ISP subscription ($30/month)
-  House 3 ──▶ ISP subscription ($30/month)
-  ...
-  House 50 ──▶ ISP subscription ($30/month)
+**Mehr model** (shared through the mesh — total: ~$30/month + tiny MHR fees):
 
-  Total: $1,500/month for the neighborhood
-
-
-Mehr model (shared through the mesh):
-
-  House 1 ──radio──▶ House 12 ──WiFi──▶ Gateway ──▶ Internet ($30/month)
-  House 2 ──radio──┘                     │
-  House 3 ──WiFi───────────────────────┘
-
-  Total: ~$30/month + tiny MHR fees
-  Gateway operator earns from the neighborhood.
-  Everyone else saves 75%+.
+```mermaid
+graph LR
+    H1[House 1] -->|radio| H12[House 12] -->|WiFi| GW[Gateway] -->|"$30/month"| Internet
+    H2[House 2] -->|radio| H12
+    H3[House 3] -->|WiFi| GW
 ```
+
+> Gateway operator earns from the neighborhood. Everyone else saves 75%+.
 
 ## Who Controls It?
 
@@ -190,17 +162,18 @@ Nobody. There is no company behind Mehr. No server to shut down. No account to b
 
 ## The Big Picture
 
+**Traditional internet:**
+
+```mermaid
+graph LR
+    Everyone1[Everyone] -->|pays| BigCo[Big companies\ncontrol everything] -->|provide| Service
 ```
-Traditional internet:
 
-  Everyone ──pays──▶ Big companies ──provide──▶ Service
-                    (companies control everything)
+**Mehr:**
 
-
-Mehr:
-
-  Everyone ◀──helps──▶ Everyone
-  (nobody controls anything)
+```mermaid
+graph LR
+    E1[Everyone] <-->|helps| E2[Everyone]
 ```
 
 ## Want to Learn More?

@@ -78,33 +78,15 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 
 ## Layer Dependency Graph
 
-```
-Layer 6: Applications
-  ├── Messaging, Social, Identity, Voice, Naming, Voting, Licensing, Cloud Storage, Roaming, Forums, Hosting
-  └── depends on ↓
-
-Layer 5: Service Primitives
-  ├── MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute
-  └── depends on ↓
-
-Layer 4: Capability Marketplace
-  ├── Discovery, Agreements, Verification
-  └── depends on ↓
-
-Layer 3: Economic Protocol
-  ├── MHR Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods, Propagation
-  └── depends on ↓
-
-Layer 2: Security
-  ├── Link encryption, E2E encryption, Authentication, Key management
-  └── depends on ↓
-
-Layer 1: Network Protocol
-  ├── Identity, Addressing, Routing, Gossip, Congestion Control
-  └── depends on ↓
-
-Layer 0: Physical Transport
-  └── LoRa, WiFi, Cellular, LTE-M, NB-IoT, Ethernet, BLE, Fiber, Serial
+```mermaid
+graph TD
+    L6["Layer 6: Applications<br/>Messaging, Social, Identity, Voice, Naming, Voting, Licensing, Cloud Storage, Roaming, Forums, Hosting"] --> L5
+    L5["Layer 5: Service Primitives<br/>MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute"] --> L4
+    L4["Layer 4: Capability Marketplace<br/>Discovery, Agreements, Verification"] --> L3
+    L3["Layer 3: Economic Protocol<br/>MHR Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods, Propagation"] --> L2
+    L2["Layer 2: Security<br/>Link encryption, E2E encryption, Authentication, Key management"] --> L1
+    L1["Layer 1: Network Protocol<br/>Identity, Addressing, Routing, Gossip, Congestion Control"] --> L0
+    L0["Layer 0: Physical Transport<br/>LoRa, WiFi, Cellular, LTE-M, NB-IoT, Ethernet, BLE, Fiber, Serial"]
 ```
 
 Each layer depends **only** on the layer directly below it. Applications never touch transport details. Payment never touches routing internals.
@@ -173,14 +155,12 @@ Total: 200 bytes
 | 11. Protocol Versioning | [Versioning](development/versioning) |
 | 12. Open Questions | [Open Questions](development/open-questions) |
 
-## Version History
+## Version
 
-| Version | Status | Description |
-|---------|--------|-------------|
-| v0.1-v0.5 | Superseded | Early design iterations |
-| v0.8 | Superseded | Introduced explicit community zones (later replaced by trust neighborhoods) |
-| **v1.0** | **Current** | Consolidated specification — Reticulum foundation, stochastic relay rewards, emergent trust neighborhoods |
+| Version | Status |
+|---------|--------|
+| **v1.0** | **Current** |
 
 ---
 
-*This specification consolidates design work from v0.1 through v1.0. The foundation — Reticulum-based transport, cryptographic identity, Kleinberg small-world routing, stochastic relay rewards, CRDT settlement, epoch compaction, emergent trust neighborhoods, and the capability marketplace — is the protocol. Everything above it — storage, compute, pub/sub, naming, and applications — are services built on that foundation.*
+*The foundation — Reticulum-based transport, cryptographic identity, Kleinberg small-world routing, stochastic relay rewards, CRDT settlement, epoch compaction, emergent trust neighborhoods, and the capability marketplace — is the protocol. Everything above it — storage, compute, pub/sub, naming, and applications — are services built on that foundation.*

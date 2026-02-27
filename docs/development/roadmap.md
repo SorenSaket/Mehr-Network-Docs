@@ -7,21 +7,14 @@ title: Roadmap
 
 The Mehr implementation follows a **server-first** strategy: get the protocol running on well-connected Linux servers over traditional internet, prove the core services work, then extend to phones and mesh radio. The protocol spec is comprehensive because it needs to be — but implementation is ruthlessly phased. Each phase delivers something people can use, not just something that passes tests.
 
-```
-                    Implementation Strategy
+```mermaid
+graph LR
+    P1["<b>Phase 1: Linux Server Node (MVP)</b><br/>TCP/IP transport<br/>Storage + DHT<br/>Trust graph<br/>Free tier only<br/><i>Users: server operators</i>"]
+    P2["<b>Phase 2: Economics + Social</b><br/>Payment channels<br/>VRF lottery<br/>CRDT ledger<br/>Social feeds<br/><i>Users: economy bootstraps</i>"]
+    P3["<b>Phase 3: Mobile + Mesh</b><br/>Phone apps<br/>LoRa relay nodes<br/>WiFi/BLE mesh<br/>Gateway operators<br/><i>Users: mobile communities</i>"]
+    P4["<b>Phase 4: Full Ecosystem</b><br/>Advanced compute<br/>Licensing<br/>Onion routing<br/>Protocol bridges<br/><i>Users: mature ecosystem</i>"]
 
-  Phase 1          Phase 2           Phase 3           Phase 4
-  ─────────        ─────────         ─────────         ─────────
-  LINUX SERVER     ECONOMICS +       MOBILE +          FULL
-  NODE (MVP)       SOCIAL            MESH               ECOSYSTEM
-
-  TCP/IP transport Payment channels  Phone apps         Advanced compute
-  Storage + DHT    VRF lottery       LoRa relay nodes   Licensing
-  Trust graph      CRDT ledger       WiFi/BLE mesh      Onion routing
-  Free tier only   Social feeds      Gateway operators   Protocol bridges
-
-  Users: server    Users: economy    Users: mobile      Users: mature
-  operators        bootstraps        communities        ecosystem
+    P1 --> P2 --> P3 --> P4
 ```
 
 **Principle**: Start where the resources are. Servers have bandwidth, uptime, storage, and compute. Debug the protocol on reliable hardware over reliable links, then extend to constrained devices and radio. The free tier (trusted peer communication) is a complete product on its own. MHR tokens, economics, and advanced features come only after there are real nodes generating real traffic. Token follows utility, never leads it.
@@ -46,13 +39,13 @@ The Mehr implementation follows a **server-first** strategy: get the protocol ru
 
 ### Milestone 1.2: Bootstrap + Peer Discovery
 
-- Hardcoded bootstrap node list (known IP:port pairs for initial connection)
+- DNS-based genesis gateway discovery (well-known domain resolves to genesis gateway IPs — primary bootstrap method)
+- Hardcoded bootstrap node list as fallback (known IP:port pairs, including genesis gateway addresses)
 - Peer exchange protocol (connected peers share their known peer lists)
-- Optional DNS-based bootstrap (resolve a well-known domain to current bootstrap IPs)
 - Outbound-only NAT traversal (nodes behind NAT connect outbound to bootstrap nodes; TCP connection is bidirectional once established)
 - Peer persistence (remember previously connected peers across restarts)
 
-**Acceptance**: A new node with only the bootstrap list connects to the network within 30 seconds. After 3 gossip rounds, the node has discovered peers beyond the bootstrap list. A node behind NAT connects outbound and participates fully as a relay. Restarting a node reconnects to previously known peers without hitting the bootstrap list.
+**Acceptance**: A new node discovers the genesis gateway via DNS and connects to the network within 30 seconds. After 3 gossip rounds, the node has discovered peers beyond the genesis gateway. Fallback to hardcoded list works when DNS is unavailable. A node behind NAT connects outbound and participates fully as a relay. Restarting a node reconnects to previously known peers without hitting the bootstrap list.
 
 ### Milestone 1.3: Routing + Gossip
 
@@ -146,15 +139,18 @@ The Mehr implementation follows a **server-first** strategy: get the protocol ru
 
 **Acceptance**: A 20-node network triggers epochs correctly. Balances converge across the network. GCounter rebase keeps counters bounded.
 
-### Milestone 2.3: Token Genesis + Proof-of-Service Mining
+### Milestone 2.3: Token Genesis + Demand-Backed Mining
 
 - Emission schedule implementation (10^12 μMHR/epoch, halving every 100,000 epochs, shift clamp at 63)
 - Tail emission floor (0.1% of circulating supply annually)
-- `RelayWinSummary` aggregation per epoch
+- Genesis allocation to genesis gateway operator (transparent, visible in ledger from epoch 0)
+- Demand-backed minting eligibility (VRF wins count only on funded-channel traffic)
+- Revenue-capped minting (`effective_minting = min(emission_schedule, 0.5 × total_channel_debits)`)
+- `RelayWinSummary` aggregation per epoch (demand-backed wins only)
 - Mint distribution proportional to verified VRF lottery wins
 - Channel-funded relay payments (coexist with minting)
 
-**Acceptance**: The first epoch mints MHR and distributes it to relay nodes. Distribution is proportional to wins. Minting and channel payments coexist. Token supply follows the emission schedule.
+**Acceptance**: The first epoch mints MHR and distributes it to relay nodes. Genesis allocation is visible in the ledger. Distribution is proportional to demand-backed wins. Minting on unfunded-channel traffic is rejected. Revenue cap limits minting to 50% of channel debits. Minting and channel payments coexist. Token supply follows the emission schedule.
 
 ### Milestone 2.4: Reputation + Credit
 
@@ -266,6 +262,8 @@ The Mehr implementation follows a **server-first** strategy: get the protocol ru
 - Fiat billing integration (subscription, prepaid, pay-as-you-go — gateway's choice)
 - Cloud storage via gateway (consumer stores files, gateway handles MHR)
 - Gateway-provided connectivity (ethernet ports, WiFi access points)
+
+The [genesis service gateway](../economics/mhr-token#genesis-service-gateway) is the first instance of this pattern — it bootstraps the economy in Phase 2. This milestone generalizes gateway mechanics for any operator to deploy.
 
 **Acceptance**: A consumer signs up with a gateway, pays fiat, and uses the network without seeing MHR. Traffic flows through gateway trust. Consumer can switch gateways without losing identity.
 

@@ -11,17 +11,37 @@ Mehr doesn't exist in a vacuum. It interacts with the existing internet economy 
 
 Consider a typical apartment building in Denmark:
 
-```
-Current model:
-  50 apartments × 200 kr/month = 10,000 kr/month to ISPs
-  Average utilization per connection: <5%
-  Each apartment has its own router, its own subscription, its own bill
+```mermaid
+graph TD
+    subgraph current["Current Model"]
+        ISP1["ISPs"]
+        A1["Apt 1\n200 kr/month"]
+        A2["Apt 2\n200 kr/month"]
+        A3["..."]
+        A50["Apt 50\n200 kr/month"]
+        ISP1 -->|"own router,\nown subscription"| A1
+        ISP1 --> A2
+        ISP1 --> A3
+        ISP1 --> A50
+        TOTAL1["50 × 200 kr = 10,000 kr/month\nUtilization per connection: < 5%"]
+    end
 
-Mehr model:
-  2-3 gateway nodes with internet subscriptions = 400-600 kr/month to ISPs
-  Gateway nodes share internet via WiFi mesh to all 50 apartments
-  Other 47 apartments pay gateway operators in MHR
-  ISP revenue from building: drops ~94%
+    subgraph mehr["Mehr Model"]
+        ISP2["ISPs"]
+        GW1["Gateway Node 1\n200 kr/month"]
+        GW2["Gateway Node 2\n200 kr/month"]
+        R1["Apt 1\npays MHR"]
+        R2["Apt 2\npays MHR"]
+        R3["..."]
+        R47["Apt 47\npays MHR"]
+        ISP2 --> GW1
+        ISP2 --> GW2
+        GW1 -->|"WiFi mesh"| R1
+        GW1 --> R2
+        GW2 --> R3
+        GW2 --> R47
+        TOTAL2["2-3 gateways = 400-600 kr/month\nISP revenue drops ~94%"]
+    end
 ```
 
 ### Why This Works

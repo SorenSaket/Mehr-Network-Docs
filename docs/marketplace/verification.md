@@ -23,6 +23,8 @@ Bob proves: "I forwarded to Carol, here's the chain"
 
 A relay node can only earn routing fees by actually delivering packets to their destination.
 
+**Note**: Delivery receipts prove that packets were delivered, not that the traffic represents legitimate demand. A Sybil attacker can fabricate traffic between colluding nodes and produce valid delivery receipts. The economic defense against this is [demand-backed minting](../economics/payment-channels#demand-backed-minting-eligibility) — VRF wins only count for minting if the packet traversed a funded payment channel, and [revenue-capped minting](../economics/payment-channels#revenue-capped-minting) ensures self-dealing is always unprofitable.
+
 ## Storage Verification
 
 **Method**: Merkle-proof challenge-response (see [MHR-Store](../services/mhr-store#proof-of-storage) for full details)

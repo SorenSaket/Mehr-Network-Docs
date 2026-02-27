@@ -9,24 +9,36 @@ Mehr provides **decentralized file storage** — like Dropbox or iCloud, but bac
 
 ## Overview
 
+```mermaid
+graph LR
+    subgraph Devices["Your Devices"]
+        Phone
+        Laptop
+        Tablet
+    end
+
+    subgraph Storage["Mesh Storage Nodes"]
+        A["Node A<br/>(stores chunks 1-3)"]
+        B["Node B<br/>(stores chunks 2-5)"]
+        C["Node C<br/>(stores chunks 4-6)"]
+    end
+
+    Phone -->|"encrypted chunks<br/>via MHR-Store"| A
+    Phone -->|"encrypted chunks<br/>via MHR-Store"| B
+    Laptop -->|"encrypted chunks<br/>via MHR-Store"| A
+    Laptop -->|"encrypted chunks<br/>via MHR-Store"| B
+    Laptop -->|"encrypted chunks<br/>via MHR-Store"| C
+    Tablet -->|"encrypted chunks<br/>via MHR-Store"| B
+    Tablet -->|"encrypted chunks<br/>via MHR-Store"| C
+
+    Storage -.->|"Replication factor: 3<br/>any 2 of 3 nodes can reconstruct"| Storage
 ```
-                       Cloud Storage Architecture
 
-  YOUR DEVICES                    MESH STORAGE NODES
-  ────────────                    ──────────────────
-  Phone  ─┐                      ┌── [Node A] (stores chunks 1-3)
-           │   encrypted          │
-  Laptop ──┼── chunks ──────────▶├── [Node B] (stores chunks 2-5)
-           │   via MHR-Store      │
-  Tablet ──┘                      └── [Node C] (stores chunks 4-6)
-                                       │
-                                  Replication factor: 3
-                                  → any 2 of 3 nodes can reconstruct
+```mermaid
+graph LR
+    F1[File] --> E1[Encrypt] --> Ch1[Chunk] --> EC1[Erasure Code] --> St1[Store on N Nodes]
 
-  ┌──────────────────────────────────────────────────────────────┐
-  │  File → encrypt → chunk → erasure code → store on N nodes   │
-  │  Retrieve: fetch chunks → reconstruct → decrypt → file      │
-  └──────────────────────────────────────────────────────────────┘
+    F2[Fetch Chunks] --> R2[Reconstruct] --> D2[Decrypt] --> Fi2[File]
 ```
 
 ## How It Works
@@ -214,7 +226,7 @@ StorageConfig {
 
 ## Gateway-Operated Cloud Storage
 
-[Gateway operators](../economics/mhr-token#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — consumers upload files through the gateway's app, the gateway handles MHR storage agreements on their behalf, and the consumer pays a monthly fiat subscription.
+The [genesis service gateway](../economics/mhr-token#genesis-service-gateway) is the first operator to offer fiat-priced cloud storage, providing the initial market benchmark for storage pricing. Any [gateway operator](../economics/mhr-token#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — consumers upload files through the gateway's app, the gateway handles MHR storage agreements on their behalf, and the consumer pays a monthly fiat subscription.
 
 ```
 Gateway cloud storage:

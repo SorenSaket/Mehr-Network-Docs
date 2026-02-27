@@ -5,7 +5,7 @@ title: "Layer 2: Security"
 
 # Layer 2: Security
 
-Security in Mehr is structural, not bolted on. Every layer of the protocol incorporates cryptographic protections. There is no trusted infrastructure — no certificate authorities, no trusted servers, no DNS.
+Security in Mehr is structural, not bolted on. Every layer of the protocol incorporates cryptographic protections. There is no trusted infrastructure — no certificate authorities, no trusted servers. DNS is used only for initial [genesis gateway discovery](../economics/mhr-token#genesis-gateway-discovery), not for protocol operation.
 
 ## Threat Model
 
@@ -13,7 +13,7 @@ Mehr assumes the worst:
 
 - **Open network**: Any node can join. Nodes may be malicious.
 - **Hostile observers**: All link-layer traffic may be monitored (especially radio).
-- **No trusted infrastructure**: No certificate authorities, no trusted servers, no DNS.
+- **No trusted infrastructure**: No certificate authorities, no trusted servers. DNS is used only for initial genesis gateway discovery, not for protocol operation.
 - **State-level adversaries**: Governments may control internet gateways and operate nodes within the mesh.
 
 Mehr does **not** attempt to defend against:
@@ -132,7 +132,7 @@ An attacker can generate unlimited identities (Sybil attack). Mehr mitigates thi
 1. **Payment channel deposits**: Opening a channel requires visible balance. Sybil nodes with no balance cannot participate in the economy.
 2. **Reputation accumulation**: Reputation is earned through verified service delivery over time. New identities start with zero reputation. Creating many identities dilutes rather than concentrates reputation.
 3. **Trust graph**: A Sybil attacker needs real social relationships to gain trust. Trusted peers [vouch economically](../economics/trust-neighborhoods#trust-based-credit) — they absorb the debts of nodes they trust, making trust costly to extend.
-4. **Proof of service**: Stochastic relay rewards use a [VRF-based lottery](../economics/payment-channels#how-stochastic-rewards-work) that produces exactly one verifiable outcome per (relay, packet) pair. A node can only earn by actually delivering packets, and cannot grind for favorable lottery outcomes.
+4. **Proof of service (demand-backed)**: Stochastic relay rewards use a [VRF-based lottery](../economics/payment-channels#how-stochastic-rewards-work) that produces exactly one verifiable outcome per (relay, packet) pair — preventing grinding. However, VRF alone does not prevent traffic fabrication between colluding nodes. The actual Sybil defense is [demand-backed minting](../economics/payment-channels#demand-backed-minting-eligibility): VRF wins only count for minting if the packet traversed a funded payment channel, and [revenue-capped minting](../economics/payment-channels#revenue-capped-minting) ensures self-dealing is always unprofitable (spending Y MHR on fake traffic yields at most 0.5Y in minting).
 5. **Transitive credit limits**: Even if a Sybil node gains one trust relationship, transitive credit is capped at 10% per hop and rate-limited for new relationships.
 
 ## Reputation

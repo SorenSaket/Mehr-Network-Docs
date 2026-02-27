@@ -13,32 +13,26 @@ Blockchains require global consensus: all nodes must agree on the order of trans
 
 ## Account State
 
-```
-                    CRDT Ledger Overview
+```mermaid
+graph TD
+    subgraph NodeA["Node A"]
+        A_epoch["epoch_bal: 200"]
+        A_earned["Δ earned: 300"]
+        A_spent["Δ spent: 0"]
+        A_balance["balance: 500"]
+    end
 
-   Node A                          Node B
-  ┌─────────────────┐            ┌─────────────────┐
-  │ epoch_bal: 200  │            │ epoch_bal: 200  │
-  │ Δ earned:  300  │            │ Δ earned:  100  │
-  │ Δ spent:    0   │            │ Δ spent:    0   │
-  │ ─────────────── │            │ ─────────────── │
-  │ balance:   500  │            │ balance:   300  │
-  └──────┬──────────┘            └──────┬──────────┘
-         │                              │
-         │    SettlementRecord          │
-         │    (both signatures)         │
-         └──────────┬───────────────────┘
-                    │
-                    ▼  gossiped to network
-         ┌──────────────────────────┐
-         │  Each receiving node     │
-         │  validates & merges      │
-         │                          │
-         │  epoch_balance: frozen   │
-         │  delta GCounters: merge  │
-         │  via pointwise max       │
-         │  (no conflicts ever)     │
-         └──────────────────────────┘
+    subgraph NodeB["Node B"]
+        B_epoch["epoch_bal: 200"]
+        B_earned["Δ earned: 100"]
+        B_spent["Δ spent: 0"]
+        B_balance["balance: 300"]
+    end
+
+    NodeA --> SR["SettlementRecord<br/>(both signatures)"]
+    NodeB --> SR
+    SR --> Gossip["Gossiped to network"]
+    Gossip --> Merge["Each receiving node<br/>validates & merges<br/><br/>epoch_balance: frozen<br/>delta GCounters: merge<br/>via pointwise max<br/>(no conflicts ever)"]
 ```
 
 ```
@@ -145,7 +139,8 @@ Relay minting rewards are computed during epoch finalization. Each relay accumul
 ```
 RelayWinSummary {
     relay_id: NodeID,
-    win_count: u32,                     // number of VRF lottery wins this epoch
+    win_count: u32,                     // number of demand-backed VRF lottery wins this epoch
+                                        // (only wins where packet traversed a funded channel)
     sample_proofs: Vec<VRFProof>,       // subset of proofs (up to 10) for spot-checking
     total_wins_hash: Blake3Hash,        // Blake3 of all win proofs (verifiable if challenged)
 }

@@ -12,7 +12,8 @@ MHR is the unit of account for the Mehr network. It is not a speculative asset �
 ```
 MHR Properties:
   Smallest unit: 1 μMHR (micro-MHR)
-  Initial distribution: Proof-of-service mining only (no ICO, no pre-mine)
+  Initial distribution: Genesis service allocation + demand-backed proof-of-service mining (no ICO)
+  Genesis allocation: Disclosed amount to genesis gateway operator (see Genesis below)
   Supply ceiling: 2^64 μMHR (~18.4 × 10^18 μMHR, asymptotic — never reached)
 ```
 
@@ -69,9 +70,15 @@ Only relay earns minting rewards. Storage and compute earn through bilateral pay
 ```
 Service minting analysis:
 
-  Relay:    ✓ Minting reward (VRF lottery)
-            Every win proves a real packet was forwarded.
-            The VRF is bound to actual packet hashes — unfakeable.
+  Relay:    ✓ Minting reward (VRF lottery, demand-backed)
+            VRF prevents grinding — exactly one output per (relay, packet) pair.
+            But VRF alone does NOT prevent traffic fabrication: a Sybil attacker
+            can fabricate traffic between colluding nodes and run the VRF lottery
+            on fake packets. The actual Sybil defense is demand-backed minting:
+            VRF wins only count for minting if the packet traversed a funded
+            payment channel. Fabricating funded-channel traffic requires spending
+            real MHR, and revenue-capped minting ensures the attacker always
+            loses money (see Revenue-Capped Minting below).
 
   Storage:  ✗ No minting reward
             Storage proofs can be gamed: store your own garbage data,
@@ -96,10 +103,17 @@ Bootstrap sequence by service type:
     ├── Storage: Trusted peers store each other's data for free
     └── Compute: Nodes run their own contracts locally
 
-  Phase 1: RELAY MINTING
-    ├── Non-trusted traffic triggers VRF lottery
-    ├── Relay nodes accumulate MHR through epoch minting
-    └── MHR enters circulation for the first time
+  Phase 0.5: GENESIS SERVICE GATEWAY
+    ├── Genesis gateway receives transparent MHR allocation
+    ├── Gateway offers real services for fiat (relay, storage, compute)
+    ├── Consumer fiat → MHR credit extensions → funded channels
+    └── Real relay demand enters the network for the first time
+
+  Phase 1: DEMAND-BACKED RELAY MINTING
+    ├── Funded-channel traffic triggers VRF lottery
+    ├── VRF wins on funded channels earn minting rewards
+    ├── Revenue-capped minting prevents self-dealing (see below)
+    └── MHR enters circulation backed by real demand
 
   Phase 2: SPENDING
     ├── Relay earners spend MHR on paid storage agreements
@@ -120,23 +134,19 @@ Relay is the right bootstrap mechanism because it's the most universal service �
 
 Mehr has a simple economic model: **free between friends, paid between strangers.**
 
-```
-                          MHR Token Flow
-    ┌─────────────────────────────────────────────────────┐
-    │                                                     │
-    │    TRUST NETWORK (free)    │  PAID ECONOMY (MHR)    │
-    │                            │                        │
-    │   [Alice] ◀──free──▶ [Bob] │──relay──▶ [Carol]      │
-    │      │                     │    │         │         │
-    │    free                    │  lottery    pays       │
-    │      │                     │  win?       relay      │
-    │   [Dave]                   │    │         fee       │
-    │                            │    ▼         │         │
-    │   No tokens.               │  Mint +     ▼         │
-    │   No channels.             │  Channel ──▶ Storage   │
-    │   No overhead.             │  debit      Compute   │
-    │                            │             Content    │
-    └─────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph TRUST["TRUST NETWORK (free)"]
+        Alice["Alice"] <-->|"free"| Bob["Bob"]
+        Alice <-->|"free"| Dave["Dave"]
+    end
+
+    subgraph PAID["PAID ECONOMY (MHR)"]
+        Bob -->|"relay"| Carol["Carol"]
+        Carol -->|"pays relay fee"| Services["Storage\nCompute\nContent"]
+        Bob -->|"lottery win?"| Mint["Mint +\nChannel debit"]
+        Mint --> Services
+    end
 ```
 
 ### Free Tier (Trust-Based)
@@ -161,11 +171,11 @@ The bootstrapping problem — needing MHR to use services, but needing to provid
 - **A local mesh works with zero tokens in circulation**
 - The protocol is fully functional without any MHR — just limited to your trust network
 
-### Proof-of-Service Mining (MHR Genesis)
+### Demand-Backed Proof-of-Service Mining (MHR Genesis)
 
 The [stochastic relay lottery](payment-channels) serves a dual purpose: it determines who earns and how much, while the **funding source** depends on the economic context:
 
-1. **Minting (subsidy)**: Each epoch, the emission schedule determines how much new MHR is minted. This is distributed proportionally to relay nodes based on their accumulated VRF lottery wins during that epoch — proof that they actually forwarded packets. Minting dominates during bootstrap and decays over time per the emission schedule.
+1. **Minting (subsidy, demand-backed)**: Each epoch, the emission schedule determines the minting ceiling. Actual minting is distributed proportionally to relay nodes based on their accumulated VRF lottery wins during that epoch — but only wins on packets that traversed a **funded payment channel** are minting-eligible. Free-tier trusted traffic does not earn minting rewards. This demand-backed requirement ensures minting reflects real economic activity, not fabricated traffic.
 
 2. **Channel debit (market)**: When a relay wins the lottery and has an open [payment channel](payment-channels) with the upstream sender, the reward is debited from that channel. The sender pays directly for routing. This becomes the dominant mechanism as MHR enters circulation and channels become widespread.
 
@@ -187,21 +197,132 @@ Relay compensation per epoch:
   Total relay income = mint share + channel revenue
 ```
 
+### Genesis Service Gateway
+
+The bootstrapping problem is solved by a **Genesis Service Gateway** — a known, trusted operator that provides real services for fiat and bootstraps the MHR economy with genuine demand:
+
+1. **Transparent allocation**: The genesis gateway operator receives a disclosed MHR allocation. No hidden allocation, no ICO — the amount is visible in the ledger from epoch 0.
+2. **Competitive fiat pricing**: The gateway offers relay, storage, and compute at market-competitive fiat prices (see [Initial Pricing](#initial-pricing) below).
+3. **Funded channels**: Consumer fiat payments are converted to MHR credit extensions, creating funded payment channels. This generates the first real relay demand on the network.
+4. **Demand-backed minting**: Real relay traffic through funded channels triggers the VRF lottery. Winning relays earn minting rewards backed by actual economic activity.
+5. **MHR circulation**: Minted MHR enters circulation — relay operators can spend it on storage, compute, or other services.
+6. **Decentralization**: As more operators join and offer competing services, the genesis gateway becomes one of many providers. The economy transitions from gateway-bootstrapped to fully market-driven.
+
 ### Bootstrap Sequence
 
-1. Nodes form local meshes (free between trusted peers, no tokens)
-2. Gateway nodes bridge to wider network
-3. Non-trusted traffic triggers stochastic relay lottery (VRF-based)
-4. Lottery wins accumulate as service proofs; epoch minting distributes MHR to relays
-5. Relay nodes open payment channels and begin spending MHR on services
-6. Senders with MHR fund relay costs via channel debits; minting share decreases
-7. Market pricing emerges from supply/demand
+1. Genesis gateway receives transparent MHR allocation, begins offering fiat-priced services
+2. Nodes form local meshes (free between trusted peers, no tokens)
+3. Consumers pay fiat to genesis gateway → funded channels created
+4. Funded-channel traffic triggers demand-backed relay minting (VRF-based)
+5. Lottery wins on funded channels accumulate as service proofs; epoch minting distributes MHR to relays
+6. Relay nodes open payment channels and begin spending MHR on services
+7. More operators join, offer competing services, prices fall toward marginal cost
+8. Market pricing emerges from supply/demand
 
 ### Trust-Based Credit
 
 Trusted peers can [vouch for each other](trust-neighborhoods#trust-based-credit) by extending transitive credit. Each node configures the credit line it extends to its direct trusted peers (e.g., "I'll cover up to 1000 μMHR for Alice"). A friend-of-a-friend gets 10% of that direct limit — backed by the vouching peer's MHR balance. If a credited node defaults, the voucher absorbs the debt. This provides an on-ramp for new users without needing to earn MHR first.
 
 **Free direct communication works immediately** with no tokens at all. MHR is only needed when your packets traverse untrusted infrastructure.
+
+### Revenue-Capped Minting
+
+The emission schedule sets a ceiling, but actual minting per epoch is capped at a fraction of real relay fees collected. This makes self-dealing always unprofitable:
+
+```
+Revenue-capped minting formula:
+
+  effective_minting(epoch) = min(
+      emission_schedule(epoch),                    // halving ceiling (10^12 >> shift)
+      minting_cap × total_channel_debits(epoch)    // 0.5 × actual relay fees
+  )
+
+  minting_cap = 0.5  (minting can never exceed 50% of relay revenue)
+```
+
+**Why this makes self-dealing unprofitable:**
+
+An attacker who pays fiat to acquire MHR, then spends it on fake relay traffic to their own Sybil nodes, always loses money:
+
+```
+Self-dealing attack analysis:
+
+  1. Attacker pays $X fiat → gets Y MHR
+  2. Attacker spends Y MHR on relay fees (fake traffic through own nodes)
+  3. Maximum minting across ALL relays in the epoch = 0.5 × total_channel_debits
+  4. Even if attacker captures 100% of all minting: gets back at most 0.5 × Y MHR
+  5. Net result: spent Y, received ≤ 0.5Y → net loss of ≥ 0.5Y
+
+  This holds regardless of epoch, traffic volume, or attacker's share of the network.
+  The minting_cap guarantees self-dealing is unprofitable at every scale.
+```
+
+**What happens to "unminted" emission:**
+
+- During early bootstrap, total relay fees are small, so actual minting is well below the emission schedule
+- The difference is NOT minted — it is simply not created (supply grows slower)
+- As traffic grows, actual minting approaches the emission schedule ceiling
+- In mature economy, the cap is rarely binding (relay fees far exceed the emission schedule)
+
+This changes the supply curve: instead of predictable emission, supply growth tracks actual economic activity. Early supply grows slowly (good — prevents speculation without real usage), mature supply follows the emission schedule.
+
+### Initial Pricing
+
+The genesis gateway prices services at or slightly above market competitors. This is deliberate — the goal is fair pricing with operational margin, not undercutting.
+
+```
+Initial pricing strategy:
+
+  Principle: Price at market rate with overhead, NOT undercutting.
+
+  The genesis gateway publishes maximum prices (ceilings). These serve as a
+  ceiling that competitors can undercut as they join. The gateway can initially
+  run on AWS/cloud infrastructure — it needs margin to cover that cost.
+
+  Service             Market Benchmark              Genesis Ceiling
+  ────────────────────────────────────────────────────────────────────
+  Storage             AWS S3: $0.023/GB/mo          ~$0.02/GB/mo
+  Internet gateway    ISP: $30-100/mo               ~$30/mo
+  Compute             AWS Lambda: ~$0.20/1M req     At market
+  Relay (per-packet)  Bundled in gateway price      ~5 μMHR
+
+  Rationale:
+  - Storage: At market, not below — no reason to subsidize
+  - Gateway: Match ISP rate; value is privacy/resilience, not cheapness
+  - Compute: No reason to undercut cloud pricing initially
+  - Relay: Derived from gateway fiat price ÷ expected packet volume
+```
+
+**How prices fall over time:**
+
+```
+Price evolution:
+
+  Genesis:     Gateway sets ceiling (market rate + overhead)
+  Growth:      New providers enter, set prices ≤ ceiling to attract users
+  Maturity:    Competition drives prices toward marginal cost
+               (Mehr's marginal cost is low — spare bandwidth/disk on existing devices)
+```
+
+The genesis gateway doesn't need to be cheapest. It needs to be **trusted, available, and fairly priced**. Price competition comes from the market, not from subsidized undercutting. The gateway's fiat-to-MHR conversion rate becomes the initial exchange rate for MHR.
+
+### Genesis Gateway Discovery
+
+New nodes discover the genesis gateway through DNS:
+
+```
+Genesis gateway discovery:
+
+  1. Well-known DNS domain resolves to genesis gateway IP(s)
+  2. Hardcoded fallback list in daemon binary (in case DNS is unavailable)
+  3. DNS is for initial contact only — once connected, gossip takes over
+  4. Multiple DNS records for redundancy (A/AAAA records)
+
+  Note: DNS is used ONLY for initial genesis gateway discovery,
+  not for ongoing protocol operation. See roadmap Milestone 1.2.
+```
+
+This ties into the existing bootstrap mechanism (Milestone 1.2 in the [roadmap](../development/roadmap#milestone-12-bootstrap--peer-discovery)), elevating DNS from "optional" to the primary method for locating genesis gateways.
 
 ## Why One Global Currency
 
@@ -229,17 +350,14 @@ This is expected and not inherently harmful.
 
 **Why exchange doesn't break the system:**
 
-```
-Token flow with external exchange:
-
-  Operator earns MHR ──▶ Sells for fiat ──▶ Pays electricity bill
-       │                      │
-       │                      ▼
-       │                Buyer gets MHR ──▶ Spends on network services
-       │                      │
-       ▼                      ▼
-  Network received        Network received
-  real work (relay)       real demand (usage)
+```mermaid
+graph TD
+    Operator["Operator earns MHR"] --> Sells["Sells for fiat"]
+    Sells --> Pays["Pays electricity bill"]
+    Sells --> Buyer["Buyer gets MHR"]
+    Buyer --> Spends["Spends on network services"]
+    Operator --> RealWork["Network received\nreal work (relay)"]
+    Buyer --> RealDemand["Network received\nreal demand (usage)"]
 ```
 
 1. **Purchased MHR is legitimate.** If someone buys MHR with fiat instead of earning it through relay, the seller earned it through real work. The network benefited from that work. The buyer funds network infrastructure indirectly — identical to buying bus tokens.
@@ -267,25 +385,34 @@ Users don't need to know what 1 μMHR is worth in fiat. They need to know: "Can 
 
 ### Gateway Operators (Fiat Onramp)
 
+The [Genesis Service Gateway](#genesis-service-gateway) is the first instance of this pattern. The same mechanics — trust extension, credit lines, fiat billing — apply to all subsequent gateway operators. As more gateways join, the economy decentralizes and pricing becomes competitive.
+
 Not everyone wants to run a relay. Pure consumers — people who just want to use the network — should be able to pay with fiat and never think about MHR. **Gateway operators** make this possible.
 
 A gateway operator is a trusted intermediary who bridges fiat payment and MHR economics. The consumer interacts with the gateway; the gateway interacts with the network. This uses existing protocol mechanics — no new wire formats or consensus changes.
 
-```
-Gateway Operator Model
+```mermaid
+graph LR
+    subgraph Consumer
+        Signup["Signs up\n(fiat payment)"]
+        Uses["Uses network\n(messages, content,\nstorage, etc.)"]
+        Bill["Monthly fiat bill"]
+    end
 
-  Consumer                    Gateway                      Network
-  ────────                    ───────                      ───────
-  Signs up (fiat payment) ──▶ Adds consumer to trusted_peers
-                              Extends credit via CreditState
+    subgraph Gateway
+        Trust["Adds consumer to trusted_peers\nExtends credit via CreditState"]
+        Relay["Gateway relays for free\n(trusted peer = free)"]
+        Earns["Gateway earns MHR through\nrelay + receives fiat\nfrom consumers"]
+    end
 
-  Uses network ─────────────▶ Gateway relays for free      ──▶ Paid relay
-  (messages, content,         (trusted peer = free)              to wider network
-   storage, etc.)                                                (gateway pays MHR)
+    subgraph Network
+        Paid["Paid relay\nto wider network\n(gateway pays MHR)"]
+    end
 
-  Monthly fiat bill ────────▶ Gateway earns MHR through
-                              relay + receives fiat
-                              from consumers
+    Signup --> Trust
+    Uses --> Relay
+    Relay --> Paid
+    Bill --> Earns
 ```
 
 **How it works:**
@@ -354,7 +481,8 @@ Gateways are not privileged protocol participants. They are regular nodes that c
 ## Economic Design Goals
 
 - **Utility-first**: MHR is designed for purchasing services. Fiat exchange may emerge but the protocol's health doesn't depend on it, and the internal economy functions as a closed loop for participants who never touch fiat.
-- **No pre-mine**: All MHR enters circulation through proof-of-service. No ICO, no founder allocation, no insider advantage.
+- **Transparent genesis**: Disclosed genesis allocation to the gateway operator, visible in the ledger from epoch 0. No ICO, no hidden allocation, no insider advantage.
+- **Demand-backed minting**: Funded payment channels required for minting eligibility. Fabricated traffic through unfunded channels earns nothing. Revenue-capped emission guarantees self-dealing is always unprofitable.
 - **Spend-incentivized**: Tail emission (0.1% annual) mildly dilutes idle holdings. Lost keys (~1–2% annually) permanently remove supply. MHR earns nothing by sitting still — only by being spent on services or lent via trust-based credit.
 - **Partition-safe**: The economic layer works correctly during network partitions and converges when they heal
 - **Minimal overhead**: [Stochastic rewards](payment-channels) reduce economic bandwidth overhead by ~10x compared to per-packet payment

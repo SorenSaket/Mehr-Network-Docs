@@ -44,7 +44,7 @@ This page documents the key architectural decisions made during Mehr protocol de
 | | |
 |---|---|
 | **Chosen** | Trust graph with emergent neighborhoods (no explicit zones) |
-| **Alternatives** | Explicit zones with admin keys and admission policies (v0.8 design) |
+| **Alternatives** | Explicit zones with admin keys and admission policies |
 | **Rationale** | Explicit zones require someone to create and manage them — centralized thinking in decentralized clothing. They impose UX burden and artificially fragment communities. Trust neighborhoods emerge naturally from who you trust: free communication between trusted peers, paid between strangers. No admin, no governance, no admission policies. Communities form the same way they form in real life — through relationships, not administrative acts. The trust graph provides Sybil resistance economically (vouching peers absorb debts). |
 
 ## Compaction: Epoch Checkpoints with Bloom Filters
@@ -84,7 +84,7 @@ This page documents the key architectural decisions made during Mehr protocol de
 | | |
 |---|---|
 | **Chosen** | Hierarchical-scope-based names (e.g., `alice@geo:us/oregon/portland`) |
-| **Alternatives** | Global names via consensus, flat community labels (v0.8 `alice@portland-mesh`) |
+| **Alternatives** | Global names via consensus, flat community labels (`alice@portland-mesh`) |
 | **Rationale** | Global consensus contradicts partition tolerance. Flat community labels were replaced by [hierarchical scopes](../economics/trust-neighborhoods#hierarchical-scopes) — geographic (`Geo`) and interest (`Topic`) — which provide structured resolution. Names resolve against scope hierarchy: `alice@geo:portland` queries Portland scope first, then broadens. Two different cities named "portland" are disambiguated by longer paths (`alice@geo:us/oregon/portland` vs `alice@geo:us/maine/portland`). Proximity-based resolution handles most cases naturally. Local petnames provide a fallback. |
 
 ## Cost Annotations: Compact Path Cost (No Per-Relay Signatures)
@@ -156,7 +156,7 @@ This page documents the key architectural decisions made during Mehr protocol de
 | | |
 |---|---|
 | **Chosen** | STT/TTS/inference as compute capabilities in the marketplace |
-| **Alternatives** | Dedicated transform layer (considered in v0.5 draft) |
+| **Alternatives** | Dedicated transform layer |
 | **Rationale** | Speech-to-text, translation, and other transforms are just compute. Making them protocol primitives over-engineers the foundation. The capability marketplace already handles discovery, negotiation, execution, verification, and payment for arbitrary compute functions. |
 
 ## Group Admin: Delegated Co-Admin (No Threshold Signatures)
@@ -254,3 +254,19 @@ This page documents the key architectural decisions made during Mehr protocol de
 | **Chosen** | TLA+ for concurrent protocol properties; 4-tier priority: (1) CRDT merge, (2) payment channels, (3) epoch checkpoints, (4) full composition deferred |
 | **Alternatives** | Coq/Lean theorem proving, no formal verification (testing only), verify everything before v1.0 |
 | **Rationale** | Coq/Lean have a steep learning curve that limits contributor access. Pure testing cannot prove absence of bugs in concurrent distributed protocols. Verifying everything delays launch indefinitely. TLA+ is battle-tested for distributed systems (used by Amazon for AWS services, by Microsoft for Azure) and has a practical learning curve. **Priority 1 — CRDT merge convergence** (must verify before v1.0): Prove commutativity, associativity, and idempotency of GCounter max-merge and GSet union. If merge diverges, the entire ledger is broken. **Priority 2 — Payment channel state machine** (must verify before v1.0): Prove no balance can go negative, dispute resolution always terminates within the challenge window, and channel states form a total order by sequence number. Direct financial impact if buggy. **Priority 3 — Epoch checkpoint correctness** (should verify): Prove no confirmed settlement is permanently lost after finalization, bloom filter false positive recovery covers all edge cases during the grace period. Property-based testing (QuickCheck-style) initially, formal TLA+ proof if resources allow. **Priority 4 — Full protocol composition** (defer to post-v1.0): Interaction between subsystems (e.g., channel dispute during epoch transition) is tracked as a long-term research goal. Individual component proofs provide sufficient confidence for launch. |
+
+## Genesis Model: Transparent Service Gateway
+
+| | |
+|---|---|
+| **Chosen** | Genesis Service Gateway + demand-backed minting + revenue-capped emission |
+| **Alternatives** | Pure proof-of-service mining (no genesis), airdrop, ICO, DAO treasury |
+| **Rationale** | VRF prevents grinding (one output per relay-packet pair) but does not prevent traffic fabrication: a Sybil attacker can fabricate traffic between colluding nodes and run the VRF lottery on fake packets. A genesis service gateway bootstraps the economy with real demand: a known trusted operator provides real services for fiat, creating funded payment channels that generate legitimate relay traffic. Revenue-capped minting (see below) ensures that even paying through the gateway and self-dealing is unprofitable. The genesis allocation is transparent (visible in ledger from epoch 0). DNS provides initial gateway discovery; the hardcoded bootstrap list serves as fallback. |
+
+## Revenue-Capped Minting
+
+| | |
+|---|---|
+| **Chosen** | `effective_minting = min(emission_schedule, 0.5 × total_channel_debits)` |
+| **Alternatives** | Uncapped emission (vulnerable to self-dealing), fixed low emission (doesn't scale with network growth), proof-of-stake gating (concentrates power) |
+| **Rationale** | The revenue cap guarantees that self-dealing is unprofitable at all traffic levels: an attacker spending Y MHR on relay fees can receive at most 0.5 × Y in minting rewards, regardless of their share of the network. This holds for any Y, any epoch, and any number of Sybil nodes. The cap also makes supply growth demand-responsive: during low-usage periods, actual minting is well below the emission schedule (supply grows slowly, preventing speculation). As the network matures and relay fees increase, the cap becomes non-binding and supply follows the standard halving schedule. Fixed low emission was rejected because it doesn't scale — a fixed amount becomes either too generous at low traffic or too stingy at high traffic. Proof-of-stake gating was rejected because it concentrates minting power among large holders. |

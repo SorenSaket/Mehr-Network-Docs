@@ -38,10 +38,13 @@ Trust relationships are **asymmetric and revocable at any time**. Removing a nod
 
 When a cluster of nodes all trust each other, a **neighborhood** forms:
 
-```
-  [Alice] ←──trust──→ [Bob] ←──trust──→ [Carol]
-     │                  │                   │
-     └────trust────→ [Dave] ←───trust──────┘
+```mermaid
+graph LR
+    Alice["Alice"] <-->|trust| Bob["Bob"]
+    Bob <-->|trust| Carol["Carol"]
+    Alice <-->|trust| Dave["Dave"]
+    Bob <-->|trust| Dave
+    Carol <-->|trust| Dave
 ```
 
 Alice, Bob, Carol, and Dave are a neighborhood. No one "created" it. No one "joined" it. It exists because they trust each other.
@@ -192,7 +195,7 @@ Subscriptions and queries can match at any level of the hierarchy:
 
 ### Properties
 
-Scopes retain all the properties of the old `community_label`:
+Scopes retain all the properties of `community_label`:
 
 - **Self-assigned** — no one approves your scope claims, no authority enforces them
 - **Not authoritative** — scopes carry no protocol-level privileges (cannot grant access, waive fees, or modify trust)
@@ -252,10 +255,10 @@ Migration:
 
 A single post can have **both** a geographic and interest scope. A post tagged `Geo("portland") + Topic("gaming", "pokemon")` appears in both the Portland local feed and the global Pokemon feed. Intersection queries ("Portland Pokemon") are resolved client-side by filtering on both scopes.
 
-## Comparison: Zones vs. Trust Neighborhoods
+## Comparison: Explicit Zones vs. Trust Neighborhoods
 
-| Aspect | Explicit Zones (old) | Trust Neighborhoods (current) |
-|--------|---------------------|-------------------------------|
+| Aspect | Explicit Zones | Trust Neighborhoods |
+|--------|---------------|---------------------|
 | Creation | Someone creates a zone | Emerges from mutual trust |
 | Joining | Request + approval | Mark someone as trusted |
 | Governance | Admin keys, voting | None needed |

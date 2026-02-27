@@ -251,7 +251,7 @@ See [Gateway Operators](economics/mhr-token#gateway-operators-fiat-onramp) for d
 
 ### Can I get rich from MHR?
 
-That's not the point. MHR is designed to be spent on services, not hoarded. There's no ICO, no pre-mine, no founder allocation. Tail emission (0.1% annual) mildly dilutes idle holdings. Lost keys permanently remove supply. The economic incentive is to earn and spend, not to accumulate.
+That's not the point. MHR is designed to be spent on services, not hoarded. There's no ICO and no hidden allocation — the genesis gateway receives a transparent, disclosed allocation visible in the ledger from day one. Tail emission (0.1% annual) mildly dilutes idle holdings. Lost keys permanently remove supply. The economic incentive is to earn and spend, not to accumulate.
 
 ---
 

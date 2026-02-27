@@ -24,34 +24,29 @@ While "social" implies short text posts, the same architecture handles **any con
 
 Every publication on Mehr has two layers: a **free envelope** that propagates everywhere (browsable at zero cost), and **paid content** that requires retrieval fees. Users browse envelopes to decide what's worth accessing, then pay only for content they actually want.
 
-```
-                        Two-Layer Architecture
+```mermaid
+graph TD
+    subgraph FREE["FREE LAYER (PostEnvelope)<br/>Propagates via MHR-Pub to all scope subscribers<br/>~300–500 bytes — fits in a single LoRa frame"]
+        Headline
+        Summary
+        Blurhash
+        Scopes["Scopes, metadata"]
+    end
 
-   ┌─────────────────────────────────────────────────────────────┐
-   │  FREE LAYER (PostEnvelope)                                  │
-   │                                                             │
-   │  Propagates via MHR-Pub to all scope subscribers            │
-   │  ~300-500 bytes — fits in a single LoRa frame               │
-   │                                                             │
-   │  ┌──────────┬────────────┬───────────┬──────────────────┐   │
-   │  │ Headline │  Summary   │ Blurhash  │ Scopes, metadata │   │
-   │  └──────────┴────────────┴───────────┴──────────────────┘   │
-   │                         │                                   │
-   │                     post_id ──────────────────┐            │
-   │                                                │            │
-   ├────────────────────────────────────────────────│────────────┤
-   │  PAID LAYER (SocialPost)                       │            │
-   │                                                ▼            │
-   │  Fetched on demand — reader pays relay fees   [DataObject]  │
-   │  Size proportional to content                               │
-   │                                                             │
-   │  ┌──────────┬────────────────────┬──────────────────────┐   │
-   │  │ Full text│  Media (images,    │  Links               │   │
-   │  │          │  video, audio)     │                      │   │
-   │  └──────────┴────────────────────┴──────────────────────┘   │
-   │                         │                                   │
-   │                    Kickback ──▶ Author                      │
-   └─────────────────────────────────────────────────────────────┘
+    subgraph PAID["PAID LAYER (SocialPost)<br/>Fetched on demand — reader pays relay fees<br/>Size proportional to content"]
+        FullText["Full text"]
+        Media["Media (images, video, audio)"]
+        Links
+    end
+
+    Headline -->|post_id| FullText
+    Summary -->|post_id| FullText
+    Blurhash -->|post_id| FullText
+    Scopes -->|post_id| FullText
+
+    FullText -->|Kickback| Author
+    Media -->|Kickback| Author
+    Links -->|Kickback| Author
 ```
 
 ### PostEnvelope (Free Layer)
@@ -128,31 +123,16 @@ UserProfile {
 
 Mehr social supports five feed types. All feeds are assembled **locally** — no server decides what you see.
 
-```
-                    Five Feed Types
+```mermaid
+graph TD
+    Follow["1. FOLLOW<br/>Specific users you choose<br/>Node(alice)"]
+    Geographic["2. GEOGRAPHIC<br/>Content from a place:<br/>neighborhood → city → region"]
+    Interest["3. INTEREST<br/>Content by topic:<br/>pokemon, physics, jazz"]
+    Intersection["4. INTERSECTION<br/>Client-side filter on BOTH:<br/>'Portland Pokemon' = geo ∩ topic"]
+    Curated["5. CURATED<br/>Human editor selects best content<br/>Readers subscribe to curator's feed<br/>Two kickback flows: curator + original author"]
 
-  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-  │ 1. FOLLOW    │  │ 2. GEOGRAPHIC│  │ 3. INTEREST  │
-  │              │  │              │  │              │
-  │ Specific     │  │ Content from │  │ Content by   │
-  │ users you    │  │ a place:     │  │ topic:       │
-  │ choose       │  │ neighborhood │  │ pokemon,     │
-  │              │  │ → city       │  │ physics,     │
-  │ Node(alice)  │  │ → region     │  │ jazz         │
-  └──────────────┘  └──────┬───────┘  └──────┬───────┘
-                           │                  │
-                    ┌──────┴──────────────────┴──────┐
-                    │ 4. INTERSECTION                │
-                    │ Client-side filter on BOTH:    │
-                    │ "Portland Pokemon" = geo ∩ topic│
-                    └───────────────────────────────┘
-
-  ┌─────────────────────────────────────────────────┐
-  │ 5. CURATED                                      │
-  │ Human editor selects best content               │
-  │ Readers subscribe to curator's feed             │
-  │ Two kickback flows: curator + original author   │
-  └─────────────────────────────────────────────────┘
+    Geographic --> Intersection
+    Interest --> Intersection
 ```
 
 ### 1. Direct Follow Feed
@@ -256,18 +236,16 @@ These are **two independent kickback flows** on two different DataObjects — th
 
 **The curation hierarchy:**
 
-```
-Producers (authors)
-    │ create content, earn kickback from readers
-    ▼
-Curators (human editors)
-    │ select best content, earn from subscribers
-    ▼
-Meta-curators (curators of curators)
-    │ select best curators, earn from subscribers
-    ▼
-Readers
-    pay bandwidth, choose what to subscribe to
+```mermaid
+graph TD
+    Producers["Producers (authors)<br/>Create content, earn kickback from readers"]
+    Curators["Curators (human editors)<br/>Select best content, earn from subscribers"]
+    MetaCurators["Meta-curators (curators of curators)<br/>Select best curators, earn from subscribers"]
+    Readers["Readers<br/>Pay bandwidth, choose what to subscribe to"]
+
+    Producers --> Curators
+    Curators --> MetaCurators
+    MetaCurators --> Readers
 ```
 
 Every level has skin in the game:
@@ -324,29 +302,21 @@ Editing flow:
 
 ## Content Economics
 
-```
-                    Content Economics Flow
+```mermaid
+graph LR
+    Author
+    Storage["Storage Node"]
+    Reader
 
-  Author                                                    Reader
-    │                                                         │
-    │ 1. Pay storage                                          │
-    │──────────▶ [Storage Node]                               │
-    │                │                                        │
-    │           2. Envelope                                   │
-    │           propagates (free) ─────────────────────────▶  │
-    │                                                    3. Browse
-    │                                               headlines, summaries
-    │                                                    (free)
-    │                                                         │
-    │                                                    4. Fetch full
-    │                                                    post (paid)
-    │                │◀───── relay fees ──────────────────────│
-    │                │                                        │
-    │    5. Kickback │                                        │
-    │◀───────────────│                                        │
-    │                                                         │
-    │  Popular post?  Kickback > storage cost = self-funding  │
-    │  Unpopular?     Kickback < storage cost = author pays   │
+    Author -->|"1. Pay storage"| Storage
+    Storage -->|"2. Envelope propagates (free)"| Reader
+    Reader -->|"3. Browse headlines,<br/>summaries (free)"| Reader
+    Reader -->|"4. Fetch full post (paid)<br/>relay fees"| Storage
+    Storage -->|"5. Kickback"| Author
+
+    style Author fill:#f9f,stroke:#333
+    style Reader fill:#bbf,stroke:#333
+    style Storage fill:#bfb,stroke:#333
 ```
 
 ### Browse Before You Pay

@@ -54,22 +54,20 @@ Storage node decision:
 
 When a post earns more in [kickback](../services/mhr-store#revenue-sharing-kickback) than it costs to store, it becomes **self-sustaining**:
 
+```mermaid
+graph TD
+    A[Author pays initial cost] --> B[Storage - N epochs]
+    B --> C[Readers pay to access]
+    C --> D[Kickback to author]
+    D --> E[Reinvest]
+    E --> F[Extend storage / wider scope]
+    F --> B
 ```
-                    ┌─────────────────────────────────┐
-                    │                                 │
-   Author pays ────▶ Storage (N epochs) ────▶ Readers pay to access
-   initial cost     │                        │
-                    │                        ▼
-                    │               Kickback to author
-                    │                        │
-                    │                        ▼
-                    │     Reinvest ──▶ Extend storage / wider scope
-                    │                        │
-                    └────────────────────────┘
 
-   Self-funding threshold:
-     kickback_per_epoch > cost_per_epoch → content is immortal
-     kickback_per_epoch < cost_per_epoch → author subsidizes or content expires
+```
+Self-funding threshold:
+  kickback_per_epoch > cost_per_epoch → content is immortal
+  kickback_per_epoch < cost_per_epoch → author subsidizes or content expires
 ```
 
 **Popular content climbs automatically:**
@@ -87,24 +85,33 @@ When a post earns more in [kickback](../services/mhr-store#revenue-sharing-kickb
 
 Interest communities are **sparse** — they span geography. A `Topic("gaming", "pokemon")` post from Portland might interest readers in Tokyo, Berlin, and Buenos Aires, with nothing in between.
 
-```
-                    Geographic vs. Interest Propagation
+```mermaid
+graph TD
+    subgraph Geographic["Geographic (dense, local-first)"]
+        direction BT
+        G_Author[Author] --> G_Nbhd1[Nbhd]
+        G_Nbhd1 --> G_City1[City]
+        G_Nbhd2[Nbhd] --> G_City1
+        G_City1 --> G_Region1[Region]
+        G_City2[City] --> G_Region1
+        G_City3[City] --> G_Region2[Region]
+        G_Region1 --> G_Country[Country]
+        G_Region2 --> G_Country
+    end
 
-    Geographic (dense, local-first)       Interest (sparse, validated-then-global)
-
-         ┌──Country──┐                    Portland ···· Tokyo ···· Berlin
-         │           │                       ▲            ▲          ▲
-      ┌Region┐   ┌Region┐                   │            │          │
-      │      │   │      │               interest     interest    interest
-    ┌City┐ ┌City┐     City              relay node   relay node  relay node
-    │    │                                   ▲
-  Nbhd  Nbhd  ← content starts here         │
-    ▲                                    local validation
-    │                                    (boost/retrieve/curate)
-  Author                                     ▲
-                                           Author
-    Bubbles UP with demand              Spreads OUT after validation
+    subgraph Interest["Interest (sparse, validated-then-global)"]
+        direction BT
+        I_Author[Author] --> I_Validation[Local validation]
+        I_Validation --> I_Relay1[Interest relay node]
+        I_Validation --> I_Relay2[Interest relay node]
+        I_Validation --> I_Relay3[Interest relay node]
+        I_Relay1 --> I_Portland[Portland]
+        I_Relay2 --> I_Tokyo[Tokyo]
+        I_Relay3 --> I_Berlin[Berlin]
+    end
 ```
+
+> **Geographic** bubbles UP with demand. **Interest** spreads OUT after local validation.
 
 ### Interest Relay Nodes
 
@@ -190,23 +197,12 @@ The economics naturally prioritize the right audience: local Portland readers ge
 
 Every piece of content on Mehr follows an economic lifecycle. Content is born local and either grows through demand or expires through indifference:
 
-```
-                         Content Lifecycle
-
-  Popularity ▲
-             │              ┌─── PEAK ───┐
-             │             ╱  Self-funding  ╲
-             │            ╱   Wide caching   ╲
-             │        ╱──╱                     ╲──╲
-             │      ╱  GROWTH                DECLINE  ╲
-             │    ╱  Kickback rises        Demand drops  ╲
-             │  ╱    Caches multiply       Caches evict     ╲
-             │╱                                               ╲
-             │ BIRTH                                    EXPIRY ╲──
-             │ Author pays                              GC'd or
-             │ Neighborhood scope                       reduced scope
-             └──────────────────────────────────────────────────▶ Time
-                                                    (epochs)
+```mermaid
+graph LR
+    Birth["BIRTH\nAuthor pays\nNeighborhood scope"] --> Growth["GROWTH\nKickback rises\nCaches multiply"]
+    Growth --> Peak["PEAK\nSelf-funding\nWide caching"]
+    Peak --> Decline["DECLINE\nDemand drops\nCaches evict"]
+    Decline --> Expiry["EXPIRY\nGC'd or\nreduced scope"]
 ```
 
 ```

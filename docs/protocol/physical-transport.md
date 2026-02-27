@@ -77,12 +77,10 @@ The bridge node is where bandwidth characteristics change dramatically — and w
 - Earn relay rewards for the bridging service
 - Advertise its bridging capability to nearby nodes
 
-```
-                    LoRa (10 kbps)              WiFi (100 Mbps)
-  [Remote Sensor] ←───────────────→ [Bridge Node] ←──────────────→ [Gateway]
-                                         │
-                                    Bridges between
-                                    two transports
+```mermaid
+graph LR
+    RS["Remote Sensor"] <-- "LoRa (10 kbps)" --> BN["Bridge Node"]
+    BN <-- "WiFi (100 Mbps)" --> GW["Gateway"]
 ```
 
 ## Bandwidth Ranges and Their Implications

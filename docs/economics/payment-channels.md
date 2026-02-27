@@ -13,32 +13,15 @@ Per-packet payment requires a channel state update for every batch of relayed pa
 
 ## How Stochastic Rewards Work
 
-```
-            Stochastic Relay Reward Flow
-
-  Packet arrives           VRF Lottery
-  at relay node     ┌──────────────────────┐
-       │            │                      │
-       ▼            │  VRF(relay_key,      │
-  ┌─────────┐       │       packet_hash)   │
-  │ Forward │──────▶│         │            │
-  │ packet  │       │         ▼            │
-  └─────────┘       │  output < target?    │
-                    │    │          │       │
-                    │   YES        NO      │
-                    │ (1/100)    (99/100)  │
-                    └────┤──────────┤──────┘
-                         │          │
-                         ▼          ▼
-                    ┌─────────┐  Nothing
-                    │ Win!    │  (no overhead)
-                    │ 500 μMHR│
-                    └────┬────┘
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-        Channel debit          Mining proof
-        (sender pays)       (epoch minting)
+```mermaid
+graph TD
+    A["Packet arrives at relay node"] --> B["Forward packet"]
+    B --> C["VRF Lottery: VRF(relay_key, packet_hash)"]
+    C --> D{"output < target?"}
+    D -- "YES (1/100)" --> E["Win! 500 μMHR"]
+    D -- "NO (99/100)" --> F["Nothing (no overhead)"]
+    E --> G["Channel debit (sender pays)"]
+    E --> H["Mining proof (epoch minting)"]
 ```
 
 Each relayed packet is checked against a **VRF-based lottery**. The relay computes a Verifiable Random Function output over the packet, producing a deterministic but unpredictable result that anyone can verify:
@@ -156,18 +139,87 @@ The `sequence` field is a monotonically increasing version number:
 
 When Alice sends a packet through Bob → Carol → Dave, each relay independently runs the VRF lottery:
 
-```
-Alice ──→ Bob ──→ Carol ──→ Dave
-           │        │
-        lottery?  lottery?
+```mermaid
+graph LR
+    Alice --> Bob --> Carol --> Dave
+    Bob -. "lottery?" .-> Bob
+    Carol -. "lottery?" .-> Carol
 ```
 
 A lottery win triggers compensation through one or both mechanisms:
 
 1. **Channel debit** (if a channel exists with the upstream sender): Bob's win debits Alice's channel with Bob; Carol's win debits Bob's channel with Carol. This is the steady-state mechanism once MHR is circulating.
-2. **Mining proof** (always): The VRF proof is accumulated as a service proof entitling the relay to a share of the epoch's [minting reward](mhr-token#proof-of-service-mining-mhr-genesis). This is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
+2. **Mining proof** (demand-backed): The VRF proof is accumulated as a service proof entitling the relay to a share of the epoch's [minting reward](mhr-token#demand-backed-proof-of-service-mining-mhr-genesis) — but only if the packet traversed a funded payment channel. Free-tier trusted traffic does not earn minting rewards. This demand-backed requirement ensures minting reflects real economic activity. Minting is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
 
 Most packets trigger no channel update at all. Each hop is independent — no end-to-end payment coordination.
+
+## Demand-Backed Minting Eligibility
+
+A VRF lottery win is **minting-eligible** only if the packet that triggered it traversed a funded payment channel with the upstream sender. This is the core defense against Sybil traffic fabrication:
+
+```
+Minting eligibility rule:
+
+  VRF win on packet P at relay R:
+    IF upstream channel(sender, R) is funded (balance > 0):
+      → Win counts toward R's epoch minting share
+    ELSE (free-tier trusted traffic, or no funded channel):
+      → Win does NOT count toward minting
+
+  Why:
+    Without this rule, a Sybil attacker can fabricate traffic between
+    colluding nodes, run the VRF lottery on fake packets, and claim
+    minting rewards for zero-cost "work."
+
+    With this rule, generating minting-eligible traffic requires
+    spending real MHR through funded channels — and revenue-capped
+    minting ensures the attacker always loses money.
+```
+
+**Free-tier trusted traffic**: Trusted peers relay for free — this is unchanged. Free relay is a benefit of the trust network, not a minting mechanism. It was never intended to earn minting rewards.
+
+**Channel-funded payments (mechanism 1)**: Unaffected. When a relay wins the lottery and has a funded channel with the sender, the channel debit happens regardless. Demand-backed minting only affects mechanism 2 (minting proofs).
+
+## Revenue-Capped Minting
+
+Even with demand-backed minting eligibility, an attacker could spend MHR on funded channels to generate minting-eligible traffic. Revenue-capped minting ensures this is **always unprofitable**:
+
+```
+Revenue-capped minting formula:
+
+  effective_minting(epoch) = min(
+      emission_schedule(epoch),                         // halving ceiling
+      minting_cap × total_channel_debits(epoch)         // 0.5 × actual relay fees
+  )
+
+  minting_cap = 0.5
+```
+
+**Formal proof of unprofitability:**
+
+```
+Self-dealing attack:
+
+  1. Attacker spends Y MHR on relay fees (channel debits) for fake traffic
+  2. total_channel_debits increases by Y (attacker's contribution)
+  3. Maximum possible minting = minting_cap × total_channel_debits
+  4. Even if attacker is the ONLY relay and captures 100% of minting:
+     attacker receives ≤ 0.5 × total_channel_debits
+  5. Attacker's best case: spent Y, received 0.5 × Y = net loss of 0.5 × Y
+
+  With other honest relays in the network, the attacker receives even less
+  (their share of 0.5 × total_debits, proportional to their wins).
+
+  The attack is unprofitable at ALL scales — whether Y is 1 MHR or 1 billion MHR.
+```
+
+**Impact on supply curve:**
+
+- Early network (low traffic): actual minting is well below the emission schedule. Supply grows slowly, tracking real economic activity.
+- Growing network: actual minting approaches emission ceiling as relay fees increase.
+- Mature network: revenue cap is rarely binding (relay fees far exceed the emission schedule). Supply follows the standard halving schedule.
+
+This means supply growth is demand-responsive rather than fixed. Early supply grows slowly (good — prevents speculation), and mature supply follows the emission schedule.
 
 ## Efficiency on Constrained Links
 
