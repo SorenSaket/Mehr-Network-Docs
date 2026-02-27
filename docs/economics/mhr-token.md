@@ -49,7 +49,7 @@ Emission formula:
 
 The theoretical ceiling is 2^64 μMHR, but it is never reached — tail emission asymptotically approaches it. The initial reward of 10^12 μMHR/epoch yields ~1.5% of the supply ceiling minted in the first halving period, providing strong bootstrap incentive. Discrete halving every 100,000 epochs is epoch-counted (no clock synchronization needed) and trivially computable via bit-shift on integer-only hardware.
 
-The tail ensures ongoing proof-of-service rewards exist indefinitely, funding relay and storage operators. In practice, lost keys (estimated 1–2% of supply annually) offset tail emission, keeping effective circulating supply roughly stable after year ~10.
+The tail ensures ongoing proof-of-service rewards exist indefinitely, funding all service operators (relay, storage, compute). In practice, lost keys (estimated 1–2% of supply annually) offset tail emission, keeping effective circulating supply roughly stable after year ~10.
 
 ### Typical Costs
 
@@ -63,40 +63,173 @@ The tail ensures ongoing proof-of-service rewards exist indefinitely, funding re
 
 The relay lottery pays out infrequently but in larger amounts. Expected value per packet is the same: `500 μMHR × 1/100 = 5 μMHR`. See [Stochastic Relay Rewards](payment-channels) for the full mechanism.
 
-## Why Relay-Only Minting
+## All-Service Minting
 
-Only relay earns minting rewards. Storage and compute earn through bilateral payments, not minting. This is deliberate.
+All services — relay, storage, and compute — earn minting rewards. Minting is proportional to real economic activity (channel debits) and capped at a fraction of that activity, making self-dealing structurally unprofitable. A 2% service burn on every funded-channel payment creates a deflationary force that bounds supply even in isolated partitions.
 
-```
-Service minting analysis:
+### Why All Services Mint
 
-  Relay:    ✓ Minting reward (VRF lottery, demand-backed)
-            VRF prevents grinding — exactly one output per (relay, packet) pair.
-            But VRF alone does NOT prevent traffic fabrication: a Sybil attacker
-            can fabricate traffic between colluding nodes and run the VRF lottery
-            on fake packets. The actual Sybil defense is demand-backed minting:
-            VRF wins only count for minting if the packet traversed a funded
-            payment channel. Fabricating funded-channel traffic requires spending
-            real MHR, and revenue-capped minting ensures the attacker always
-            loses money (see Revenue-Capped Minting below).
+The anti-gaming defense is **not** service-specific proofs. It is three mechanisms that work uniformly across all services:
 
-  Storage:  ✗ No minting reward
-            Storage proofs can be gamed: store your own garbage data,
-            respond to your own challenges, claim minting. A bilateral
-            StorageAgreement requires TWO signatures — but a Sybil
-            node could sign both sides.
+1. **Non-deterministic assignment** — the client cannot choose who serves the request
+2. **Net-income revenue cap** — total minting cannot exceed 50% of net economic activity
+3. **Service burn + active-set scaling** — 2% burn on all funded-channel payments + emission scaled by partition size bounds isolated partition damage to a finite equilibrium
 
-  Compute:  ✗ No minting reward
-            Compute is demand-driven. "Mining" computation without
-            a requester would incentivize wasted work. Unlike relay
-            (which serves others), un-requested computation serves
-            nobody.
-```
+Together, these guarantee that self-dealing in a connected network is **never profitable**, and that isolated partitions converge to a bounded supply equilibrium. See the [Security Analysis](#security-analysis) for the complete threat model.
 
-Storage and compute don't need minting because they bootstrap through the free tier and bilateral payments:
+### Non-Deterministic Assignment
+
+Each service type has a natural mechanism that prevents the client from choosing the server:
 
 ```
-Bootstrap sequence by service type:
+Service assignment:
+
+  Relay:    Mesh routing (Kleinberg greedy forwarding)
+            Path determined by network topology, not client choice.
+            Multi-hop paths include honest relays with high probability.
+            Probability of ALL hops being attacker-controlled: X^hops
+            (vanishingly small for typical path lengths).
+
+  Storage:  DHT ring assignment
+            responsible_node = DHT(hash(content_id || epoch_hash))
+            The epoch_hash is unpredictable at request time, preventing
+            the client from grinding content IDs to influence assignment.
+            Replicas assigned to multiple DHT-ring positions for durability.
+
+  Compute:  DHT ring assignment
+            responsible_node = DHT(hash(job_spec || epoch_hash))
+            Same mechanism as storage. The compute node is determined by
+            the DHT ring, not by client choice.
+```
+
+The DHT ring is the same Kleinberg small-world ring used for routing. No new mechanism — storage and compute assignment reuse the existing topology.
+
+### Unified Minting Formula
+
+All service income contributes to one minting pool. The revenue cap uses **net income** (income minus spending per provider), not gross channel debits, to prevent [cycling attacks](#attack-channel-cycling). Emission is scaled by the active set size to limit small-partition minting:
+
+```
+Minting formula (all services):
+
+  For each provider P this epoch:
+    P_income  = relay_income + storage_income + compute_income  (payments received)
+    P_spending = total payments sent across all channels
+    P_net     = max(0, P_income - P_spending)
+
+  Active-set-scaled emission:
+    active_nodes = number of nodes in epoch's active set
+    reference_size = 100  (configurable protocol parameter)
+    scale_factor = min(active_nodes, reference_size) / reference_size
+    scaled_emission = emission(epoch) × scale_factor
+      → 3-node partition: 3/100 × E = 0.03E
+      → 100+ node partition: full E
+
+  Revenue cap (net-income based):
+    minting_eligible = Σ P_net for all providers P
+    epoch_minting = min(scaled_emission, 0.5 × minting_eligible)
+
+  Service burn:
+    burn_rate = 0.02  (2% of every funded-channel payment)
+    Burned amount is permanently destroyed before minting calculation.
+    Provider receives 98% of channel payment; 2% is removed from supply.
+
+  Distribution (gross-income based):
+    provider_mint_share = (P_income / Σ all_income) × epoch_minting
+
+  The cap uses net income (prevents cycling). Distribution uses gross
+  income (rewards all service provision fairly). A relay earning 1000 μMHR
+  and a storage node earning 1000 μMHR get the same distribution share.
+
+  Why net income for the cap:
+    In a round-trip cycle (A→B→A), every provider's income = spending → net = 0.
+    Cycling produces zero minting, regardless of how many times MHR circulates.
+    One-directional spending (real demand) produces positive net income.
+
+  Why active-set scaling:
+    Without scaling, a 3-node partition mints the same as a 10,000-node network.
+    With scaling, the 3-node partition mints 3% of full emission — proportional
+    to its size. Combined with the 2% burn, supply converges to a finite
+    equilibrium (scaled_emission / burn_rate) instead of growing without bound.
+```
+
+### Service-Specific Payment Mechanics
+
+The VRF stochastic lottery remains relay-specific — it is a bandwidth optimization, not a minting mechanism:
+
+```
+Payment mechanics by service:
+
+  Relay:    VRF stochastic lottery per-packet (existing)
+            Channel debit on lottery win (~1/100 packets)
+            High-frequency, low-value: lottery reduces overhead by ~10x
+
+  Storage:  Direct channel debit per-epoch per-agreement
+            Low-frequency: one payment per storage agreement per epoch
+            No lottery needed — per-event channel updates are affordable
+
+  Compute:  Direct channel debit per-job
+            Medium-frequency: one payment per computation
+            No lottery needed — per-event channel updates are affordable
+```
+
+### Proof: Self-Dealing Is Unprofitable
+
+```
+Self-dealing with non-deterministic assignment + net-income cap:
+
+  Attacker has X fraction of network economic capacity.
+  Attacker generates Y MHR in fake service demand.
+
+  Non-deterministic assignment routes:
+    X × Y  → attacker's own nodes (internal transfer, net cost 0)
+    (1-X) × Y → honest nodes (REAL cost to attacker)
+
+  Net income (for revenue cap):
+    Honest providers: net = (1-X)Y (received payment, didn't spend back to attacker)
+    Attacker providers: net = max(0, XY - Y) = 0 (income < spending for X < 1)
+    minting_eligible = (1-X)Y  (only honest providers contribute)
+
+  Minting earned by attacker:
+    attacker_share = XY / Y = X  (gross income share)
+    attacker_minting = X × min(E, 0.5 × (1-X)Y)
+
+  Attacker's net profit (assuming 0.5(1-X)Y < E):
+    -(1-X)Y + X × 0.5 × (1-X)Y = (1-X)Y × (0.5X - 1)
+
+  This is ALWAYS negative for any X < 1:
+    X = 10%: net = -0.45Y × 0.9 = -0.855Y  (85.5% loss)
+    X = 30%: net = -0.35Y × 0.7 = -0.49Y   (49% loss)
+    X = 50%: net = -0.25Y × 0.5 = -0.375Y  (37.5% loss)
+    X = 90%: net = -0.05Y × 0.1 = -0.045Y  (4.5% loss)
+    X = 99%: net = -0.005Y × 0.01 = -0.005Y (0.5% loss)
+
+  Self-dealing is NEVER profitable in a connected network.
+  The net-income cap ensures the attacker's own internal transfers
+  don't count toward minting eligibility.
+```
+
+Non-deterministic assignment forces the attacker to pay honest nodes. The net-income cap ensures the attacker's internal transfers (paying their own nodes) produce zero minting eligibility. Together, self-dealing in a connected network always loses money — the attacker spends real MHR on honest nodes and earns nothing from their internal circulation.
+
+**Note**: This "never profitable" result requires that the network is connected and non-deterministic assignment is operational. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but genesis-anchored minting (bootstrap), active-set-scaled emission, and 2% service burn bound the damage to a finite equilibrium. See the [Security Analysis](#security-analysis) for the full threat model.
+
+### What We Don't Need
+
+The three-mechanism defense (non-deterministic assignment + net-income cap + burn/scaling) makes several commonly proposed anti-gaming mechanisms unnecessary:
+
+| Mechanism | Why not needed |
+|-----------|----------------|
+| Numerical trust scores | Binary trust neighborhoods handle free/paid boundary |
+| Staking | Channel funding provides implicit Sybil cost |
+| Slashing | Attacks are structurally unprofitable — punishment is redundant |
+| Service-specific proof protocols | DHT assignment + bilateral verification sufficient |
+| Dynamic pool rebalancing | Single pool, proportional distribution, market adjusts prices |
+
+Three mechanisms. One formula. Zero trust assumptions.
+
+### Bootstrap by Service Type
+
+```
+Bootstrap sequence:
 
   Phase 0: FREE TIER
     ├── Relay:   Trusted peers relay for free (works immediately)
@@ -107,18 +240,19 @@ Bootstrap sequence by service type:
     ├── Genesis gateway receives transparent MHR allocation
     ├── Gateway offers real services for fiat (relay, storage, compute)
     ├── Consumer fiat → MHR credit extensions → funded channels
-    └── Real relay demand enters the network for the first time
+    └── Real service demand enters the network for the first time
 
-  Phase 1: DEMAND-BACKED RELAY MINTING
-    ├── Funded-channel traffic triggers VRF lottery
-    ├── VRF wins on funded channels earn minting rewards
-    ├── Revenue-capped minting prevents self-dealing (see below)
-    └── MHR enters circulation backed by real demand
+  Phase 1: DEMAND-BACKED SERVICE MINTING
+    ├── Funded-channel traffic triggers relay VRF lottery
+    ├── Storage/compute agreements generate direct channel debits
+    ├── ALL channel debits (relay + storage + compute) earn minting
+    ├── Revenue-capped minting prevents self-dealing (see above)
+    └── MHR enters circulation backed by real demand across all services
 
-  Phase 2: SPENDING
-    ├── Relay earners spend MHR on paid storage agreements
-    ├── Relay earners spend MHR on compute delegation
-    └── Storage/compute providers now have MHR income
+  Phase 2: MARKET ECONOMY
+    ├── Service providers spend MHR on other services
+    ├── Competition drives prices toward marginal cost
+    └── All service types have mature bilateral payment markets
 
   Phase 3: MATURE ECONOMY
     ├── Bilateral payments dominate all services
@@ -126,9 +260,92 @@ Bootstrap sequence by service type:
     └── Service prices emerge from supply/demand
 ```
 
-Relay is the right bootstrap mechanism because it's the most universal service — every node relays. A $30 solar relay earns minting rewards by forwarding packets, then spends those tokens on storage and compute from more capable nodes. The minting subsidy flows from the most common service to the rest of the economy.
+Every service type earns minting from Phase 1. A $30 solar relay earns minting by forwarding packets. A node with spare disk earns minting by storing data. A node with a GPU earns minting by running compute jobs. The minting subsidy is proportional to economic contribution, not service type.
 
-**Sharing storage is another low-barrier entry point.** Any device with spare disk space can offer [cloud storage](../applications/cloud-storage#earning-mhr-through-storage) and earn MHR through bilateral payments. While storage doesn't earn minting rewards, it earns directly from users who need their files stored and replicated. The marginal cost is near zero (idle disk space), so even modest demand generates income. For users who want to participate in the economy without running relay infrastructure, storage is the simplest starting point.
+**Storage is a particularly low-barrier entry point.** Any device with spare disk space can offer [cloud storage](../applications/cloud-storage#earning-mhr-through-storage) and earn MHR through both bilateral payments and minting rewards. The marginal cost is near zero (idle disk space), so even modest demand generates income. For users who want to participate in the economy without running relay infrastructure, storage is the simplest starting point.
+
+### Genesis-Anchored Minting
+
+During bootstrap (before the first halving at epoch 100,000), minting eligibility requires a **GenesisAttestation** — a signed proof of recent connectivity to a genesis node. This completely eliminates the [isolated partition attack](#attack-isolated-partition) during the most vulnerable period (high emission, low total supply).
+
+```
+GenesisAttestation {
+    epoch_number: u64,              // epoch this attestation was issued
+    attestor_id: NodeID,            // genesis node or attested peer
+    attestor_sig: Ed25519Signature, // signature over (epoch_number || subject_id)
+    chain_length: u8,               // 0 = genesis node itself, 1 = direct peer, etc.
+    max_chain_length: u8,           // protocol parameter (default: 5)
+}
+
+How attestations propagate:
+  1. Genesis nodes sign attestations for directly connected peers each epoch
+     (chain_length = 1)
+  2. Any node with a valid attestation (chain_length < max) can vouch for
+     its own direct peers (chain_length + 1)
+  3. Attestations propagate one hop per epoch via gossip
+  4. TTL: attestations expire after 10 epochs — a node that loses genesis
+     connectivity for >10 epochs can no longer mint
+  5. Minting eligibility check:
+     IF epoch_number < 100,000:  // bootstrap phase
+       provider must have a valid GenesisAttestation (not expired, chain verified)
+     ELSE:
+       genesis attestation not required (burns + scaling provide sufficient defense)
+
+Why this works:
+  - An isolated partition with no path to a genesis node gets ZERO minting
+  - The attacker cannot forge attestations (Ed25519 signatures)
+  - The attacker cannot relay attestations without actual connectivity
+  - Legitimate isolated communities (natural partitions) also cannot mint
+    during bootstrap — this is acceptable because the bootstrap period is
+    when the genesis gateway is the primary MHR source anyway
+```
+
+**Sunset clause**: At epoch 100,000 (first halving), genesis-anchored minting is retired. By this point, emission has halved and the active-set-scaled emission + service burn provide sufficient defense against isolated partitions. The network no longer depends on genesis connectivity for security.
+
+### Service Burn
+
+A **2% burn** is applied to every funded-channel payment, permanently destroying the burned amount. This creates a deflationary force that counterbalances minting, ensuring supply converges to a finite equilibrium even in isolated partitions.
+
+```
+Service burn mechanics:
+
+  On every funded-channel payment (relay lottery win, storage debit, compute debit):
+    burn_amount = payment × 0.02
+    provider_receives = payment × 0.98
+    burn_amount is permanently destroyed (removed from circulating supply)
+
+  Applies to:
+    ✓ Relay VRF lottery wins (burn 2% of the payout)
+    ✓ Storage per-epoch debits (burn 2% of the payment)
+    ✓ Compute per-job debits (burn 2% of the payment)
+    ✗ Free-tier trusted traffic (no payment = nothing to burn)
+    ✗ Minting rewards (new supply, not a payment)
+
+  Burn tracking:
+    Each ServiceDebitSummary includes a burn_total field
+    Epoch snapshot includes epoch_burn_total (sum of all burns)
+    Burns are reflected in the CRDT ledger as reduced delta_earned
+    (provider's delta_earned increases by 98% of payment, not 100%)
+
+Equilibrium in isolated partitions:
+  In a partition with N nodes, active-set-scaled emission = (N/100) × E
+  Each epoch, the burn destroys 2% of circulating supply used in transactions
+  Supply converges to: equilibrium = scaled_emission / burn_rate
+
+  Example (3-node partition):
+    scaled_emission = 0.03 × E = 0.03 × 10^6 = 30,000 MHR/epoch
+    burn_rate = 0.02
+    equilibrium = 30,000 / 0.02 = 1,500,000 MHR
+
+  This is a FINITE bound, regardless of how long the partition persists.
+  Without burn + scaling: supply grows without bound at E per epoch.
+
+Effect on connected networks:
+  In the normal (connected) network, burns reduce effective circulating supply.
+  Combined with lost keys (~1-2% annual), the deflationary pressure is mild
+  but creates a tighter long-term equilibrium. Tail emission (0.1% annual)
+  compensates — the steady state is: tail_emission ≈ burns + lost_keys.
+```
 
 ## Economic Architecture
 
@@ -143,9 +360,12 @@ graph LR
 
     subgraph PAID["PAID ECONOMY (MHR)"]
         Bob -->|"relay"| Carol["Carol"]
-        Carol -->|"pays relay fee"| Services["Storage\nCompute\nContent"]
-        Bob -->|"lottery win?"| Mint["Mint +\nChannel debit"]
-        Mint --> Services
+        Carol -->|"storage"| StorageNode["Storage Node"]
+        Carol -->|"compute"| ComputeNode["Compute Node"]
+        Bob -->|"channel debit"| Mint["Minting Pool"]
+        Carol -->|"channel debit"| Mint
+        StorageNode -->|"channel debit"| Mint
+        ComputeNode -->|"channel debit"| Mint
     end
 ```
 
@@ -157,8 +377,9 @@ graph LR
 
 ### Paid Tier (MHR)
 
-- Traffic crossing trust boundaries triggers [stochastic relay rewards](payment-channels)
-- Relay nodes earn MHR probabilistically — same expected income, far less overhead
+- Services crossing trust boundaries earn through [bilateral payment channels](payment-channels)
+- Relay uses [stochastic lottery](payment-channels) for bandwidth efficiency; storage and compute use direct channel debits
+- All channel debits contribute to the minting pool (proportional, revenue-capped)
 - Settled via [CRDT ledger](crdt-ledger)
 
 ## Genesis and Bootstrapping
@@ -173,28 +394,51 @@ The bootstrapping problem — needing MHR to use services, but needing to provid
 
 ### Demand-Backed Proof-of-Service Mining (MHR Genesis)
 
-The [stochastic relay lottery](payment-channels) serves a dual purpose: it determines who earns and how much, while the **funding source** depends on the economic context:
+All services — relay, storage, and compute — earn minting rewards proportional to their channel debits. The **funding source** depends on the economic context:
 
-1. **Minting (subsidy, demand-backed)**: Each epoch, the emission schedule determines the minting ceiling. Actual minting is distributed proportionally to relay nodes based on their accumulated VRF lottery wins during that epoch — but only wins on packets that traversed a **funded payment channel** are minting-eligible. Free-tier trusted traffic does not earn minting rewards. This demand-backed requirement ensures minting reflects real economic activity, not fabricated traffic.
+1. **Minting (subsidy, demand-backed)**: Each epoch, the emission schedule determines the minting ceiling. Actual minting is distributed proportionally to all service providers based on their channel debits during that epoch — but only debits from **funded payment channels** are minting-eligible. Free-tier trusted traffic does not earn minting rewards. This demand-backed requirement ensures minting reflects real economic activity, not fabricated traffic.
 
-2. **Channel debit (market)**: When a relay wins the lottery and has an open [payment channel](payment-channels) with the upstream sender, the reward is debited from that channel. The sender pays directly for routing. This becomes the dominant mechanism as MHR enters circulation and channels become widespread.
+2. **Channel debit (market)**: Service providers earn directly from clients through [payment channels](payment-channels). Relay uses a [stochastic lottery](payment-channels) for bandwidth efficiency; storage and compute use direct per-epoch or per-job channel debits. This becomes the dominant income source as MHR enters circulation.
 
-Both mechanisms coexist. As the economy matures, channel-funded relay payments naturally replace minting as the primary income source for relays, while the decaying emission schedule ensures the transition is smooth.
+Both mechanisms coexist. As the economy matures, channel-funded service payments naturally replace minting as the primary income source, while the decaying emission schedule ensures the transition is smooth.
 
 ```
-Relay compensation per epoch:
+Service provider compensation per epoch:
+
   Epoch mint pool: max(10^12 >> (epoch / 100_000), tail_floor)
     → new supply created (not transferred from a pool)
     → halves every 100,000 epochs; floors at 0.1% annual inflation
 
-  Relay R's mint share: epoch_mint_pool × (R_wins / total_wins_in_epoch)
-    → proportional to verified VRF lottery wins
-    → a relay with 10% of the epoch's wins gets 10% of the mint pool
+  Active-set-scaled emission:
+    scaled_emission = epoch_mint_pool × min(active_set_size, 100) / 100
+    → 3-node partition: 3% of full emission
+    → 100+ nodes: full emission
 
-  Channel revenue: sum of lottery wins debited from sender channels
-    → direct payment, no new supply created
+  Service burn (2%):
+    Every funded-channel payment burns 2% before crediting the provider.
+    Provider receives 98% of the channel payment.
+    Burned amount is permanently destroyed (removed from supply).
 
-  Total relay income = mint share + channel revenue
+  Per-provider net income (post-burn):
+    P_income  = relay + storage + compute payments received (after burn)
+    P_spending = total payments sent across all channels
+    P_net     = max(0, P_income - P_spending)
+    → only funded-channel activity counts (free-tier excluded)
+
+  Revenue-capped minting (net-income based):
+    minting_eligible = Σ P_net for all providers P
+    epoch_minting = min(scaled_emission, 0.5 × minting_eligible)
+
+  Provider P's mint share: epoch_minting × (P_income / Σ all_income)
+    → distribution uses gross income (rewards all service provision)
+    → a storage node earning 10% of total income gets 10% of minting
+
+  Channel revenue: direct payments from clients (separate from minting)
+    → relay: VRF lottery wins debited from sender channels (98% after burn)
+    → storage: per-epoch debits from storage agreements (98% after burn)
+    → compute: per-job debits from compute agreements (98% after burn)
+
+  Total provider income = mint share + channel revenue
 ```
 
 ### Genesis Service Gateway
@@ -203,21 +447,23 @@ The bootstrapping problem is solved by a **Genesis Service Gateway** — a known
 
 1. **Transparent allocation**: The genesis gateway operator receives a disclosed MHR allocation. No hidden allocation, no ICO — the amount is visible in the ledger from epoch 0.
 2. **Competitive fiat pricing**: The gateway offers relay, storage, and compute at market-competitive fiat prices (see [Initial Pricing](#initial-pricing) below).
-3. **Funded channels**: Consumer fiat payments are converted to MHR credit extensions, creating funded payment channels. This generates the first real relay demand on the network.
-4. **Demand-backed minting**: Real relay traffic through funded channels triggers the VRF lottery. Winning relays earn minting rewards backed by actual economic activity.
-5. **MHR circulation**: Minted MHR enters circulation — relay operators can spend it on storage, compute, or other services.
+3. **Funded channels**: Consumer fiat payments are converted to MHR credit extensions, creating funded payment channels. This generates the first real service demand on the network (relay, storage, compute).
+4. **Demand-backed minting**: All funded-channel activity — relay traffic, storage agreements, compute jobs — earns minting rewards proportional to channel debits, backed by actual economic activity.
+5. **MHR circulation**: Minted MHR enters circulation — all service providers can spend it on other services.
 6. **Decentralization**: As more operators join and offer competing services, the genesis gateway becomes one of many providers. The economy transitions from gateway-bootstrapped to fully market-driven.
 
 ### Bootstrap Sequence
 
-1. Genesis gateway receives transparent MHR allocation, begins offering fiat-priced services
-2. Nodes form local meshes (free between trusted peers, no tokens)
-3. Consumers pay fiat to genesis gateway → funded channels created
-4. Funded-channel traffic triggers demand-backed relay minting (VRF-based)
-5. Lottery wins on funded channels accumulate as service proofs; epoch minting distributes MHR to relays
-6. Relay nodes open payment channels and begin spending MHR on services
-7. More operators join, offer competing services, prices fall toward marginal cost
-8. Market pricing emerges from supply/demand
+1. Genesis gateway receives transparent MHR allocation, begins offering fiat-priced services (relay, storage, compute)
+2. Genesis nodes begin signing [GenesisAttestations](#genesis-anchored-minting) for connected peers — minting eligibility requires attestation during bootstrap
+3. Nodes form local meshes (free between trusted peers, no tokens)
+4. Consumers pay fiat to genesis gateway → funded channels created for all service types
+5. Funded-channel activity triggers demand-backed minting: relay VRF lottery wins + storage/compute direct debits. 2% of each payment is [burned](#service-burn).
+6. All service providers (relay, storage, compute) with valid genesis attestations earn minting proportional to their channel debits
+7. Providers open payment channels and begin spending MHR on other services
+8. More operators join, offer competing services across all types, prices fall toward marginal cost
+9. At epoch 100,000 (first halving): genesis attestation requirement sunsets — burns + active-set scaling provide sufficient defense
+10. Market pricing emerges from supply/demand
 
 ### Trust-Based Credit
 
@@ -227,44 +473,93 @@ Trusted peers can [vouch for each other](trust-neighborhoods#trust-based-credit)
 
 ### Revenue-Capped Minting
 
-The emission schedule sets a ceiling, but actual minting per epoch is capped at a fraction of real relay fees collected. This makes self-dealing always unprofitable:
+The emission schedule sets a ceiling, but actual minting per epoch is capped at a fraction of **net economic activity** across all service types. Emission is further scaled by the partition's active set size, and a 2% [service burn](#service-burn) on every funded-channel payment creates a deflationary counterforce:
 
 ```
 Revenue-capped minting formula:
 
+  For each provider P this epoch:
+    P_income  = total payments received for services (relay + storage + compute)
+              (post-burn: provider receives 98% of channel payment)
+    P_spending = total payments sent across all channels
+    P_net     = max(0, P_income - P_spending)
+      → only funded-channel activity counts (free-tier excluded)
+
+  minting_eligible = Σ P_net for all providers P
+
+  Active-set-scaled emission:
+    scaled_emission = emission_schedule(epoch) × min(active_set_size, 100) / 100
+
   effective_minting(epoch) = min(
-      emission_schedule(epoch),                    // halving ceiling (10^12 >> shift)
-      minting_cap × total_channel_debits(epoch)    // 0.5 × actual relay fees
+      scaled_emission,                          // active-set-scaled halving ceiling
+      minting_cap × minting_eligible            // 0.5 × net economic activity
   )
 
-  minting_cap = 0.5  (minting can never exceed 50% of relay revenue)
+  minting_cap = 0.5  (minting can never exceed 50% of net service activity)
+
+  Service burn: 2% of every funded-channel payment permanently destroyed.
+  This reduces circulating supply and bounds isolated partition equilibrium
+  to scaled_emission / burn_rate (finite).
 ```
 
-**Why this makes self-dealing unprofitable:**
+**Why net income, not gross debits:** Gross debits can be inflated by cycling — two colluding nodes pass the same MHR back and forth, each pass creating new "debits." Net income eliminates this: a round-trip produces income = spending → net = 0 → zero minting. See [Channel Cycling](#attack-channel-cycling) in the Security Analysis for the full defense.
 
-An attacker who pays fiat to acquire MHR, then spends it on fake relay traffic to their own Sybil nodes, always loses money:
+**Why self-dealing is unprofitable — the complete analysis:**
+
+Self-dealing means the attacker controls both the client and the server. The channel debit between them is an internal transfer (net cost 0). The attacker's only gain is minting. The defense has two parts:
+
+1. **Non-deterministic assignment** forces the attacker to pay honest nodes for most of their fake demand
+2. **Net-income revenue cap** limits the minting the attacker can capture
 
 ```
-Self-dealing attack analysis:
+Self-dealing attack analysis (with non-deterministic assignment):
 
-  1. Attacker pays $X fiat → gets Y MHR
-  2. Attacker spends Y MHR on relay fees (fake traffic through own nodes)
-  3. Maximum minting across ALL relays in the epoch = 0.5 × total_channel_debits
-  4. Even if attacker captures 100% of all minting: gets back at most 0.5 × Y MHR
-  5. Net result: spent Y, received ≤ 0.5Y → net loss of ≥ 0.5Y
+  Setup:
+    Attacker controls X fraction of network economic capacity
+    Attacker generates Y MHR in fake service demand
 
-  This holds regardless of epoch, traffic volume, or attacker's share of the network.
-  The minting_cap guarantees self-dealing is unprofitable at every scale.
+  Non-deterministic assignment:
+    Relay: mesh routing sends packets through honest relays (topology-determined)
+    Storage: DHT assigns honest nodes for (1-X) fraction of requests
+    Compute: DHT assigns honest nodes for (1-X) fraction of requests
+
+  Cost to attacker:
+    (1-X) × Y → paid to honest nodes (REAL, irrecoverable cost)
+    X × Y → paid to own nodes (internal transfer, net 0)
+
+  Attacker's net income (for minting cap):
+    Honest providers' net: (1-X) × Y (they received, didn't spend to attacker)
+    Attacker providers' net: 0 (received X×Y from own nodes, internal transfer)
+    But attacker also spent (1-X)Y to honest nodes, so:
+      Attacker's total spending: Y
+      Attacker's total income: X × Y (from own fake demand)
+      Attacker's net: max(0, XY - Y) = 0 (since X < 1)
+
+  Revenue for attacker:
+    Minting share = (attacker_income / total_income) × epoch_minting
+    = (XY / Y) × min(E, 0.5 × minting_eligible)
+    = X × min(E, 0.5 × (1-X)Y)    // only honest providers have positive net
+
+  Attacker's profit (assuming 0.5(1-X)Y < E):
+    -(1-X)Y + X × 0.5(1-X)Y = (1-X)Y × (0.5X - 1)
+
+  This is ALWAYS negative for X < 1. The net-income cap makes the
+  defense STRONGER than the gross-debit analysis (which allowed profit
+  at X > 67%). With net income, self-dealing in a connected network is
+  NEVER profitable — the attacker's own net income is always 0.
 ```
+
+**Important**: The "never profitable" result applies to the **connected** network case where non-deterministic assignment routes most demand to honest nodes. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but genesis attestation (bootstrap), active-set scaling, and service burn bound the damage to a finite equilibrium.
 
 **What happens to "unminted" emission:**
 
-- During early bootstrap, total relay fees are small, so actual minting is well below the emission schedule
+- During early bootstrap, net service activity is small, so actual minting is well below the emission schedule
 - The difference is NOT minted — it is simply not created (supply grows slower)
 - As traffic grows, actual minting approaches the emission schedule ceiling
-- In mature economy, the cap is rarely binding (relay fees far exceed the emission schedule)
+- In mature economy, the cap is rarely binding (net service activity far exceeds the emission schedule)
+- The 2% service burn continuously removes supply, creating a tighter equilibrium than emission alone would suggest
 
-This changes the supply curve: instead of predictable emission, supply growth tracks actual economic activity. Early supply grows slowly (good — prevents speculation without real usage), mature supply follows the emission schedule.
+This changes the supply curve: instead of predictable emission, supply growth tracks actual economic activity minus burns. Early supply grows slowly (good — prevents speculation without real usage), mature supply follows the emission schedule minus the burn rate. The steady-state effective supply is where `minting ≈ burns + lost_keys`.
 
 ### Initial Pricing
 
@@ -337,7 +632,7 @@ If each isolated community minted its own token, connecting two communities woul
 When two communities operate in isolation:
 
 1. **Internally**: Both communities communicate free between trusted peers — no MHR needed
-2. **Independently**: Each community mints MHR via proof-of-service, proportional to actual relay work. The [CRDT ledger](crdt-ledger) tracks balances independently on each side
+2. **Independently**: Each community mints MHR via proof-of-service, proportional to actual service activity (relay, storage, compute). The [CRDT ledger](crdt-ledger) tracks balances independently on each side
 3. **On reconnection**: The CRDT ledger merges automatically (CRDTs guarantee convergence). Both communities' MHR is valid because it was earned through real work, not printed arbitrarily
 
 MHR derives its value from **labor** (relaying, storage, compute), not from community membership. One hour of relaying in Community A is roughly equivalent to one hour in Community B. Different hardware costs are reflected in **market pricing** — nodes set their own per-byte charges — not in separate currencies.
@@ -420,7 +715,7 @@ graph LR
 1. **Sign-up**: Consumer pays the gateway in fiat (monthly subscription, prepaid, pay-as-you-go — the gateway chooses its business model)
 2. **Trust extension**: Gateway adds the consumer to `trusted_peers` and extends a credit line via [CreditState](trust-neighborhoods#trust-based-credit). The consumer's traffic through the gateway is free (trusted peer relay)
 3. **Network access**: The consumer uses the network normally. Their traffic reaches the gateway for free, and the gateway pays MHR for onward relay to untrusted nodes
-4. **Settlement**: The gateway earns MHR through relay minting + charges fiat to consumers. The spread between fiat revenue and MHR costs is the gateway's margin
+4. **Settlement**: The gateway earns MHR through service minting (relay, storage, compute) + charges fiat to consumers. The spread between fiat revenue and MHR costs is the gateway's margin
 
 **The consumer never sees MHR.** From their perspective, they pay a monthly bill and use the network. Like a mobile carrier — you don't think about interconnect fees between networks.
 
@@ -462,9 +757,9 @@ Trust-based gateway mechanics:
 
 **Gateway incentives:**
 
-- Gateways earn relay minting rewards (they relay traffic between consumers and the wider network)
+- Gateways earn minting rewards across all services they provide (relay, storage, compute)
 - Gateways earn fiat from consumer subscriptions
-- Gateways with many consumers become valuable relay hubs — more traffic = more lottery wins = more MHR minting
+- Gateways with many consumers generate high channel debit volume = proportionally more minting
 - Competition between gateways drives prices toward cost (standard market dynamics)
 
 **Risks and mitigations:**
@@ -482,11 +777,348 @@ Gateways are not privileged protocol participants. They are regular nodes that c
 
 - **Utility-first**: MHR is designed for purchasing services. Fiat exchange may emerge but the protocol's health doesn't depend on it, and the internal economy functions as a closed loop for participants who never touch fiat.
 - **Transparent genesis**: Disclosed genesis allocation to the gateway operator, visible in the ledger from epoch 0. No ICO, no hidden allocation, no insider advantage.
-- **Demand-backed minting**: Funded payment channels required for minting eligibility. Fabricated traffic through unfunded channels earns nothing. Revenue-capped emission guarantees self-dealing is always unprofitable.
+- **Demand-backed minting**: Funded payment channels required for minting eligibility across all service types. Non-deterministic assignment + net-income revenue cap guarantee self-dealing is never profitable in connected networks. Isolated partition damage is bounded by genesis attestation (bootstrap), active-set scaling, and 2% service burn. See [Security Analysis](#security-analysis).
 - **Spend-incentivized**: Tail emission (0.1% annual) mildly dilutes idle holdings. Lost keys (~1–2% annually) permanently remove supply. MHR earns nothing by sitting still — only by being spent on services or lent via trust-based credit.
 - **Partition-safe**: The economic layer works correctly during network partitions and converges when they heal
 - **Minimal overhead**: [Stochastic rewards](payment-channels) reduce economic bandwidth overhead by ~10x compared to per-packet payment
 - **Communities first**: Trusted peer communication is free. The economic layer only activates at trust boundaries.
+
+## Partition Tolerance
+
+The economic layer is designed to operate correctly during network partitions and converge automatically when they heal. This section describes how all-service minting interacts with partitions.
+
+### Per-Partition Minting
+
+Each partition operates as a self-contained economy with its own minting. Emission is **scaled by the partition's active set size** and reduced by the **2% service burn**:
+
+```
+Partition minting (with active-set scaling and burn):
+
+  Partition A (60 nodes):
+    scaled_emission_A = emission(epoch) × min(60, 100) / 100 = 0.6E
+    local_debits_A = relay + storage + compute debits within partition A
+    local_minting_A = min(scaled_emission_A, 0.5 × net_income_A)
+    burns_A = 0.02 × total_funded_payments_A
+
+  Partition B (40 nodes):
+    scaled_emission_B = emission(epoch) × min(40, 100) / 100 = 0.4E
+    local_debits_B = relay + storage + compute debits within partition B
+    local_minting_B = min(scaled_emission_B, 0.5 × net_income_B)
+    burns_B = 0.02 × total_funded_payments_B
+
+  Each partition independently applies scaled emission, revenue cap, and burns.
+  No cross-partition knowledge needed — each side sees only local activity.
+```
+
+On merge, total minted supply may exceed what a single-network emission would have produced. However, with active-set scaling, the overminting is **bounded by the sum of scale factors** (e.g., 60-node + 40-node = 0.6E + 0.4E = 1.0E, no overminting at all when the two partitions together equal the reference size). The 2% burn during partition operation further reduces the net supply impact. This is the same [partition minting tradeoff](crdt-ledger#partition-minting-and-supply-convergence) — the alternative (coordinated minting) requires global consensus, which contradicts partition tolerance.
+
+### DHT Assignment During Partitions
+
+Storage and compute use DHT ring assignment. During a partition:
+
+```
+DHT assignment in partitioned network:
+
+  Before partition:
+    Full ring: nodes A, B, C, D, E, F, G, H
+    storage_key = hash(content || epoch_hash) → assigned to node D
+
+  During partition (A,B,C,D | E,F,G,H):
+    Left partition ring: A, B, C, D
+    Right partition ring: E, F, G, H
+
+    New storage requests in left partition use left-ring DHT
+    New storage requests in right partition use right-ring DHT
+    Existing agreements continue on whichever side their node is in
+
+  After merge:
+    Full ring restored
+    New requests use full ring
+    Existing agreements are unaffected (provider stays the same)
+```
+
+Existing storage agreements survive partitions because the payment channel persists between client and provider. If the provider is on the other side of the partition, the client cannot verify or pay — the agreement is effectively paused. On merge, the channel resumes (CRDT convergence restores both parties' balances).
+
+### Revenue Cap During Partitions
+
+Each partition's revenue cap uses only local net income, scaled by its active set size:
+
+- No cross-partition knowledge needed
+- Each partition independently caps minting at `min(scaled_emission, 0.5 × net_income)`
+- Active-set scaling limits small partitions: 3-node partition gets 3% of full emission
+- 2% service burn creates deflationary counterforce within each partition
+- The net-income cap prevents [cycling attacks](#attack-channel-cycling) even within isolated partitions
+- On merge, the CRDT ledger handles balance convergence
+- During bootstrap (epoch < 100,000): [genesis-anchored minting](#genesis-anchored-minting) prevents isolated partitions from minting at all
+
+For detailed analysis of attacks that exploit partitions — including fully-controlled partitions, cycling, and compounding — see the [Security Analysis](#security-analysis).
+
+## Security Analysis
+
+This section catalogs all known economic attack vectors and their defenses. The economic layer relies on three mechanisms — **non-deterministic assignment**, **net-income revenue cap**, and **service burn + active-set scaling** — to defend against minting abuse. During bootstrap, [genesis-anchored minting](#genesis-anchored-minting) provides an additional layer by requiring provable connectivity to genesis nodes. No staking, slashing, or trust scores are required.
+
+### Attack: Self-Dealing (Connected Network)
+
+**Description**: Attacker controls X fraction of network economic capacity. Generates Y MHR in fake service demand through funded channels to earn minting rewards.
+
+**Defense**: Non-deterministic assignment routes (1-X)×Y to honest nodes (real, irrecoverable cost). The net-income revenue cap ensures the attacker's own internal transfers produce zero minting eligibility. Result: self-dealing in a connected network is **never profitable** for any X < 1.
+
+**Residual risk**: None in connected networks. See [Proof: Self-Dealing Is Unprofitable](#proof-self-dealing-is-unprofitable) for the full analysis.
+
+### Attack: Channel Cycling
+
+**Description**: Two colluding nodes cycle M MHR back and forth on the same channel K times per epoch. With gross debits, each round-trip adds 2M to total debits — after K cycles, total debits = 2KM. The attacker reaches the emission ceiling immediately, regardless of actual economic activity. This also works across channels (triangle cycling: A→B→C→A) and through settlement-mediated cycling (settle, refund, repeat).
+
+**Defense**: The revenue cap uses **net income per provider** (income minus spending), not gross channel debits.
+
+```
+Cycling prevention (net-income cap):
+
+  Same-channel cycling: A→B then B→A, repeated K times
+    A: income = KM, spending = KM → net = 0
+    B: income = KM, spending = KM → net = 0
+    minting_eligible = 0 → epoch_minting = 0 ✓
+
+  Cross-channel cycling (triangle): A→B→C→A, repeated K times
+    A: income = KM (from C), spending = KM (to B) → net = 0
+    B: income = KM (from A), spending = KM (to C) → net = 0
+    C: income = KM (from B), spending = KM (to A) → net = 0
+    minting_eligible = 0 → epoch_minting = 0 ✓
+
+  Settlement-mediated cycling: settle channel, refund, repeat
+    Same result — net income is tracked per-provider across ALL
+    channels and settlements within the epoch. A provider who
+    receives M via settlement and spends M via new channel debits
+    has net income = 0 regardless of settlement timing.
+
+  Key property: any CLOSED CYCLE produces zero net income for
+  every participant, because every provider's income equals their
+  spending. Only one-directional flows (real demand) produce
+  positive net income.
+```
+
+**Residual risk**: None. Cycling is completely neutralized by the net-income cap.
+
+### Attack: Sybil DHT Positioning
+
+**Description**: Attacker creates many node identities to occupy more DHT ring space. With more ring positions, a larger fraction of storage/compute assignments are directed to attacker nodes, increasing their minting share.
+
+**Defense**: This is equivalent to increasing X (attacker's network fraction) in the self-dealing proof. More identities capture more assignments, but:
+
+```
+Sybil analysis:
+
+  Attacker creates N identities, captures N/total_nodes of DHT ring.
+  Equivalent to having X = N/total_nodes network fraction.
+
+  In connected network: self-dealing proof applies.
+    Attacker's net income = 0 (internal transfers don't count).
+    Never profitable for any X < 1.
+
+  Additional defenses:
+    - DHT assignment uses hash(content_id || epoch_hash)
+      → epoch_hash changes every epoch, so ring positions are ephemeral
+      → attacker can't grind permanent strategic positions
+    - Each identity needs funded channels (real MHR) to earn minting
+    - Creating identities is cheap but funding channels requires capital
+```
+
+**Residual risk**: Same as self-dealing — none in connected networks.
+
+### Attack: Content/Job ID Grinding
+
+**Description**: Client generates content IDs or job specifications designed so that `hash(content_id || epoch_hash)` maps to an attacker-controlled node on the DHT ring.
+
+**Defense**: The `epoch_hash` is determined at epoch proposal time and is unpredictable at content creation time. To pre-grind assignments, the attacker would need to predict future epoch hashes — computationally infeasible (hash space is 2^256). Even grinding after the epoch hash is known is impractical: the client must use the content_id it actually wants to store, not an arbitrary one.
+
+**Residual risk**: None (computationally infeasible).
+
+### Attack: Relay Without Forwarding
+
+**Description**: Relay node claims VRF lottery wins without actually forwarding packets, collecting payment for non-service.
+
+**Defense**: The VRF lottery requires the actual packet hash as input — the relay must have received the real packet to compute a valid VRF proof. If the relay doesn't forward the packet:
+
+- The sender detects non-delivery (no acknowledgment from destination)
+- The sender routes around the dishonest relay in future
+- Persistent non-forwarding is detectable via delivery rate monitoring
+
+**Residual risk**: Individual packet drops are hard to attribute (could be normal link loss). But the economic impact is bounded to individual lottery wins, and persistent dishonesty leads to route abandonment.
+
+### Attack: Storage/Compute Fabrication
+
+**Description**: Provider claims to store data or execute computations without actually doing so, collecting channel payments for non-service.
+
+**Defense**: Bilateral verification by the client:
+
+- **Storage**: Client issues periodic challenge-response queries on stored data (e.g., "return bytes 1024-2048 of block X"). Failure to respond correctly means the data is not stored.
+- **Compute**: Client verifies computation results against expected output or spot-checks. Incorrect results are immediately detectable.
+
+No protocol-level proof mechanism is needed. The economic incentive (continued payment) ensures honest service. Dishonest providers lose the client's business immediately.
+
+**Residual risk**: Brief period of undetected non-service before the client verifies. Bounded by a single epoch's payment for storage, or a single job's payment for compute.
+
+### Attack: Isolated Partition
+
+**Description**: Attacker creates a network partition they fully or majority control. Within this partition, the attacker controls enough of the economic capacity to profit from self-dealing. At 100% control, non-deterministic assignment is nullified — all service requests go to attacker nodes. Creating an isolated partition is trivial — a few VMs on a laptop suffice.
+
+This is the most significant economic attack vector. Three defense layers bound the damage to a finite, predictable amount:
+
+**Defense layers**:
+
+1. **Genesis-anchored minting (bootstrap defense)**: During bootstrap (epoch < 100,000), minting requires a valid [GenesisAttestation](#genesis-anchored-minting) — a signed proof of recent connectivity to a genesis node. An isolated partition with no path to a genesis node gets **zero minting**. This completely eliminates the attack during the most vulnerable period (high emission, low total supply).
+
+2. **Active-set-scaled emission (size defense)**: Emission is scaled by the partition's active set size: `scaled_emission = emission × min(active_nodes, 100) / 100`. A 3-node partition gets 3% of full emission. This eliminates the linear scaling advantage of small partitions.
+
+3. **Service burn (equilibrium defense)**: 2% of every funded-channel payment is permanently destroyed. In an isolated partition, supply converges to a finite equilibrium where burn = minting:
+
+```
+Isolated partition equilibrium analysis:
+
+  Setup: attacker controls 100% of an isolated partition with N nodes
+  Scaled emission: (N/100) × E  (for N < 100)
+  Burn rate: 2% of every funded-channel payment
+
+  Without burn (compounding):
+    Supply after K epochs: M × 1.5^K (unbounded growth)
+    Reaches scaled emission ceiling in O(log(scaled_E/M)) epochs
+    After ceiling: attacker mints scaled_E per epoch indefinitely
+
+  With burn (equilibrium):
+    Each epoch: supply += minting, supply -= burns
+    Burns = 0.02 × economic_activity
+    At equilibrium: minting = burns
+    equilibrium_supply = scaled_emission / burn_rate
+
+  Example (3-node partition, bootstrap emission):
+    scaled_emission = (3/100) × 10^6 = 30,000 MHR/epoch
+    equilibrium = 30,000 / 0.02 = 1,500,000 MHR
+    → Finite bound, regardless of how long the partition persists
+
+  Example (3-node partition, mature emission after 5 halvings):
+    scaled_emission = (3/100) × 10^6 / 32 = 937.5 MHR/epoch
+    equilibrium = 937.5 / 0.02 = 46,875 MHR
+    → Negligible
+
+  Compare to undefended (no scaling, no burn):
+    Full emission at bootstrap: 10^6 MHR/epoch, growing without bound
+    After 100 epochs: 10^8 excess MHR
+```
+
+4. **Cycling prevention**: The net-income cap prevents the attacker from inflating debits by cycling MHR between their own nodes. Only net one-directional flows count toward minting eligibility.
+
+5. **Self-correcting on merge**: Excess supply dilutes ALL holders equally, including the attacker's own holdings. The emission schedule decays geometrically, so any supply shock becomes negligible over time.
+
+**Why three layers**: Each defense targets a different phase of the attack:
+- Genesis attestation prevents the attack during bootstrap (when damage is maximal)
+- Active-set scaling limits emission rate regardless of economic activity
+- Service burn ensures long-running partitions converge to equilibrium (not unbounded growth)
+
+**Residual risk**: Post-bootstrap (epoch > 100,000), an isolated partition's supply is bounded by `scaled_emission / burn_rate`. For small partitions at maturity, this is negligible. The attack remains theoretically possible but quantifiably bounded — this is the inherent cost of partition tolerance without global consensus.
+
+### Attack: Artificial Partition Creation
+
+**Description**: Attacker deliberately creates multiple isolated partitions they control, maximizing total minting across all partitions.
+
+**Defense**:
+
+```
+Multi-partition attack economics (with active-set scaling + burn):
+
+  K partitions, each with N_k nodes fully controlled by attacker
+  Total attacker nodes: Σ N_k
+
+  Per-partition scaled emission: (N_k / 100) × E
+  Per-partition equilibrium supply: (N_k / 100) × E / 0.02
+
+  Total attacker equilibrium: Σ (N_k / 100) × E / 0.02
+                            = (Σ N_k / 100) × E / 0.02
+
+  Key insight: splitting nodes across K partitions gives the SAME total
+  equilibrium as one partition with Σ N_k nodes. There is no advantage
+  to fragmenting into multiple partitions.
+
+  During bootstrap: genesis-anchored minting prevents all isolated
+  partitions from minting regardless of K.
+
+  Cost:
+    - K sets of hardware (real physical devices)
+    - Initial MHR capital in each partition
+    - No scaling advantage over a single partition of the same total size
+```
+
+**Residual risk**: No advantage over single-partition attack. Same equilibrium bound applies. During bootstrap, completely prevented by genesis attestation.
+
+### Attack: Channel Balance Inflation
+
+**Description**: Attacker creates payment channels with inflated balances not backed by actual MHR holdings on the CRDT ledger.
+
+**Defense**: Settlement validation is performed by **every receiving node**, which checks that neither party's derived balance goes negative after applying the settlement. Derived balance = `epoch_balance + delta_earned - delta_spent`, which is deterministic from the CRDT state. A node cannot claim more MHR than the ledger attributes to it.
+
+Channel opening requires both parties to sign the initial state. The balances must be backed by ledger holdings. Creating MHR from nothing requires forging the CRDT state, which requires forging settlement records (dual Ed25519 signatures) or corrupting epoch snapshots (67% acknowledgment threshold).
+
+**Residual risk**: None under normal operation. In a fully attacker-controlled partition, the attacker can corrupt the local CRDT state — but this reduces to the [Isolated Partition](#attack-isolated-partition) attack, bounded by scaled emission, burn equilibrium, and genesis attestation.
+
+### Attack: Double-Spend via Old Channel State
+
+**Description**: One party publishes an old channel state (lower sequence number, more favorable balance) to claim funds already spent.
+
+**Defense**: The dispute resolution window (2,880 gossip rounds, ~48 hours) allows the counterparty to submit a higher-sequence state, which always wins. After the window, the latest submitted state is final. Channel abandonment (4 epochs of inactivity) allows unilateral close with the last mutually-signed state. See [Bilateral Payment Channels](payment-channels#channel-lifecycle).
+
+**Residual risk**: If the honest counterparty is offline for >48 hours during a dispute, they cannot submit the newer state. Mitigated by the probabilistic double-spend detection in the CRDT ledger and by economic disincentive (blacklisting makes the one-time gain smaller than the cost of losing network identity).
+
+### Attack: Settlement Forgery
+
+**Description**: Forge settlement records to credit attacker with unearned balance on the CRDT ledger.
+
+**Defense**: Settlement records require Ed25519 signatures from BOTH parties. Forging requires compromising both private keys. Every receiving node validates both signatures independently against the settlement hash. Invalid settlements are silently dropped and not gossiped.
+
+**Residual risk**: None without private key compromise.
+
+### Attack: CRDT Counter Manipulation
+
+**Description**: Inflate GCounter entries in the CRDT ledger to increase balance without corresponding economic activity.
+
+**Defense**: GCounter entries are per-node — each processing node writes only to its own entry. Merge takes pointwise maximum. Increases must correspond to valid settlement records, which require dual Ed25519 signatures. A node that inflates its own entry without corresponding settlements is detectable by any peer that compares the claimed delta against available settlement records during the epoch verification window.
+
+**Residual risk**: In a partition where all verifiers are attacker nodes, inflation goes undetected locally. On merge, this reduces to the [Isolated Partition](#attack-isolated-partition) attack — bounded by scaled emission, burn equilibrium, and genesis attestation, and corrected during epoch reconciliation.
+
+### Attack: VRF Lottery Manipulation
+
+**Description**: Relay node tries to influence the VRF output to win the lottery more frequently.
+
+**Defense**: The VRF (ECVRF-ED25519-SHA512-TAI, RFC 9381) produces exactly **one valid output** per (private_key, packet_hash) pair. The relay cannot "grind" through values — there is only one valid output for each packet. The VRF proof is verifiable by any party using the relay's public key. Changing the relay key changes the node identity (and forfeits accumulated reputation).
+
+**Residual risk**: None (cryptographic guarantee).
+
+### Attack: Trust/Credit Exploitation
+
+**Description**: Attacker gains trust from peers, extracts maximum credit, then defaults on the debt.
+
+**Defense**: Credit limits are per-peer, per-epoch, configurable by the vouching node. The voucher absorbs the debt (economic skin in the game — you only trust people you'd lend to). Transitive credit decays (10% per hop, max 2 hops). Trust is revocable at any time. See [Trust & Neighborhoods](trust-neighborhoods).
+
+**Residual risk**: One-time loss up to the extended credit limit. Mitigated by conservative credit settings and the social cost of defaulting (loss of all trust relationships in the network).
+
+### Defense Summary
+
+| Attack Vector | Primary Defense | Residual Risk |
+|---|---|---|
+| Self-dealing (connected) | Non-deterministic assignment + net-income cap | None |
+| Channel cycling | Net-income revenue cap | None |
+| Sybil DHT positioning | Reduces to self-dealing proof | None (connected) |
+| Content/Job ID grinding | Unpredictable epoch_hash | None |
+| Relay non-forwarding | VRF requires real packet + sender detection | Individual packet drops |
+| Storage/compute fabrication | Bilateral client verification | Brief undetected period |
+| **Isolated partition** | **Genesis attestation (bootstrap) + burn + scaled emission** | **Bounded: scaled_emission / burn_rate** |
+| Artificial partition creation | Same as isolated partition; no advantage to splitting | Same equilibrium bound |
+| Channel balance inflation | CRDT ledger validation | None (connected) |
+| Double-spend (old state) | 48-hour dispute window | Offline counterparty |
+| Settlement forgery | Dual Ed25519 signatures | None |
+| CRDT counter manipulation | Per-node entries + settlement proof | Reduces to partition attack |
+| VRF lottery manipulation | Cryptographic (one output per input) | None |
+| Trust/credit exploitation | Credit limits + voucher absorbs debt | One-time credit loss |
+
+**All attack vectors are now bounded.** The isolated partition — previously the only vector with material residual risk — is now defended by three layers: genesis-anchored minting (eliminates the attack during bootstrap), active-set-scaled emission (limits small-partition minting rate), and 2% service burn (ensures supply converges to a finite equilibrium). The residual risk is quantifiable: `scaled_emission / burn_rate`, which is negligible at maturity. This is the inherent cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
 
 ## Long-Term Sustainability
 
@@ -498,19 +1130,21 @@ Does MHR stay functional for 100 years?
 Supply dynamics over time:
 
   Year 0-10:   High minting emission, rapid supply growth
+               2% service burn provides continuous deflationary pressure
                Lost keys: ~1-2% annually (negligible vs. emission)
-               Economy bootstraps
+               Economy bootstraps; genesis attestation prevents partition exploits
 
   Year 10-30:  Minting decays significantly (many halvings)
-               Lost keys accumulate (~10-40% of early supply permanently gone)
-               Effective circulating supply stabilizes
+               Burns + lost keys accumulate (~10-40% of early supply permanently gone)
+               Effective circulating supply stabilizes faster than without burns
+               Genesis attestation sunsets at first halving; burns + scaling take over
 
-  Year 30+:    Tail emission ≈ lost keys
-               Roughly constant effective supply
+  Year 30+:    Tail emission ≈ burns + lost keys
+               Tighter equilibrium than lost keys alone
                All income is from bilateral payments + residual minting
 ```
 
-The tail emission exists specifically for this: it ensures relay operators always have a minting incentive, even centuries from now. Lost keys and tail emission create a rough equilibrium — new supply enters through service, old supply exits through lost keys. Neither grows without bound.
+The tail emission exists specifically for this: it ensures service providers always have a minting incentive, even centuries from now. Lost keys, service burns, and tail emission create a tight equilibrium — new supply enters through service, old supply exits through burns and lost keys. Neither grows without bound. The 2% service burn accelerates the approach to equilibrium compared to relying on lost keys alone.
 
 ### Technology Evolution
 

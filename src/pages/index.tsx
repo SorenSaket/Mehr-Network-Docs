@@ -29,14 +29,45 @@ function HomepageHeader() {
   );
 }
 
+function HomepageDescription() {
+  return (
+    <section className={styles.description}>
+      <div className="container">
+        <div className={styles.descriptionContent}>
+          <p>
+            Proof of work wastes electricity. Proof of stake rewards capital, not contribution.
+            Mehr uses <strong>proof of service</strong> — every token in circulation was minted
+            because someone relayed packets, stored data, or ran computations for a real paying client.
+            No work is wasted. No token is unearned.
+          </p>
+          <p>
+            The network runs on a simple principle: <strong>free between friends, paid between
+            strangers</strong>. Communities communicate at zero cost over trusted local mesh.
+            When traffic crosses trust boundaries, service providers earn through bilateral
+            payment channels — and the protocol guarantees that cheating is structurally
+            unprofitable, with zero trust assumptions.
+          </p>
+          <p>
+            Mehr works on any transport — LoRa radio, WiFi, fiber, cellular — and is designed
+            for partition tolerance from the ground up. A village mesh that loses internet
+            connectivity continues operating independently. When it reconnects, the CRDT-based
+            ledger converges automatically. No consensus protocol. No downtime. No data loss.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="Decentralized Capability Mesh"
-      description="A decentralized capability marketplace over transport-agnostic mesh networking">
+      title="Decentralized Mesh Infrastructure"
+      description="Decentralized mesh infrastructure powered by proof of service — every token is minted when real services are delivered">
       <HomepageHeader />
       <main>
+        <HomepageDescription />
         <HomepageFeatures />
       </main>
     </Layout>

@@ -8,9 +8,25 @@ import StackDiagram from '@site/src/components/StackDiagram';
 
 # Mehr Network
 
-**A Decentralized Capability Marketplace Over Transport-Agnostic Mesh**
+**Decentralized Mesh Infrastructure Powered by Proof of Service**
+
+Proof of work wastes electricity. Proof of stake rewards capital, not contribution. Mehr uses **proof of service** — a token is minted only when a real service is delivered to a real paying client through a funded payment channel. Relay a packet, store a block, run a computation — that's how MHR enters circulation. No work is wasted. No token is unearned.
 
 Mehr is a decentralized network where every resource — bandwidth, compute, storage, connectivity — is a discoverable, negotiable, verifiable, payable capability. Nodes participate at whatever level their hardware allows. Nothing is required except a cryptographic keypair.
+
+## What Makes Mehr Different
+
+### Proof of Service
+
+Most decentralized networks create tokens through artificial work (hashing) or capital lockup (staking). Mehr mints tokens only when a provider delivers a real service — relaying traffic, storing data, or executing computations — to a client who pays through a funded payment channel. Minting is proportional to real economic activity and capped at 50% of net service income. A 2% burn on every payment creates a deflationary counterforce that keeps supply bounded.
+
+### Zero Trust Economics
+
+The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable in connected networks: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). In isolated partitions, active-set-scaled emission and the service burn bound damage to a finite equilibrium. No staking, no slashing, no trust scores required.
+
+### Free Between Friends
+
+Communication within your trust network is free — no tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates at zero cost. The economic layer only activates when traffic crosses trust boundaries. This mirrors how communities actually work: you help your neighbors for free, but charge strangers for using your infrastructure.
 
 ## Vision
 

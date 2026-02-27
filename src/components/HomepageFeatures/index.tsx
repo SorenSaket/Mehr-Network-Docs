@@ -10,11 +10,41 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
+    title: 'Proof of Service',
+    description: (
+      <>
+        Tokens are minted only when real services are delivered through funded
+        payment channels. Relay, storage, and compute all earn proportionally.
+        A 2% burn on every payment keeps supply honest.
+      </>
+    ),
+  },
+  {
+    title: 'Free Local, Paid Routed',
+    description: (
+      <>
+        Trusted neighbors relay for free — no tokens, no channels, no overhead.
+        The economic layer only activates when traffic crosses trust boundaries,
+        just like the real world.
+      </>
+    ),
+  },
+  {
+    title: 'Zero Trust Economics',
+    description: (
+      <>
+        Non-deterministic service assignment and net-income revenue caps make
+        self-dealing structurally unprofitable. No staking, no slashing, no
+        trust scores required.
+      </>
+    ),
+  },
+  {
     title: 'Transport Agnostic',
     description: (
       <>
-        Works on any medium that can move bytes — from 500 bps LoRa radio to
-        10 Gbps fiber. A single node can bridge between multiple transports
+        Any medium that can move bytes is a valid link — from 500 bps LoRa
+        radio to 10 Gbps fiber. A single node can bridge multiple transports
         simultaneously.
       </>
     ),
@@ -23,49 +53,19 @@ const FeatureList: FeatureItem[] = [
     title: 'Partition Tolerant',
     description: (
       <>
-        Network fragmentation is expected operation, not an error. A village on
-        LoRa is a partition. A country with internet cut is a partition. Every
-        layer converges correctly when partitions heal.
+        Network fragmentation is expected, not an error. Each partition operates
+        independently with its own economy. On reconnection, the CRDT ledger
+        converges automatically.
       </>
     ),
   },
   {
-    title: 'Capability Marketplace',
+    title: 'Any Hardware',
     description: (
       <>
-        Every resource — bandwidth, compute, storage, connectivity — is
-        discoverable, negotiable, verifiable, and payable. Hardware determines
-        capability; the market determines role.
-      </>
-    ),
-  },
-  {
-    title: 'Free Local, Paid Routed',
-    description: (
-      <>
-        Direct neighbors communicate for free. You pay only when your packets
-        traverse other people's infrastructure. Micropayments flow through
-        bilateral payment channels.
-      </>
-    ),
-  },
-  {
-    title: 'No Trusted Infrastructure',
-    description: (
-      <>
-        No certificate authorities, no DNS, no central servers. Identity is a
-        cryptographic keypair. Security is structural — Ed25519 signing,
-        X25519 key exchange, ChaCha20-Poly1305 encryption.
-      </>
-    ),
-  },
-  {
-    title: '$30 to $500+',
-    description: (
-      <>
-        From a solar-powered ESP32 relay to a GPU inference node, every device
-        participates at whatever level its hardware allows. Nothing is required
-        except a keypair.
+        A solar-powered ESP32 relays packets. A Raspberry Pi stores data for
+        the mesh. A GPU workstation runs compute jobs. Every device participates
+        at whatever level its hardware allows.
       </>
     ),
   },

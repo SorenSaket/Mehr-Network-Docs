@@ -21,3 +21,18 @@
   align-items: center;
   justify-content: center;
 }
+
+.description {
+  padding: 3rem 0;
+}
+
+.descriptionContent {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.descriptionContent p {
+  margin-bottom: 1.25rem;
+}

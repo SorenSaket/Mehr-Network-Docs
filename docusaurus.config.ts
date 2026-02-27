@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Mehr Network',
-  tagline: 'A Decentralized Capability Marketplace Over Transport-Agnostic Mesh',
+  tagline: 'Decentralized Mesh Infrastructure Powered by Proof of Service',
   favicon: 'img/favicon.ico',
 
   future: {

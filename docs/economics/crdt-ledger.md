@@ -113,40 +113,58 @@ Double-spend prevention is **probabilistic, not perfect**. Perfect prevention re
 
 ## Partition Minting and Supply Convergence
 
-When the network is partitioned, each partition independently runs the emission schedule and mints MHR proportional to local relay work. On merge, the winning epoch's `epoch_balance` snapshot is adopted and the losing partition's settlements are recovered via settlement proofs (see [Partition-Safe Merge Rules](#partition-safe-merge-rules)). Individual balance correctness is preserved — no one loses earned MHR. However, **total minted supply across all partitions exceeds what a single-partition emission schedule would have produced.**
+When the network is partitioned, each partition independently runs the emission schedule and mints MHR proportional to local service work. Emission is **scaled by the partition's active set size** (`scaled_emission = emission × min(active_set_size, 100) / 100`), and a **2% service burn** on every funded-channel payment creates a deflationary counterforce. On merge, the winning epoch's `epoch_balance` snapshot is adopted and the losing partition's settlements are recovered via settlement proofs (see [Partition-Safe Merge Rules](#partition-safe-merge-rules)). Individual balance correctness is preserved — no one loses earned MHR.
 
 ```
-Example:
-  Epoch 5 emission schedule: 1000 MHR total
-  Partition A (60% of nodes): mints 1000 MHR to its relays
-  Partition B (40% of nodes): mints 1000 MHR to its relays
-  On merge: total minted in epoch 5 = 2000 MHR (not 1000)
+Example (with active-set scaling):
+  Epoch 5 emission schedule: 1000 MHR total, reference_size = 100
+  Partition A (60 nodes): scaled_emission = 600 MHR, mints up to 600 MHR
+  Partition B (40 nodes): scaled_emission = 400 MHR, mints up to 400 MHR
+  On merge: total minted in epoch 5 = up to 1000 MHR (no overminting!)
+
+  Compare without scaling:
+  Partition A: mints up to 1000 MHR
+  Partition B: mints up to 1000 MHR
+  On merge: total = up to 2000 MHR (2x overminting)
 ```
 
-This is an accepted tradeoff of partition tolerance — the alternative (coordinated minting) requires global consensus, which is incompatible with the design. The overminting is bounded:
+Active-set scaling eliminates overminting when the partition sizes sum to the reference size or less. When the total active set exceeds the reference size, some overminting can still occur (each large partition mints at full emission), but this is bounded and further reduced by the 2% service burn within each partition.
 
-1. **Proportional to partition count**: Two partitions produce at most 2x; three produce at most 3x. Prolonged fragmentation into many partitions is rare in practice.
-2. **Detectable on merge**: When partitions heal, nodes can observe that multiple epoch proposals exist for the same epoch number. Post-merge epochs resume normal single-emission-schedule minting.
-3. **Self-correcting over time**: The emission schedule decays geometrically. A one-time overmint during a partition is a fixed quantity that becomes negligible relative to total supply. The asymptotic ceiling is unchanged — it is just approached slightly faster.
-4. **Offset by lost keys**: The estimated 1-2% annual key loss rate dwarfs partition minting overshoot in most scenarios.
+The remaining overminting bounds:
+
+1. **Proportional to scale factors**: Two partitions with N₁ + N₂ ≤ reference_size produce no overminting at all. Larger networks may produce up to Kx (K = partition count), but this is offset by burns.
+2. **Reduced by service burn**: 2% of economic activity is permanently destroyed each epoch, creating a deflationary counterforce that partially offsets any overminting.
+3. **Self-correcting over time**: The emission schedule decays geometrically. Partition supply shocks become negligible as emission decreases.
+4. **Offset by lost keys**: The estimated 1-2% annual key loss rate further reduces effective supply.
 
 The protocol does not attempt to "claw back" overminted supply. The cost of the mechanism (requiring consensus) exceeds the cost of the problem (minor temporary supply inflation during rare partitions).
 
-## Relay Compensation Tracking
+## Service Compensation Tracking
 
-Relay minting rewards are computed during epoch finalization. Each relay accumulates VRF lottery win proofs during the epoch and includes them in its epoch acknowledgment:
+Minting rewards are computed during epoch finalization. All service types — relay, storage, and compute — contribute to a unified minting pool. Emission is scaled by the active set size (`min(active_set_size, 100) / 100`). A 2% service burn is applied to every funded-channel payment before crediting the provider. The revenue cap uses **net income** (income minus spending per provider) to prevent [cycling attacks](mhr-token#attack-channel-cycling), while distribution uses gross income to reward all service provision fairly. See [All-Service Minting](mhr-token#all-service-minting).
+
+For relay specifically, VRF lottery win proofs are accumulated as service proofs:
 
 ```
-RelayWinSummary {
-    relay_id: NodeID,
-    win_count: u32,                     // number of demand-backed VRF lottery wins this epoch
-                                        // (only wins where packet traversed a funded channel)
-    sample_proofs: Vec<VRFProof>,       // subset of proofs (up to 10) for spot-checking
-    total_wins_hash: Blake3Hash,        // Blake3 of all win proofs (verifiable if challenged)
+ServiceDebitSummary {
+    provider_id: NodeID,
+    relay_income: u64,                  // total relay payments received this epoch (μMHR, post-burn)
+    storage_income: u64,                // total storage payments received this epoch (μMHR, post-burn)
+    compute_income: u64,                // total compute payments received this epoch (μMHR, post-burn)
+    total_spending: u64,                // total payments sent across all channels (μMHR)
+    burn_total: u64,                    // total μMHR burned this epoch (2% of all funded-channel payments)
+    relay_sample_proofs: Vec<VRFProof>, // subset of relay VRF proofs (up to 10) for spot-checking
+    income_hash: Blake3Hash,            // Blake3 of all income/spending proofs (verifiable if challenged)
 }
+
+Derived fields:
+  gross_income = relay_income + storage_income + compute_income
+  net_income   = max(0, gross_income - total_spending)
+  // Note: income fields are post-burn (provider receives 98% of channel payment)
+  // burn_total tracks the 2% that was permanently destroyed
 ```
 
-The epoch proposer aggregates win summaries from gossip and includes total win counts in the epoch snapshot. Mint share for each relay is `epoch_reward × (relay_wins / total_wins)`. Full proof sets are not gossiped (too large) — only summaries with spot-check samples. Any node can challenge a relay's win count during the 4-epoch grace period by requesting the full proof set. Fraudulent claims result in the relay's minting share being redistributed and the relay's reputation being penalized.
+The epoch proposer aggregates debit summaries from gossip and includes totals in the epoch snapshot. The revenue cap is `epoch_minting = min(scaled_emission, 0.5 × Σ net_income)`, where `scaled_emission = emission × min(active_set_size, 100) / 100`. This prevents cycling (round-trip payments produce net income = 0) and limits small-partition minting. The `epoch_burn_total` in the Epoch struct tracks total burns for the epoch. Distribution uses gross income: each provider's mint share is `epoch_minting × (provider_gross_income / Σ all_gross_income)`. Full proof sets are not gossiped (too large) — only summaries with spot-check samples. Any node can challenge a provider's income/spending/burn claims during the 4-epoch grace period by requesting the full proof set. Fraudulent claims result in the provider's minting share being redistributed and the provider's reputation being penalized.
 
 ## Epoch Compaction
 
@@ -166,6 +184,12 @@ Epoch {
     // Active set: defines the 67% threshold denominator
     active_set_hash: Blake3Hash,    // hash of sorted NodeIDs active in last 2 epochs
     active_set_size: u32,           // number of nodes in the active set
+
+    // Genesis-anchored minting (bootstrap only, before epoch 100,000)
+    genesis_attestations: GSet<GenesisAttestationHash>,  // valid attestations this epoch
+
+    // Service burn tracking
+    epoch_burn_total: u64,          // total μMHR burned this epoch across all providers
 
     // Acknowledgment tracking
     ack_count: u32,
