@@ -13,14 +13,14 @@ const layers: LayerData[] = [
   {
     number: 6,
     name: 'Applications',
-    items: ['Messaging', 'Social', 'Voice', 'Naming', 'Forums', 'Hosting'],
+    items: ['Messaging', 'Social', 'Voice', 'Voting', 'Licensing', 'Hosting'],
     link: 'applications/messaging',
     group: 'applications',
   },
   {
     number: 5,
     name: 'Service Primitives',
-    items: ['MHR-Store', 'MHR-DHT', 'MHR-Pub', 'MHR-Compute'],
+    items: ['MHR-Store', 'MHR-DHT', 'MHR-Pub', 'MHR-Compute', 'MHR-Name', 'MHR-ID'],
     link: 'services/mhr-store',
     group: 'services',
   },

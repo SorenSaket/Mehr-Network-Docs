@@ -30,12 +30,22 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Zero Trust Economics',
+    title: 'Self-Sovereign Identity',
     description: (
       <>
-        Non-deterministic service assignment and net-income revenue caps make
-        self-dealing structurally unprofitable. No staking, no slashing, no
-        trust scores required.
+        Your key is your identity. Build a profile with per-field visibility
+        controls — public, friends-only, or specific people. Claims are vouched
+        by peers, not certified by authorities.
+      </>
+    ),
+  },
+  {
+    title: 'Trust-Weighted Naming',
+    description: (
+      <>
+        No global DNS. Names resolve from your position in the trust graph —
+        names from people you trust outrank strangers. Names point to people,
+        content, or distributed applications.
       </>
     ),
   },
@@ -60,12 +70,32 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
+    title: 'Distributed Applications',
+    description: (
+      <>
+        Apps are content-addressed packages stored in the mesh — no app store,
+        no platform fee. Install locally, upgrade via trust-weighted propagation.
+        No single point of removal.
+      </>
+    ),
+  },
+  {
     title: 'Any Hardware',
     description: (
       <>
         A solar-powered ESP32 relays packets. A Raspberry Pi stores data for
         the mesh. A GPU workstation runs compute jobs. Every device participates
         at whatever level its hardware allows.
+      </>
+    ),
+  },
+  {
+    title: 'Zero Trust Economics',
+    description: (
+      <>
+        Non-deterministic service assignment and net-income revenue caps make
+        self-dealing structurally unprofitable. No staking, no slashing, no
+        trust scores required.
       </>
     ),
   },

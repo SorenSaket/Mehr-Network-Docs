@@ -116,8 +116,8 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 
 ```mermaid
 graph TD
-    L6["Layer 6: Applications<br/>Messaging, Social, Voice, Voting, Licensing, Cloud Storage, Roaming, Forums, Hosting"] --> L5
-    L5["Layer 5: Service Primitives<br/>MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute, MHR-Name, MHR-ID"] --> L4
+    L6["Layer 6: Applications<br/>Messaging, Social, Voice, Voting, Licensing, Cloud Storage, Roaming, Hosting"] --> L5
+    L5["Layer 5: Service Primitives<br/>MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute, MHR-Name, MHR-ID, Distributed Apps"] --> L4
     L4["Layer 4: Capability Marketplace<br/>Discovery, Agreements, Verification"] --> L3
     L3["Layer 3: Economic Protocol<br/>MHR Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods, Propagation"] --> L2
     L2["Layer 2: Security<br/>Link encryption, E2E encryption, Authentication, Key management"] --> L1

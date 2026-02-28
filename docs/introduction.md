@@ -28,6 +28,18 @@ The economic layer assumes every participant is adversarial. Two mechanisms make
 
 Communication within your trust network is free — no tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates at zero cost. The economic layer only activates when traffic crosses trust boundaries. This mirrors how communities actually work: you help your neighbors for free, but charge strangers for using your infrastructure.
 
+### Self-Sovereign Identity
+
+Your identity is your cryptographic key — not an account on someone else's server. [MHR-ID](services/mhr-id) lets you build a rich profile (name, bio, avatar, linked accounts, achievements) where every field is a signed claim that peers can vouch for or dispute. You control who sees each field: public, trusted friends only, friends-of-friends, or specific people. Geographic presence is verified by radio range proofs; external accounts are verified by [FUTO ID-style](https://docs.polycentric.io/futo-id/) crawler and OAuth challenges. No central identity provider. No data broker.
+
+### Subjective Naming
+
+There is no global DNS. [MHR-Name](services/mhr-name) provides human-readable names (`alice@geo:portland`, `my-blog@topic:tech`) that resolve from each viewer's position in the trust graph. Names registered by people you trust outrank names from strangers. Two communities can have different "alice" users — that's by design. Names can point to people, content, or [distributed applications](services/distributed-apps).
+
+### Distributed Applications
+
+Applications on Mehr are not hosted on servers — they are [content-addressed packages](services/distributed-apps) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
+
 ## Vision
 
 ### Strengthen Communities
@@ -73,7 +85,7 @@ Network fragmentation is not an error state — it is expected operation. A vill
 
 ### 4. Anonymous by Default
 
-Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. [Human-readable names](services/mhr-name) are optional and self-assigned. You can use the network, earn MHR, host content, and communicate without ever revealing who you are.
+Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. [Human-readable names](services/mhr-name) are optional and trust-scoped. [Profile fields](services/mhr-id#profile-fields) have per-field [visibility controls](services/mhr-id#visibility-controls) — you decide what to reveal and to whom. You can use the network, earn MHR, host content, and communicate without ever revealing who you are.
 
 ### 5. Free Local, Paid Routed
 
@@ -91,24 +103,29 @@ Mehr is organized into seven layers, each building on the one below. Click any l
 
 ## How It Works — A Simple Example
 
-1. **Alice** has a Raspberry Pi with a LoRa radio and WiFi. She's in a rural area with no internet.
-2. **Bob** has a gateway node 5 km away with a cellular modem providing internet access.
+1. **Alice** has a Raspberry Pi with a LoRa radio and WiFi. She's in a rural area with no internet. She's registered as `alice@geo:us/oregon/bend` and her profile shows her bio, avatar, and a verified GitHub link.
+2. **Bob** has a gateway node 5 km away with a cellular modem providing internet access. He's Alice's trusted peer — they relay for each other for free.
 3. **Carol** is somewhere on the internet and wants to message Alice.
 
 Here's what happens:
 
+- Carol looks up `alice@geo:us/oregon/bend` — the name resolves to Alice's node via trust-weighted resolution
 - Carol's message is encrypted end-to-end for Alice's public key
 - It routes through the internet to Bob's gateway
-- Bob relays it over LoRa to Alice (earning a small MHR fee)
+- Bob relays it over LoRa to Alice (free, because Alice is his trusted peer)
 - Alice's device decrypts and displays the message
-- Bob's relay cost is paid automatically through a bilateral payment channel
+- Carol's relay cost to reach Bob's gateway is paid automatically through a bilateral payment channel
 
-No central server. No accounts. No subscriptions. Just cryptographic identities and a marketplace for capabilities.
+Carol can see Alice's public profile fields (bio, avatar, verified GitHub) but not her phone number — Alice set that to DirectTrust visibility, so only her trusted peers can see it.
+
+No central server. No accounts. No subscriptions. Just cryptographic identities, trust-weighted naming, and a marketplace for capabilities.
 
 ## Next Steps
 
 - **Understand the protocol**: Start with [Physical Transport](protocol/physical-transport) and work up the stack
 - **Explore the economics**: Learn how [MHR tokens](economics/mhr-token) and [stochastic relay rewards](economics/payment-channels) enable decentralized resource markets
+- **Identity and naming**: See how [MHR-ID](services/mhr-id) builds self-sovereign profiles and how [MHR-Name](services/mhr-name) provides trust-weighted naming
+- **Distributed apps**: Learn how [AppManifests](services/distributed-apps) package and distribute applications across the mesh
 - **See the real-world impact**: Understand [how Mehr affects existing economics](economics/real-world-impact) and how participants earn
 - **See the hardware**: Check out the [reference designs](hardware/reference-designs) for building Mehr nodes
 - **Read the full spec**: The complete [protocol specification](specification) covers every detail

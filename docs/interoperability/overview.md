@@ -36,7 +36,9 @@ Each bridge is an L2 Mehr node that also speaks an external protocol. From the M
 
 ## Identity Attestation
 
-The core interop mechanism is **one-way identity attestation** — a signed statement linking a Mehr identity to an external identity.
+The core interop mechanism builds on [MHR-ID's ExternalIdentity claims](../services/mhr-id#identity-linking). An ExternalIdentity claim is a signed assertion linking a Mehr identity to an external platform account, verified via [crawler or OAuth challenges](../services/mhr-id#crawler-challenge) — the same methods used by [FUTO ID](https://docs.polycentric.io/futo-id/).
+
+For protocol bridges specifically, the bridge node acts as a **verification oracle** — it can verify the user's external identity via OAuth and publish a vouch, just like any [verification oracle](../services/mhr-id#verification-oracles). The bridge also stores a protocol-specific attestation for message routing:
 
 ```
 BridgeAttestation {
@@ -54,10 +56,12 @@ BridgeAttestation {
 **How it works**:
 
 1. Alice has a Mehr identity (Ed25519 keypair) and a Matrix account (`@alice:example.org`)
-2. She connects to a Matrix bridge service on the Mehr network
-3. She signs an attestation linking her Mehr key to her Matrix identity
-4. The bridge stores this attestation and handles message translation
-5. Other Mehr nodes can verify the attestation (Alice's Mehr key signed it)
+2. She publishes an `ExternalIdentity` claim for platform `matrix`, handle `@alice:example.org`
+3. She connects to a Matrix bridge service, which verifies her identity via OAuth and publishes a vouch
+4. The bridge stores a `BridgeAttestation` for message routing
+5. Other Mehr nodes can verify the claim via trust-weighted vouches — no need to trust the bridge blindly
+
+This is stronger than a bridge-only attestation because the ExternalIdentity claim is part of Alice's [MHR-ID profile](../services/mhr-id#profile-assembly) — visible to anyone who views her profile, with verification status from multiple independent oracles.
 
 **What the bridge doesn't know**: The content of E2E encrypted messages passing through it. The bridge translates metadata and routing, not plaintext.
 
@@ -170,6 +174,7 @@ These connect Mehr to protocols it already shares infrastructure with — partic
 
 | Project | Bridge Type | Key Alignment | Notes |
 |---------|------------|---------------|-------|
+| **BitTorrent** | Protocol | Content-addressed, massive DHT (10–25M nodes), BEP-44 uses Ed25519 | [BitTorrent Bridge](bittorrent) |
 | **Matrix** | Protocol | Federated, well-specified, transitive bridge access to dozens of protocols | [Matrix Bridge](matrix) |
 | **Nostr** | Protocol | Simple event model, sovereignty-focused, growing community | Relay ↔ MHR-Pub translation |
 | **Yggdrasil** | Transport | Encrypted mesh overlay; alternative backbone for internet-connected nodes | Could supplement Reticulum for IP links |
@@ -195,8 +200,8 @@ These connect Mehr to protocols it already shares infrastructure with — partic
 Some things are deliberately out of scope:
 
 - **Cross-protocol atomic swaps.** Mehr's CRDT ledger has different finality guarantees than blockchains. Token exchange happens through gateway operators or bilateral agreement, not protocol-level swap primitives.
-- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. Each bridge maintains its own attestation set. Users choose which bridges they trust.
-- **Protocol-level name resolution for external systems.** Mehr's [naming system](../services/mhr-name) resolves Mehr names. External names resolve through their own systems, with bridges translating at the boundary.
+- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. [ExternalIdentity claims](../services/mhr-id#identity-linking) link your Mehr key to external platforms, but each bridge maintains its own routing attestations. Users choose which bridges they trust.
+- **Protocol-level name resolution for external systems.** Mehr's [naming system](../services/mhr-name) resolves Mehr names via trust-weighted resolution. External names resolve through their own systems, with bridges translating at the boundary.
 - **Backward compatibility shims.** Bridge operators handle version mismatches. The Mehr protocol doesn't adapt its wire format to accommodate external protocol changes.
 
 ## Building a Bridge

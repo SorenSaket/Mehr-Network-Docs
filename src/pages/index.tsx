@@ -48,6 +48,13 @@ function HomepageDescription() {
             unprofitable, with zero trust assumptions.
           </p>
           <p>
+            Identity is self-sovereign — your cryptographic key is your identity, with
+            profile fields you control and per-field visibility (public, friends-only, or
+            specific people). Names resolve from your position in the trust graph, not from
+            a global registry. Applications are content-addressed packages stored in the
+            mesh — no app store, no server, no single point of removal.
+          </p>
+          <p>
             Mehr works on any transport — LoRa radio, WiFi, fiber, cellular — and is designed
             for partition tolerance from the ground up. A village mesh that loses internet
             connectivity continues operating independently. When it reconnects, the CRDT-based
