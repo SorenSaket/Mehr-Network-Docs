@@ -52,8 +52,44 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 | Vouch expiry (default) | 30 epochs | [MHR-ID](services/mhr-id#vouch-properties) |
 | Kickback rate range | 0–255 (u8) | [MHR-Store](services/mhr-store#kickback-rate) |
 | Default kickback rate | 128 (~50%) | [Content Propagation](economics/propagation#protocol-constants) |
-| IdentityClaim min size | 124 bytes | [MHR-ID](services/mhr-id#wire-format) |
+| IdentityClaim min size | 126 bytes | [MHR-ID](services/mhr-id#wire-format) |
 | Vouch size | 121 bytes | [MHR-ID](services/mhr-id#vouch-wire-format) |
+| Claim type: GeoPresence | 0 | [MHR-ID](services/mhr-id#claim-types) |
+| Claim type: CommunityMember | 1 | [MHR-ID](services/mhr-id#claim-types) |
+| Claim type: KeyRotation | 2 | [MHR-ID](services/mhr-id#claim-types) |
+| Claim type: Capability | 3 | [MHR-ID](services/mhr-id#claim-types) |
+| Claim type: ExternalIdentity | 4 | [MHR-ID](services/mhr-id#claim-types) |
+| Claim type: ProfileField | 5 | [MHR-ID](services/mhr-id#profile-fields) |
+| Visibility: Public | 0 | [MHR-ID](services/mhr-id#visibility-controls) |
+| Visibility: TrustNetwork | 1 | [MHR-ID](services/mhr-id#visibility-controls) |
+| Visibility: DirectTrust | 2 | [MHR-ID](services/mhr-id#visibility-controls) |
+| Visibility: Named | 3 | [MHR-ID](services/mhr-id#visibility-controls) |
+| ProfileField value type: Text | 0 | [MHR-ID](services/mhr-id#value-types) |
+| ProfileField value type: ContentHash | 1 | [MHR-ID](services/mhr-id#value-types) |
+| ProfileField value type: Coordinates | 2 | [MHR-ID](services/mhr-id#value-types) |
+| ProfileField value type: Integer | 3 | [MHR-ID](services/mhr-id#value-types) |
+| Identity challenge method: Crawler | 0 | [MHR-ID](services/mhr-id#identity-linking) |
+| Identity challenge method: OAuth | 1 | [MHR-ID](services/mhr-id#identity-linking) |
+| Max name length | 64 bytes | [MHR-Name](services/mhr-name#name-format) |
+| Name binding min size | 122 bytes | [MHR-Name](services/mhr-name#namebinding) |
+| Name expiry | 30 epochs | [MHR-Name](services/mhr-name#name-registration) |
+| Name target type: NodeID | `0x01` | [MHR-Name](services/mhr-name#wire-format) |
+| Name target type: ContentHash | `0x02` | [MHR-Name](services/mhr-name#wire-format) |
+| Name target type: AppManifest | `0x03` | [MHR-Name](services/mhr-name#wire-format) |
+| Name context sub-type: Register | `0x08` | [MHR-Name](services/mhr-name#message-types) |
+| Name context sub-type: Lookup | `0x09` | [MHR-Name](services/mhr-name#message-types) |
+| Name context sub-type: LookupResponse | `0x0A` | [MHR-Name](services/mhr-name#message-types) |
+| AppManifest format version | 1 | [Distributed Apps](services/distributed-apps#manifest-wire-format) |
+| Max contracts per manifest | 15 | [Distributed Apps](services/distributed-apps#appmanifest) |
+| Max app dependencies per manifest | 8 | [Distributed Apps](services/distributed-apps#dependencies) |
+| Max pub topic templates per manifest | 4 | [Distributed Apps](services/distributed-apps#appmanifest) |
+| Max app display name | 32 bytes | [Distributed Apps](services/distributed-apps#appmanifest) |
+| App type: Full | 0 | [Distributed Apps](services/distributed-apps#app-types) |
+| App type: Headless | 1 | [Distributed Apps](services/distributed-apps#app-types) |
+| App type: Static | 2 | [Distributed Apps](services/distributed-apps#app-types) |
+| App context sub-type: ManifestPublish | `0x0B` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
+| App context sub-type: ManifestLookup | `0x0C` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
+| App context sub-type: ManifestLookupResponse | `0x0D` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
 | Geo verification: min vouches | 3 (for Verified level) | [Voting](applications/voting#geoverificationlevel) |
 | Protocol version encoding | 1 byte (major 4 bits, minor 4 bits) | [Versioning](development/versioning#version-field) |
 | Extended version escape | Major = 15 → read u16 pair from TLV | [Versioning](development/versioning#version-field) |

@@ -104,20 +104,22 @@ The SocialPost is lean — scopes, timestamps, and metadata live on the envelope
 
 ### Profile
 
-A mutable DataObject containing identity information:
+A mutable DataObject containing identity information. The `claims` list references [IdentityClaims](../services/mhr-id#claims) — including [ProfileField](../services/mhr-id#profile-fields) claims for display name, bio, avatar, and any other key-value data. Each claim has its own [visibility](../services/mhr-id#visibility-controls), so different viewers see different fields depending on their trust relationship with the profile owner.
 
 ```
 UserProfile {
     node_id: NodeID,
-    display_name: String,
-    bio: Option<String>,
-    avatar: Option<Blake3Hash>,             // reference to image DataObject
+    display_name: String,                   // quick-access copy (also in ProfileField claims)
+    bio: Option<String>,                    // quick-access copy
+    avatar: Option<Blake3Hash>,             // quick-access copy
     scopes: Vec<HierarchicalScope>,         // from TrustConfig
-    claims: Vec<Blake3Hash>,                // references to IdentityClaims
+    claims: Vec<Blake3Hash>,                // references to IdentityClaims (profile fields, geo, links, etc.)
     sequence: u64,                          // monotonic version counter
     signature: Ed25519Sig,
 }
 ```
+
+The `display_name`, `bio`, and `avatar` fields are **quick-access copies** of the corresponding [ProfileField](../services/mhr-id#profile-fields) claims — included directly so clients can render a basic profile without fetching individual claims. The full profile (including visibility-controlled fields, linked accounts, achievements, and verification status) is assembled from the `claims` list. See [Profile Assembly](../services/mhr-id#profile-assembly) for the full resolution flow.
 
 ## Feed Types
 
