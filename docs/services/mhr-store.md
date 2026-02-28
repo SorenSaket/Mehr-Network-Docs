@@ -1,6 +1,8 @@
 ---
 sidebar_position: 1
 title: "MHR-Store: Content-Addressed Storage"
+description: MHR-Store distributed content-addressed storage — BLAKE3 hashing, erasure coding, pinning incentives, and garbage collection on the Mehr mesh.
+keywords: [storage, content-addressed, distributed storage, BLAKE3, erasure coding]
 ---
 
 # MHR-Store: Content-Addressed Storage

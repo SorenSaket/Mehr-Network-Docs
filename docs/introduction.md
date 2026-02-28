@@ -2,6 +2,8 @@
 sidebar_position: 1
 slug: /introduction
 title: Introduction
+description: Overview of the Mehr Network — a decentralized mesh infrastructure using Proof of Service, self-sovereign identity, and CRDT-based economics.
+keywords: [mesh network, decentralized, proof of service, introduction, Mehr]
 ---
 
 import StackDiagram from '@site/src/components/StackDiagram';

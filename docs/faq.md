@@ -1,6 +1,8 @@
 ---
 sidebar_position: 2
 title: FAQ
+description: Frequently asked questions about the Mehr Network — covering protocol design, tokenomics, hardware requirements, and comparison with other mesh projects.
+keywords: [FAQ, mesh network, questions, Mehr Network]
 ---
 
 # Frequently Asked Questions

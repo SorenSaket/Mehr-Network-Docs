@@ -1,6 +1,8 @@
 ---
 sidebar_position: 6
 title: "MHR-ID"
+description: MHR-ID self-sovereign identity system — Ed25519 key pairs, per-field visibility controls, trust graph identity, and profile management.
+keywords: [identity, self-sovereign, Ed25519, decentralized identity, MHR-ID]
 ---
 
 # Identity & Claims (MHR-ID)

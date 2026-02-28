@@ -1,6 +1,8 @@
 ---
 sidebar_position: 100
 title: Full Specification
+description: Complete formal specification of the Mehr Network protocol v1.0 — covering transport, routing, security, services, economics, and governance.
+keywords: [specification, protocol spec, Mehr Network, v1.0, formal specification]
 ---
 
 import DownloadButton from '@site/src/components/DownloadButton';

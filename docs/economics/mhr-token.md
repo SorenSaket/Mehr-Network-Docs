@@ -1,6 +1,8 @@
 ---
 sidebar_position: 1
 title: MHR Token
+description: MHR token economics — Proof of Service minting, supply dynamics, anti-inflation mechanisms, and token utility in the Mehr Network.
+keywords: [MHR token, proof of service, tokenomics, cryptocurrency, minting]
 ---
 
 # MHR Token

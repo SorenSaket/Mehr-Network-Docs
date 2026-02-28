@@ -1,6 +1,8 @@
 ---
 sidebar_position: 3
 title: How It Works (Simple Version)
+description: A simple, non-technical explanation of how the Mehr Network works — mesh networking, Proof of Service, and decentralized communication.
+keywords: [mesh network, ELI5, how it works, simple explanation]
 ---
 
 # How Mehr Works (Simple Version)

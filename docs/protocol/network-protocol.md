@@ -1,6 +1,8 @@
 ---
 sidebar_position: 2
 title: "Layer 1: Network Protocol"
+description: Network protocol layer for the Mehr mesh — addressing, routing, packet format, and multi-hop relay with incentivized forwarding.
+keywords: [network protocol, routing, mesh routing, packet format, addressing]
 ---
 
 # Layer 1: Network Protocol

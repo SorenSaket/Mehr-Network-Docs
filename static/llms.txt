@@ -1,0 +1,83 @@
+# Mehr Network
+
+> Decentralized mesh networking infrastructure powered by Proof of Service. Free between friends, paid between strangers.
+
+Mehr Network is an open protocol for decentralized mesh communication. It uses **Proof of Service** — tokens are minted only when nodes relay packets, store data, or run computations for real clients. The network operates on any transport (LoRa, WiFi, fiber, cellular) with full partition tolerance. Identity is self-sovereign and names resolve from the trust graph, not a global registry.
+
+## Documentation
+
+- [Introduction](https://mehr.network/docs/introduction): Overview of the Mehr Network vision, architecture, and core principles.
+- [How It Works (Simple Version)](https://mehr.network/docs/eli5): A non-technical explanation of the Mehr Network.
+- [FAQ](https://mehr.network/docs/faq): Frequently asked questions about Mehr Network.
+- [Full Specification](https://mehr.network/docs/specification): Complete formal protocol specification (v1.0).
+
+## Protocol Stack
+
+- [Layer 0: Physical Transport](https://mehr.network/docs/protocol/physical-transport): Physical layer supporting LoRa, WiFi Direct, Bluetooth, Ethernet, and cellular.
+- [Layer 1: Network Protocol](https://mehr.network/docs/protocol/network-protocol): Routing, addressing, and packet format for the mesh network.
+- [Layer 2: Security](https://mehr.network/docs/protocol/security): End-to-end encryption, key exchange, and threat model.
+
+## Core Services
+
+- [MHR-Store: Content-Addressed Storage](https://mehr.network/docs/services/mhr-store): Distributed content-addressed storage layer.
+- [MHR-DHT: Distributed Hash Table](https://mehr.network/docs/services/mhr-dht): Kademlia-based DHT for key-value lookups.
+- [MHR-Pub: Publish/Subscribe](https://mehr.network/docs/services/mhr-pub): Topic-based pub/sub messaging system.
+- [MHR-Compute: Contract Execution](https://mehr.network/docs/services/mhr-compute): Deterministic WASM-based computation contracts.
+- [Distributed Applications](https://mehr.network/docs/services/distributed-apps): Content-addressed application packages with no app store.
+- [MHR-Name](https://mehr.network/docs/services/mhr-name): Trust-graph-based name resolution.
+- [MHR-ID](https://mehr.network/docs/services/mhr-id): Self-sovereign identity with per-field visibility.
+
+## Economics
+
+- [MHR Token](https://mehr.network/docs/economics/mhr-token): Proof of Service tokenomics and minting.
+- [Stochastic Relay Rewards](https://mehr.network/docs/economics/payment-channels): Probabilistic micropayments for relay services.
+- [CRDT Ledger](https://mehr.network/docs/economics/crdt-ledger): Conflict-free replicated ledger with partition tolerance.
+- [Trust & Neighborhoods](https://mehr.network/docs/economics/trust-neighborhoods): Trust graph neighborhoods and reputation.
+- [Real-World Economics](https://mehr.network/docs/economics/real-world-impact): Economic impact analysis and sustainability.
+- [Content Propagation](https://mehr.network/docs/economics/propagation): Incentivized content distribution.
+- [Content Governance](https://mehr.network/docs/economics/content-governance): Community-driven content moderation.
+
+## Hardware
+
+- [Reference Designs](https://mehr.network/docs/hardware/reference-designs): Hardware reference designs for Mehr nodes.
+- [Device Capabilities by Tier](https://mehr.network/docs/hardware/device-tiers): Device tiers from solar sensors to full backbone nodes.
+
+## Interoperability
+
+- [Cross-Network Compatibility](https://mehr.network/docs/interoperability/overview): Strategy for bridging to existing networks.
+- [Meshtastic Bridge](https://mehr.network/docs/interoperability/meshtastic): Bidirectional Meshtastic integration.
+- [Reticulum Ecosystem](https://mehr.network/docs/interoperability/reticulum-ecosystem): Reticulum/LXMF bridge protocol.
+- [Scuttlebutt Bridge](https://mehr.network/docs/interoperability/scuttlebutt): Secure Scuttlebutt integration.
+- [Matrix Bridge](https://mehr.network/docs/interoperability/matrix): Matrix protocol bridge.
+- [BitTorrent Bridge](https://mehr.network/docs/interoperability/bittorrent): BitTorrent/DHT integration.
+
+## Marketplace
+
+- [Marketplace Overview](https://mehr.network/docs/marketplace/overview): Decentralized service marketplace architecture.
+- [Capability Discovery](https://mehr.network/docs/marketplace/discovery): How nodes advertise and discover services.
+- [Capability Agreements](https://mehr.network/docs/marketplace/agreements): Service-level agreement negotiation.
+- [Verification](https://mehr.network/docs/marketplace/verification): Proof of service delivery verification.
+
+## Applications
+
+- [Messaging](https://mehr.network/docs/applications/messaging): End-to-end encrypted messaging over mesh.
+- [Social](https://mehr.network/docs/applications/social): Decentralized social networking.
+- [Voice](https://mehr.network/docs/applications/voice): Voice communication over mesh.
+- [Forums, Marketplace & Wiki](https://mehr.network/docs/applications/community-apps): Community-driven applications.
+- [Hosting & Websites](https://mehr.network/docs/applications/hosting): Mesh-native web hosting.
+- [Voting](https://mehr.network/docs/applications/voting): Secure decentralized voting.
+- [Digital Licensing](https://mehr.network/docs/applications/licensing): Content licensing on mesh.
+- [Cloud Storage](https://mehr.network/docs/applications/cloud-storage): Distributed cloud storage.
+- [Roaming & Connectivity](https://mehr.network/docs/applications/roaming): Cross-network roaming.
+
+## Development
+
+- [Roadmap](https://mehr.network/docs/development/roadmap): Development milestones and timeline.
+- [Design Decisions](https://mehr.network/docs/development/design-decisions): Architectural rationale.
+- [Open Questions](https://mehr.network/docs/development/open-questions): Active research areas.
+- [Protocol Versioning](https://mehr.network/docs/development/versioning): Protocol evolution strategy.
+- [Landscape Analysis](https://mehr.network/docs/development/landscape): Comparison with existing projects.
+
+## Optional
+
+- [Full text of all documentation for LLMs](https://mehr.network/llms-full.txt)

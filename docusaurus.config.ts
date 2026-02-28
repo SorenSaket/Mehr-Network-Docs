@@ -26,6 +26,46 @@ const config: Config = {
     locales: ['en'],
   },
 
+  headTags: [
+    // Structured data: Organization
+    {
+      tagName: 'script',
+      attributes: { type: 'application/ld+json' },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'Mehr Network',
+        url: 'https://mehr.network',
+        logo: 'https://mehr.network/img/logo.svg',
+        description:
+          'Decentralized mesh networking infrastructure powered by Proof of Service. Free between friends, paid between strangers.',
+        sameAs: ['https://github.com/mehr-protocol'],
+      }),
+    },
+    // Structured data: WebSite with search
+    {
+      tagName: 'script',
+      attributes: { type: 'application/ld+json' },
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Mehr Network Documentation',
+        url: 'https://mehr.network',
+        description:
+          'Technical documentation for the Mehr Network — a decentralized mesh protocol using Proof of Service, CRDT-based ledgers, and self-sovereign identity.',
+      }),
+    },
+    // Point AI crawlers to llms.txt
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'author',
+        href: 'https://mehr.network/llms.txt',
+        type: 'text/plain',
+      },
+    },
+  ],
+
   presets: [
     [
       'classic',
@@ -37,12 +77,25 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+          ignorePatterns: ['/markdown-page/**'],
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
   ],
 
   themeConfig: {
     image: 'img/docusaurus-social-card.jpg',
+    metadata: [
+      { name: 'description', content: 'Mehr Network: decentralized mesh infrastructure powered by Proof of Service. Free between friends, paid between strangers. Protocol specification, hardware, economics, and developer documentation.' },
+      { name: 'keywords', content: 'mesh network, decentralized, proof of service, CRDT, self-sovereign identity, LoRa, protocol, peer-to-peer, Mehr, MHR token' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+    ],
     colorMode: {
       respectPrefersColorScheme: true,
     },
