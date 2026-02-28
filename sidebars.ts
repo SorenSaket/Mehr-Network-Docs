@@ -98,6 +98,7 @@ const sidebars: SidebarsConfig = {
         'development/roadmap',
         'development/landscape',
         'development/design-decisions',
+        'development/partition-defense-comparison',
         'development/versioning',
         'development/open-questions',
       ],

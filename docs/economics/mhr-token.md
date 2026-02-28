@@ -212,7 +212,7 @@ Self-dealing with non-deterministic assignment + net-income cap:
 
 Non-deterministic assignment forces the attacker to pay honest nodes. The net-income cap ensures the attacker's internal transfers (paying their own nodes) produce zero minting eligibility. Together, self-dealing in a connected network always loses money — the attacker spends real MHR on honest nodes and earns nothing from their internal circulation.
 
-**Note**: This "never profitable" result requires that the network is connected and non-deterministic assignment is operational. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but genesis-anchored minting (bootstrap), active-set-scaled emission, and 2% service burn bound supply growth to at most `E_s` per epoch (convergent over time due to halving). See the [Security Analysis](#security-analysis) for the full threat model.
+**Note**: This "never profitable" result requires that the network is connected and non-deterministic assignment is operational. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but the [trust-gated active set](#trust-gated-active-set) + [merge-time trust audit](#merge-time-trust-audit) (rejects untrusted partition minting on reconnection), active-set-scaled emission, and 2% service burn bound supply growth. See the [Security Analysis](#security-analysis) for the full threat model.
 
 ### What We Don't Need
 
@@ -291,7 +291,7 @@ How attestations propagate:
      IF epoch_number < 100,000:  // bootstrap phase
        provider must have a valid GenesisAttestation (not expired, chain verified)
      ELSE:
-       genesis attestation not required (burns + scaling provide sufficient defense)
+       GenesisAttestation sunsets — trust-gated active set + merge-time audit take over
 
 Why this works:
   - An isolated partition with no path to a genesis node gets ZERO minting
@@ -302,7 +302,7 @@ Why this works:
     when the genesis gateway is the primary MHR source anyway
 ```
 
-**Sunset clause**: At epoch 100,000 (first halving), genesis-anchored minting is retired. By this point, emission has halved and the active-set-scaled emission + service burn provide sufficient defense against isolated partitions. The network no longer depends on genesis connectivity for security.
+**Post-bootstrap defense**: At epoch 100,000 (first halving), GenesisAttestation is retired. Post-bootstrap partition defense is provided by the [trust-gated active set](#trust-gated-active-set) (minting requires ≥1 mutual trust link) and the [merge-time trust audit](#merge-time-trust-audit) (rejects untrusted partition minting on reconnection). No attestation chains, no central authority, no expiring certificates. See [Partition Defense](#partition-defense) for the complete design.
 
 ### Service Burn
 
@@ -459,7 +459,7 @@ The bootstrapping problem is solved by a **Genesis Service Gateway** — a known
 6. All service providers (relay, storage, compute) with valid genesis attestations earn minting proportional to their channel debits
 7. Providers open payment channels and begin spending MHR on other services
 8. More operators join, offer competing services across all types, prices fall toward marginal cost
-9. At epoch 100,000 (first halving): genesis attestation requirement sunsets — burns + active-set scaling provide sufficient defense
+9. At epoch 100,000 (first halving): genesis attestation sunsets — [trust-gated active set](#trust-gated-active-set) + [merge-time trust audit](#merge-time-trust-audit) provide post-bootstrap partition defense
 10. Market pricing emerges from supply/demand
 
 ### Trust-Based Credit
@@ -546,7 +546,7 @@ Self-dealing attack analysis (with non-deterministic assignment):
   NEVER profitable — the attacker's own net income is always 0.
 ```
 
-**Important**: The "never profitable" result applies to the **connected** network case where non-deterministic assignment routes most demand to honest nodes. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but genesis attestation (bootstrap), active-set scaling, and service burn bound supply growth to at most `E_s` per epoch (convergent over time due to halving).
+**Important**: The "never profitable" result applies to the **connected** network case where non-deterministic assignment routes most demand to honest nodes. In an [isolated partition](#attack-isolated-partition) where the attacker controls all nodes, non-deterministic assignment is nullified — but the [trust-gated active set](#trust-gated-active-set) + [merge-time trust audit](#merge-time-trust-audit) (rejects untrusted minting on reconnection), active-set scaling, and service burn bound supply growth.
 
 **What happens to "unminted" emission:**
 
@@ -774,7 +774,7 @@ Gateways are not privileged protocol participants. They are regular nodes that c
 
 - **Utility-first**: MHR is designed for purchasing services. Fiat exchange may emerge but the protocol's health doesn't depend on it, and the internal economy functions as a closed loop for participants who never touch fiat.
 - **Transparent genesis**: Disclosed genesis allocation to the gateway operator, visible in the ledger from epoch 0. No ICO, no hidden allocation, no insider advantage.
-- **Demand-backed minting**: Funded payment channels required for minting eligibility across all service types. Non-deterministic assignment + net-income revenue cap guarantee self-dealing is never profitable in connected networks. Isolated partition damage is bounded by genesis attestation (bootstrap), active-set scaling, and 2% service burn. See [Security Analysis](#security-analysis).
+- **Demand-backed minting**: Funded payment channels required for minting eligibility across all service types. Non-deterministic assignment + net-income revenue cap guarantee self-dealing is never profitable in connected networks. Isolated partition damage is defended by [trust-gated active set](#trust-gated-active-set) + [merge-time trust audit](#merge-time-trust-audit) + active-set scaling + 2% service burn. See [Security Analysis](#security-analysis).
 - **Spend-incentivized**: Tail emission (0.1% annual) mildly dilutes idle holdings. Lost keys (~1–2% annually) permanently remove supply. MHR earns nothing by sitting still — only by being spent on services or lent via trust-based credit.
 - **Partition-safe**: The economic layer works correctly during network partitions and converges when they heal
 - **Minimal overhead**: [Stochastic rewards](payment-channels) reduce economic bandwidth overhead by ~10x compared to per-packet payment
@@ -847,12 +847,13 @@ Each partition's revenue cap uses only local net income, scaled by its active se
 - The net-income cap prevents [cycling attacks](#attack-channel-cycling) even within isolated partitions
 - On merge, the CRDT ledger handles balance convergence
 - During bootstrap (epoch < 100,000): [genesis-anchored minting](#genesis-anchored-minting) prevents isolated partitions from minting at all
+- Post-bootstrap: [trust-gated active set](#trust-gated-active-set) requires mutual trust links for minting eligibility; [merge-time trust audit](#merge-time-trust-audit) rejects untrusted minting on reconnection
 
 For detailed analysis of attacks that exploit partitions — including fully-controlled partitions, cycling, and compounding — see the [Security Analysis](#security-analysis).
 
 ## Security Analysis
 
-This section catalogs all known economic attack vectors and their defenses. The economic layer relies on three mechanisms — **non-deterministic assignment**, **net-income revenue cap**, and **service burn + active-set scaling** — to defend against minting abuse. During bootstrap, [genesis-anchored minting](#genesis-anchored-minting) provides an additional layer by requiring provable connectivity to genesis nodes. No staking, slashing, or trust scores are required.
+This section catalogs all known economic attack vectors and their defenses. The economic layer relies on five mechanisms — **non-deterministic assignment**, **net-income revenue cap**, **service burn + active-set scaling**, **[trust-gated active set](#trust-gated-active-set)**, and **[merge-time trust audit](#merge-time-trust-audit)** — to defend against minting abuse. During bootstrap, [genesis-anchored minting](#genesis-anchored-minting) provides the initial layer by requiring provable connectivity to genesis nodes. Post-bootstrap, the trust-gated active set requires mutual trust links for minting eligibility, and the merge-time trust audit validates partition minting on reconnection. No staking, slashing, or hardware attestation is required.
 
 ### Attack: Self-Dealing (Connected Network)
 
@@ -959,19 +960,23 @@ No protocol-level proof mechanism is needed. The economic incentive (continued p
 
 **Description**: Attacker creates a network partition they fully or majority control. Within this partition, the attacker controls enough of the economic capacity to profit from self-dealing. At 100% control, non-deterministic assignment is nullified — all service requests go to attacker nodes. Creating an isolated partition is trivial — a few VMs on a laptop suffice.
 
-This is the most significant economic attack vector. Three defense layers bound the damage to a finite, predictable amount:
+This is the most significant economic attack vector. Seven defense layers bound the damage to a finite, predictable amount:
 
 **Defense layers**:
 
 1. **Genesis-anchored minting (bootstrap defense)**: During bootstrap (epoch < 100,000), minting requires a valid [GenesisAttestation](#genesis-anchored-minting) — a signed proof of recent connectivity to a genesis node. An isolated partition with no path to a genesis node gets **zero minting**. This completely eliminates the attack during the most vulnerable period (high emission, low total supply).
 
-2. **Active-set-scaled emission (size defense)**: Emission is scaled by the partition's active set size: `scaled_emission = emission × min(active_nodes, 100) / 100`. A 3-node partition gets 3% of full emission. This eliminates the linear scaling advantage of small partitions.
+2. **[Trust-gated active set](#trust-gated-active-set) (post-bootstrap identity defense)**: After bootstrap, minting requires ≥1 mutual trust link with another active-set member. This prevents nodes with zero social ties from entering the minting-eligible set in connected networks. During isolation, attacker nodes trivially satisfy this (they trust each other) — the defense activates at merge time.
 
-3. **Service burn (friction defense)**: 2% of every funded-channel payment is permanently destroyed. This imposes ongoing friction on the attacker and, after reconnection, the burn on the entire network's economic activity gradually absorbs excess supply.
+3. **[Merge-time trust audit](#merge-time-trust-audit) (reconnection defense)**: When a partition reconnects, minting from untrusted nodes is rejected. Cross-partition trust scoring ensures that only minting from nodes with real trust relationships is accepted into the main network supply. Fresh-identity attacks → 0% dilution on merge.
 
-4. **Cycling prevention**: The net-income cap prevents the attacker from inflating debits by cycling MHR between their own nodes. Only net one-directional flows count toward minting eligibility.
+4. **Active-set-scaled emission (size defense)**: Emission is scaled by the partition's active set size: `scaled_emission = emission × min(active_nodes, 100) / 100`. A 3-node partition gets 3% of full emission. This eliminates the linear scaling advantage of small partitions.
 
-5. **Self-correcting on merge**: Excess supply dilutes ALL holders equally, including the attacker's own holdings. The emission schedule decays geometrically, so any supply shock becomes negligible over time.
+5. **Service burn (friction defense)**: 2% of every funded-channel payment is permanently destroyed. This imposes ongoing friction on the attacker and, after reconnection, the burn on the entire network's economic activity gradually absorbs excess supply.
+
+6. **Cycling prevention**: The net-income cap prevents the attacker from inflating debits by cycling MHR between their own nodes. Only net one-directional flows count toward minting eligibility.
+
+7. **Self-correcting on merge**: Excess supply dilutes ALL holders equally, including the attacker's own holdings. The emission schedule decays geometrically, so any supply shock becomes negligible over time.
 
 #### Supply Dynamics Proof
 
@@ -1035,62 +1040,268 @@ Worst-case supply bound (optimal attacker, post-Phase 1):
 
 #### Attacker Economics: Cost vs. Damage
 
-The isolated partition attack requires real hardware (VMs, Raspberry Pis, or other devices) running continuously. The attacker's return on investment determines whether the attack is practical at scale.
+The isolated partition attack requires running node processes and maintaining them. The attacker's return on investment determines whether the attack is practical at scale.
+
+**Critical note on hardware costs**: A "node" in Mehr is an Ed25519 keypair plus a lightweight process. Active set membership requires only that a node appears in a `SettlementRecord` within the last 2 epochs — there is no hardware attestation, proof-of-work, or unique device requirement. An attacker can run 100 node identities as 100 processes on a single machine (localhost). The processes settle with each other over loopback, generating the required `SettlementRecord` entries for active set membership. This means the real hardware cost for a 100-node partition is **one machine** (~$60/year for a cheap VPS), not 100 separate VMs.
 
 ```
 Cost-damage analysis (post-bootstrap, first halving period):
 
-  N = attacker nodes (each requires one device/VM)
+  N = virtual attacker nodes (Ed25519 identities, all on one machine)
   E_s = (N/100) × 500,000 MHR/epoch  (capped at 500,000 for N ≥ 100)
   Annual excess = E_s × 52,600 epochs/year
   Total supply at epoch 100,000: ~10^11 MHR
-  Hardware cost ≈ $5/month per cloud VM (low estimate)
+  Hardware cost: ONE machine for any N (processes on localhost)
 
-  N     E_s/epoch   Annual excess    Annual dilution   Lifetime dilution   VM cost/year
-  ---   ---------   ------------     ---------------   -----------------   ------------
-    3      15,000       789M MHR     0.8% of supply          1.5%              $180
-   10      50,000     2,630M MHR     2.6% of supply          5.0%              $600
-   50     250,000    13,150M MHR    13.2% of supply         25.0%            $3,000
-  100     500,000    26,300M MHR    26.3% of supply         50.0%            $6,000
-  200     500,000    26,300M MHR    26.3% of supply         50.0%           $12,000
+  N     E_s/epoch   Annual excess    Annual dilution   Lifetime dilution   Real cost/year
+  ---   ---------   ------------     ---------------   -----------------   ---------------
+    3      15,000       789M MHR     0.8% of supply          1.5%              ~$60
+   10      50,000     2,630M MHR     2.6% of supply          5.0%              ~$60
+   50     250,000    13,150M MHR    13.2% of supply         25.0%              ~$60
+  100     500,000    26,300M MHR    26.3% of supply         50.0%              ~$60
+  200     500,000    26,300M MHR    26.3% of supply         50.0%              ~$60
 
   Notes:
     - "Annual dilution" is the first year only; subsequent years are halved
     - "Lifetime dilution" assumes infinite duration (convergent halving sum)
-    - Active-set cap at 100 means nodes beyond 100 add cost but no damage
+    - Active-set cap at 100 means nodes beyond 100 add no damage
+    - All N identities run on one machine: cost is FLAT, not per-node
     - These are upper bounds: actual dilution decreases as emission halves
 ```
 
+#### Localhost Attack: Why Hardware Cost Is Not the Defense {#localhost-attack}
+
+The previous cost table assumed $5/month per VM per node. This is wrong. Nothing in the protocol prevents running N identities on one machine:
+
+```
+Localhost attack setup:
+  1. Generate 100 Ed25519 keypairs                    (free, instant)
+  2. Start 100 processes on one $5/month VPS           (~$60/year)
+  3. Open funded channels between them on loopback     (needs initial MHR)
+  4. Settle channels → 100 nodes appear in active set  (100/100 = full scaling)
+  5. Self-deal: one-directional payments between nodes  (net income > 0)
+  6. Mint at full emission rate                         (500,000 MHR/epoch)
+
+Bootstrap from minimal capital:
+  Phase 1: exponential growth at 1.47x per epoch (spend everything)
+  Phase 2: linear growth at ~0.96 × E_s per epoch (saturate minting cap)
+
+  Starting capital    Epochs to Phase 2    Wall-clock time
+  ----------------    -----------------    ---------------
+  1 MHR                     ~36 epochs       ~6 hours
+  100 MHR                   ~24 epochs       ~4 hours
+  10,000 MHR                ~12 epochs       ~2 hours
+
+  Even 1 MHR of initial capital reaches full emission rate in ~6 hours.
+  Initial capital is a speed bump, not a wall.
+
+Per-MACHINE return comparison (the correct metric):
+  An attacker's "nodes" are lightweight processes on one machine.
+  An honest node is a real device. The correct comparison is per-machine.
+
+  Network size    Honest return/machine    Attack return/machine    Ratio
+  ------------    ---------------------    ---------------------    -----
+       100         5,000 MHR/epoch          500,000 MHR/epoch       100x
+     1,000           500 MHR/epoch          500,000 MHR/epoch     1,000x
+    10,000            50 MHR/epoch          500,000 MHR/epoch    10,000x
+
+  The per-NODE comparison ("honest participation earns the same") is
+  misleading because it equates a virtual process with a physical device.
+```
+
+**What the real defenses are** (honest assessment):
+
+| Defense layer | Strength | Why |
+|---|---|---|
+| **GenesisAttestation** (bootstrap, epoch < 100,000) | **Complete** | No connectivity to genesis node → zero minting. ~1.9 years of total protection. |
+| **Halving schedule** | **Strong** | Annual dilution halves every ~1.9 years: 26.3% → 13.2% → 6.6% → ... |
+| **Active-set cap at 100** | **Strong** | No benefit from running > 100 identities |
+| **Lifetime dilution cap** | **Strong** | 50% maximum (convergent halving sum) regardless of attacker persistence |
+| Hardware cost | **Weak** | ~$60/year for one machine, not $6,000/year. Not a deterrent. |
+| Per-node return parity | **Misleading** | Per-machine, attacker wins by 100x–10,000x |
+| Token value destruction | **Partial** | Attacker's minted tokens lose value from dilution, but this is a circular argument and doesn't prevent the attack |
+
 **Key observations**:
 
-1. **Small partitions (N ≤ 10) are negligible.** A 3-node attack costs $180/year and causes 0.8% annual dilution in the first year, declining to 0.4% in the next, 0.2% after that — comparable to typical monetary inflation. The lifetime bound is 1.5% even if maintained forever. This is the inherent cost of partition tolerance.
+1. **The attack is cheap post-bootstrap.** A 100-node localhost partition costs ~$60/year for a $5/month VPS and produces 26.3% annual dilution (first year). Hardware cost is not the defense — mathematical bounds are.
 
-2. **Large partitions (N = 50–100) are expensive and visible.** A 100-node attack costs $6,000/year and produces 26% annual dilution in the first year — significant, but halving to 13% the next year, 6.5% after that, etc. The attack requires maintaining 100 VMs indefinitely and is readily detectable by supply monitoring. The active-set cap at 100 means adding more nodes beyond 100 increases cost without increasing damage.
+2. **Attack yields dilution, not theft.** Minted MHR dilutes ALL holders including the attacker. If the attacker holds fraction F of pre-attack supply, they lose F × dilution from their existing holdings. The net gain is `minted_amount - F × dilution × total_supply`, which decreases as the attacker's share of the network grows. An attacker who already holds significant MHR damages their own position by inflating supply.
 
-3. **Attack yields dilution, not theft.** Minted MHR dilutes ALL holders including the attacker. If the attacker holds fraction F of pre-attack supply, they lose F × dilution from their existing holdings. The net gain is `minted_amount - F × dilution × total_supply`, which decreases as the attacker's share of the network grows. An attacker who already holds significant MHR damages their own position by inflating supply.
+3. **Repeated attacks offer no compounding advantage.** An attacker who merges and re-partitions continues at the same emission rate (epoch-counted, not wall-clock). The total damage over T epochs is ≤ E_s × T regardless of how many merge/split cycles occur. There is no "compound interest" — the attack is strictly linear per epoch, and the halving schedule steadily reduces E_s.
 
-4. **Repeated attacks offer no compounding advantage.** An attacker who merges and re-partitions continues at the same emission rate (epoch-counted, not wall-clock). The total damage over T epochs is ≤ E_s × T regardless of how many merge/split cycles occur. There is no "compound interest" — the attack is strictly linear per epoch, and the halving schedule steadily reduces E_s.
+4. **CRDT merge is permissionless — but minting is audited.** CRDT merge rules adopt data automatically (settlements, counters, bloom filters converge). However, the [merge-time trust audit](#merge-time-trust-audit) validates the *minting component* separately — rejecting minting from partition nodes that lack cross-partition trust. Fresh-identity attacks produce 0% dilution; pre-planned attacks are discounted proportional to untrusted nodes.
 
-5. **Honest participation earns the same per-node return.** In a connected network with M active nodes, each honest node earns approximately E/M per epoch. For M = 100, this equals E/100 = E_s/N per node — the same per-node return as the isolated partition attack. The attack is not more efficient than honest service on a per-node basis; it simply avoids providing real service. For M > 100, honest nodes earn less per node than attacker nodes, but the honest nodes also build reputation, earn bilateral payment income, and contribute to a network whose value they share.
+5. **The protocol can distinguish trusted from untrusted nodes — not localhost from real devices.** 100 localhost processes are indistinguishable from 100 real devices during isolation. But on reconnection, the merge-time trust audit exposes them: zero cross-partition trust → 100% minting rejection. The defense works at merge time, not during isolation.
 
-**Why three layers**: Each defense targets a different phase of the attack:
-- Genesis attestation prevents the attack during bootstrap (when damage is maximal)
+**Why these layers matter**: Each defense targets a different phase of the attack:
+- Genesis attestation prevents the attack during bootstrap (when damage is maximal) — this is the only **complete** defense
 - Active-set scaling limits emission rate regardless of economic activity — this is the primary quantitative defense
 - Service burn imposes ~4% friction during isolation and, more importantly, absorbs excess supply after merge via ongoing 2% deflation on the entire network's economic activity
 
+#### Solution: Trust-Gated Active Set + Merge-Time Trust Audit {#partition-defense}
+
+The localhost attack exposes a gap: post-bootstrap, there is no mechanism that makes running virtual nodes on one machine more expensive than running one honest node. Two defense layers close this gap without introducing any centralized dependency.
+
+##### Layer 1: Trust-Gated Active Set {#trust-gated-active-set}
+
+Post-bootstrap, minting eligibility requires **mutual trust**: a node must have at least one **mutual trust link** with another active-set member to be minting-eligible. "Mutual" means both nodes have each other in their `trusted_peers` configuration.
+
+```
+Trust-gated minting eligibility:
+
+  A node N is minting-eligible in epoch E if ALL of:
+    1. N appears in ≥1 SettlementRecord in the last 2 epochs (active set)
+    2. ∃ at least one node M such that:
+       - M is also in the active set
+       - N is in M.trusted_peers
+       - M is in N.trusted_peers
+       (i.e., N and M have a mutual trust link)
+
+  Emission scaling (updated):
+    trust_gated_active = number of active set nodes WITH ≥1 mutual trust link
+    scaled_emission = emission(epoch) × min(trust_gated_active, 100) / 100
+
+    Nodes without mutual trust links can still transact (channels,
+    settlements) but do NOT contribute to the minting-eligible active set.
+
+  Why mutual trust is expensive:
+    Adding a node to your trusted_peers means:
+      - You absorb their debts if they default
+      - You relay their traffic for free
+      - Your reputation is linked to theirs
+    This economic cost makes mass trust fabrication expensive.
+    An attacker needs real people to willingly vouch for fake nodes —
+    each vouch exposes the voucher to economic loss.
+```
+
+**Why the trust gate does NOT prevent partition attacks during isolation:**
+
+The trust gate is not the partition defense — the merge-time trust audit (Layer 2) is. Here's why:
+
+```
+During isolation:
+  Attacker's 100 localhost nodes all trust each other.
+  They satisfy the mutual-trust requirement trivially.
+  They generate SettlementRecords among themselves.
+  → Trust gate does NOT block minting during the partition.
+
+The trust gate's value is structural:
+  - It establishes trust relationships as a protocol-level concept
+  - These relationships become the basis for merge-time auditing
+  - It prevents nodes with zero social ties from entering the active set
+    in the connected network (e.g., drive-by Sybil nodes)
+```
+
+**Impact on legitimate communities:**
+
+| Scenario | Outcome |
+|---|---|
+| Village mesh, connected | Mutual trust between neighbors — mints normally |
+| Village mesh, isolated | Mutual trust still valid — mints normally for any duration |
+| New node joining | Gets mutual trust link with any existing trusted peer; can mint immediately |
+| Nomadic node (no local trust) | Cannot mint until establishing mutual trust; can still transact via channels |
+
+Unlike time-limited attestations, the trust gate never expires. Legitimate isolated communities mint indefinitely — the defense activates only at merge time.
+
+##### Layer 2: Merge-Time Trust Audit {#merge-time-trust-audit}
+
+The trust gate establishes trust relationships; the merge-time audit **uses those relationships to validate minting on reconnection**. This is the primary partition defense.
+
+The key insight: **separate CRDT convergence from economic validation**. The CRDT merge is automatic and conflict-free (settlements, counters, bloom filters converge as designed). The *minting component* is audited separately.
+
+```
+Merge-time trust audit:
+
+  When partition P reconnects to main network M:
+
+  Step 1: CRDT merge (unchanged, automatic)
+    Settlements, GCounters, epoch snapshots merge per existing rules.
+    This is non-negotiable — CRDT convergence is preserved.
+
+  Step 2: Identify divergent epoch range
+    E_split = last common epoch between P and M
+    divergent_epochs = P's epochs after E_split
+
+  Step 3: Cross-partition trust scoring
+    For each node N in P's active set during divergent epochs:
+      cross_trust(N) = number of nodes in M's active set (at E_split)
+                       that have N in their trusted_peers
+
+    partition_trust_score = Σ min(1, cross_trust(N)) / |P.active_set|
+      → 1.0 if every partition node is trusted by someone in the main network
+      → 0.0 if no partition node has any external trust
+
+  Step 4: Minting discount
+    For each divergent epoch E in P's chain:
+      accepted_minting(E) = P.epoch_minting(E) × partition_trust_score
+      rejected_minting(E) = P.epoch_minting(E) × (1 - partition_trust_score)
+
+  Step 5: Balance rebase
+    For each node in P's active set:
+      epoch_balance is adjusted to reflect only accepted minting
+      This is applied as a rebase during the merge verification window
+      (extends the existing 4-epoch grace period to 8 epochs for
+      cross-partition merges)
+
+  Step 6: Quarantine window
+    Rejected minting enters a Q = 10 epoch quarantine.
+    During quarantine, partition nodes can submit trust proofs:
+      - Signed trust configs from M-side nodes that trust P-side nodes
+      - Pre-partition channel histories showing real economic relationships
+    If proofs are validated, quarantined minting is released.
+    After Q epochs with no proofs: minting is permanently rejected
+    (balance rebase becomes final).
+
+Attack outcomes (with trust gate + merge audit combined):
+
+  Fresh localhost (0 cross-trust):
+    During isolation: mints freely (nodes trust each other)
+    On merge: partition_trust_score = 0.0 → 100% rejected → 0% dilution ✓
+
+  Pre-planned, 1 real trust link out of 100 nodes:
+    During isolation: mints freely
+    On merge: 1/100 nodes trusted → partition_trust_score = 0.01
+    99% rejected → ~0.26% dilution per cycle ✓
+
+  Pre-planned, deep infiltration (50 of 100 nodes trusted):
+    During isolation: mints freely
+    On merge: 50/100 trusted → partition_trust_score = 0.50
+    50% accepted → ~33.3% dilution (one-shot, flagged after merge)
+    Requires 50 real people to vouch for attacker nodes ✗
+
+  Legitimate village (all nodes trusted by external peers):
+    partition_trust_score = 1.0 → 0% rejection → full minting accepted ✓
+```
+
+**Why this doesn't break CRDTs**: The CRDT merge (Step 1) is unconditional — data converges. The trust audit (Steps 3-6) operates on the *economic layer on top of the CRDT*. It adjusts `epoch_balance` during the verification window, which is an existing mechanism (settlement proofs already modify balances during the grace period). The audit extends this same mechanism to minting validation.
+
+##### Combined Defense Summary
+
+| Attack variant | Trust gate alone | Trust gate + merge audit | Notes |
+|---|---|---|---|
+| Fresh localhost (100 virtual nodes) | Mints during isolation | **0% dilution on merge** | 100% minting rejected — no cross-partition trust |
+| Pre-planned, no trust infiltration | Mints during isolation | **~0% dilution** | All nodes untrusted → 100% rejection |
+| Pre-planned, 1 trust link | Mints during isolation | **~0.26% dilution** | 99 untrusted → 99% rejection |
+| Pre-planned, deep infiltration (50%) | Mints during isolation | **~33.3% dilution** | One-shot; requires 50 real vouchers |
+| Legitimate village | Full minting | Full minting | All nodes trusted → 0% rejection |
+
+**Note on neighborhood-scoped minting**: An alternative structural defense — each trust neighborhood minting its own denomination with market-set exchange rates — would achieve 0% dilution even against deep infiltration. However, it introduces ~10x implementation complexity, destroys the single global currency, creates new attack surfaces (exchange rate manipulation), and hurts legitimate nomadic users. See [Partition Defense Comparison](../development/partition-defense-comparison) for the full analysis.
+
 #### Can This Attack Ruin the Network?
 
-No. Three properties prevent isolated partition attacks from causing unbounded or catastrophic damage:
+No. With the [trust-gated active set](#trust-gated-active-set) + [merge-time trust audit](#merge-time-trust-audit), the most common attack variants are eliminated entirely:
 
-1. **Damage is bounded even over infinite time.** The convergent halving sum limits lifetime dilution to N/200 of circulating supply (capped at 50% for N ≥ 100). This is a hard mathematical ceiling — no amount of attacker persistence can exceed it.
+1. **Fresh-identity attacks produce zero dilution.** 100 virtual nodes on localhost with no external trust connections → merge-time trust audit rejects 100% of their minting on reconnection (zero cross-partition trust). Result: 0% dilution.
 
-2. **Damage rate decreases over time.** Each halving period (≈ 1.9 years), the attacker's per-epoch minting is halved. First-year dilution of 0.8% (3 nodes) becomes 0.4%, then 0.2%, and so on. The attack is front-loaded and self-limiting.
+2. **Pre-planned attacks with minimal infiltration produce negligible dilution.** Attacker pre-positions nodes, establishes 1 real trust link, then isolates. On reconnection, merge-time trust audit rejects ~99% of minting. With 1 out of 100 nodes trusted → ~0.26% dilution per cycle.
 
-3. **Network value grows faster than attacker damage.** A healthy network's total economic value (real services transacted) grows with adoption, while the attacker's dilution rate shrinks with each halving. The ratio of attack damage to network value decreases over time — the attack becomes less relevant, not more.
+3. **Damage rate decreases over time.** Each halving period (≈ 1.9 years), the attacker's per-epoch minting is halved. Combined with merge audit rejection, effective damage is a small fraction of an already-decaying emission schedule.
 
-The fundamental tradeoff: Mehr chooses **partition tolerance over inflation resistance**. A globally-consistent ledger (blockchain) can prevent this attack entirely, but at the cost of requiring global consensus — which fails during partitions. Mehr accepts bounded, predictable, decreasing inflation from isolated partitions in exchange for partition tolerance. This is the same tradeoff every CRDT-based system makes: eventual consistency allows temporary divergence, but convergence is guaranteed.
+4. **Network value grows faster than attacker damage.** A healthy network's total economic value (real services transacted) grows with adoption, while the attacker's dilution rate shrinks with each halving and each audit rejection. The ratio of attack damage to network value decreases over time.
 
-**Residual risk**: Post-bootstrap (epoch > 100,000), an isolated partition's supply grows at most `E_s` per epoch (scaled emission). For small partitions (N ≤ 10), annual dilution is comparable to typical monetary inflation (< 3%) and lifetime dilution is ≤ 5% — negligible for a utility token. For large partitions (N = 100), annual dilution starts at 26% but halves every ≈ 1.9 years and requires $6,000+/year in hardware. The active-set cap at 100 means no partition can exceed 50% lifetime dilution regardless of size. This is the inherent, quantified cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
+The fundamental tradeoff: Mehr chooses **partition tolerance over inflation resistance**. A globally-consistent ledger (blockchain) can prevent this attack entirely, but at the cost of requiring global consensus — which fails during partitions. Mehr accepts bounded, audited, decreasing inflation from isolated partitions in exchange for partition tolerance. The trust-gated active set + merge-time trust audit make this tradeoff far more favorable than pure mathematical bounds alone.
+
+**Residual risk**: The remaining exposure is **deep trust infiltration** — an attacker who gets ≥50% of their partition nodes trusted by main-network peers before isolating. In this worst case, ~33.3% dilution passes the merge audit (one-shot). This scenario requires sustained social engineering — convincing 50 real people to add attacker nodes to their `trusted_peers`, each person accepting economic liability for the attacker's debts. This is visible, one-shot (flagged after the first merge), and bounded by the halving schedule. See the [Partition Defense Comparison](../development/partition-defense-comparison) for the design rationale and analysis of neighborhood-scoped minting as an alternative.
 
 ### Attack: Artificial Partition Creation
 
@@ -1133,7 +1344,7 @@ Multi-partition attack economics (with active-set scaling + burn):
 
 Channel opening requires both parties to sign the initial state. The balances must be backed by ledger holdings. Creating MHR from nothing requires forging the CRDT state, which requires forging settlement records (dual Ed25519 signatures) or corrupting epoch snapshots (67% acknowledgment threshold).
 
-**Residual risk**: None under normal operation. In a fully attacker-controlled partition, the attacker can corrupt the local CRDT state — but this reduces to the [Isolated Partition](#attack-isolated-partition) attack, bounded by scaled emission per epoch and genesis attestation.
+**Residual risk**: None under normal operation. In a fully attacker-controlled partition, the attacker can corrupt the local CRDT state — but this reduces to the [Isolated Partition](#attack-isolated-partition) attack, defended by [trust-gated active set + merge-time trust audit](#partition-defense).
 
 ### Attack: Double-Spend via Old Channel State
 
@@ -1157,7 +1368,7 @@ Channel opening requires both parties to sign the initial state. The balances mu
 
 **Defense**: GCounter entries are per-node — each processing node writes only to its own entry. Merge takes pointwise maximum. Increases must correspond to valid settlement records, which require dual Ed25519 signatures. A node that inflates its own entry without corresponding settlements is detectable by any peer that compares the claimed delta against available settlement records during the epoch verification window.
 
-**Residual risk**: In a partition where all verifiers are attacker nodes, inflation goes undetected locally. On merge, this reduces to the [Isolated Partition](#attack-isolated-partition) attack — bounded by scaled emission per epoch and genesis attestation, and corrected during epoch reconciliation.
+**Residual risk**: In a partition where all verifiers are attacker nodes, inflation goes undetected locally. On merge, this reduces to the [Isolated Partition](#attack-isolated-partition) attack — defended by [trust-gated active set + merge-time trust audit](#partition-defense), and corrected during epoch reconciliation.
 
 ### Attack: VRF Lottery Manipulation
 
@@ -1185,7 +1396,7 @@ Channel opening requires both parties to sign the initial state. The balances mu
 | Content/Job ID grinding | Unpredictable epoch_hash | None |
 | Relay non-forwarding | VRF requires real packet + sender detection | Individual packet drops |
 | Storage/compute fabrication | Bilateral client verification | Brief undetected period |
-| **Isolated partition** | **Genesis attestation (bootstrap) + burn + scaled emission** | **Bounded: ≤ E_s per epoch (convergent via halving)** |
+| **Isolated partition** | **Trust-gated active set + merge-time trust audit + burn + scaled emission** | **Fresh IDs: 0% dilution on merge. Pre-planned: audit-discounted on merge** |
 | Artificial partition creation | Same as isolated partition; no advantage to splitting | Same per-epoch growth bound |
 | Channel balance inflation | CRDT ledger validation | None (connected) |
 | Double-spend (old state) | 48-hour dispute window | Offline counterparty |
@@ -1194,7 +1405,17 @@ Channel opening requires both parties to sign the initial state. The balances mu
 | VRF lottery manipulation | Cryptographic (one output per input) | None |
 | Trust/credit exploitation | Credit limits + voucher absorbs debt | One-time credit loss |
 
-**All attack vectors are now bounded.** The isolated partition — previously the only vector with material residual risk — is now defended by three layers: genesis-anchored minting (eliminates the attack during bootstrap), active-set-scaled emission (limits small-partition minting rate — the primary quantitative defense), and 2% service burn (provides ~4% friction during isolation and absorbs excess supply after merge). The residual risk is quantifiable: at most `E_s` per epoch, where the halving schedule ensures cumulative excess converges — ~N/200 of circulating supply for an infinite-duration partition (capped at 50% for N ≥ 100). For small partitions (N ≤ 10), lifetime dilution is ≤ 5%; for the worst case (N ≥ 100), lifetime dilution caps at 50% but requires $6,000+/year in hardware and decreases by half every ≈ 1.9 years. Repeated attacks offer no compounding advantage. See [Attacker Economics](#attacker-economics-cost-vs-damage) and [Can This Attack Ruin the Network?](#can-this-attack-ruin-the-network) for the full cost-damage analysis. This is the inherent, quantified cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
+**All attack vectors are bounded.** The isolated partition — the only vector with material residual risk — is defended by five layers:
+
+1. **Trust-gated active set** ([details](#trust-gated-active-set)): Post-bootstrap, minting requires ≥1 mutual trust link. Prevents zero-social-tie nodes from minting in connected networks. During isolation, attacker nodes satisfy this trivially — the defense activates at merge time.
+2. **Merge-time trust audit** ([details](#merge-time-trust-audit)): On reconnection, minting from untrusted partition nodes is rejected. Fresh-identity attacks → 0% dilution. Pre-planned with minimal infiltration → ~0.26% dilution.
+3. **Active-set-scaled emission**: Limits small-partition minting rate — the primary quantitative defense.
+4. **2% service burn**: Provides ~4% friction during isolation and absorbs excess supply after merge.
+5. **Halving schedule**: Cumulative excess converges — the exponentially decaying emission bounds lifetime dilution.
+
+**Hardware cost is not a meaningful defense** — 100 virtual nodes can run on a single $5/month machine ([localhost attack](#localhost-attack)), ~$60/year. The defense rests on merge-time trust audit (rejects minting from untrusted nodes on reconnection) and mathematical bounds (halving, active-set cap). See [Attacker Economics](#attacker-economics-cost-vs-damage), [Localhost Attack](#localhost-attack), and [Partition Defense](#partition-defense) for the full analysis.
+
+For the worst-case residual scenario (attacker deeply infiltrates the trust graph with 50% of partition nodes trusted by main-network peers), dilution is ~33.3% one-shot — still bounded by halving and flagged after the first merge. See the [Partition Defense Comparison](../development/partition-defense-comparison) for the design rationale and analysis of neighborhood-scoped minting as an alternative.
 
 ## Long-Term Sustainability
 

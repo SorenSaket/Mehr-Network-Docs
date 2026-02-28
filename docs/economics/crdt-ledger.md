@@ -326,6 +326,81 @@ CASE 3: DIFFERENT epoch_numbers (one partition is ahead)
 
 **Settlement proof dedup rule**: During the verification window, settlement proofs are checked against the **winning epoch's bloom filter only**. The live GSet is NOT consulted. After successful re-application, the settlement hash is added to the GSet to prevent future re-processing during normal (non-verification-window) operation.
 
+### Merge-Time Supply Audit {#merge-time-supply-audit}
+
+When two partitions reconnect, the CRDT merge (above) handles data convergence automatically. The **supply audit** is an additional economic layer that validates minting produced during the partition. This prevents an isolated attacker from injecting unbounded supply into the main network.
+
+**Key principle**: CRDT convergence is unconditional — settlements, GCounters, epoch snapshots, and bloom filters all merge per the rules above. The supply audit operates *on top of* the merged data, adjusting only the minting component.
+
+```
+Merge-time supply audit:
+
+  Trigger: a node receives epoch data from a partition it has been
+  disconnected from for ≥ 1 epoch
+
+  Step 1: Identify divergent epoch range
+    E_split = last common epoch number between the two partitions
+    divergent_range = epochs in the reconnecting partition after E_split
+
+  Step 2: Cross-partition trust scoring
+    For each node N that was in the reconnecting partition's active set
+    during the divergent range:
+
+      cross_trust(N) = |{ M_node ∈ main_active_set(E_split) :
+                          N ∈ M_node.trusted_peers }|
+
+    This counts how many main-network active nodes had N in their
+    trusted_peers at the time of the split. The trust graph is a
+    CRDT (GSet of signed trust configs), so both sides have the
+    pre-split state.
+
+    partition_trust_score = Σ min(1, cross_trust(N)) / |partition_active_set|
+      → 1.0 if every partition node was trusted by ≥1 main-network node
+      → 0.0 if no partition node had any cross-partition trust
+
+  Step 3: Minting discount
+    For each divergent epoch E in the reconnecting partition:
+      accepted_minting(E) = partition_epoch_minting(E) × partition_trust_score
+      rejected_minting(E) = partition_epoch_minting(E) × (1 - partition_trust_score)
+
+    accepted_minting merges into the main supply normally.
+    rejected_minting enters quarantine (Step 4).
+
+  Step 4: Quarantine window (Q = 10 epochs)
+    Rejected minting is held in a pending state for Q = 10 epochs.
+
+    During quarantine, partition nodes can submit trust proofs:
+      - Signed trust configs from main-network nodes dated after E_split
+        that trust partition nodes (proves trust was established during,
+        not before, the partition — weaker but still counts)
+      - Pre-partition settlement records showing real bilateral economic
+        activity between partition nodes and main-network nodes
+      - Channel close proofs from before the split showing funded channels
+
+    Trust proofs increase partition_trust_score retroactively.
+    Recalculated score applies to all divergent epochs.
+
+    After Q epochs with no proofs: rejected minting is permanently
+    discarded. Affected nodes' epoch_balances are rebased:
+      rebased_balance = epoch_balance - (rejected_minting / partition_size)
+
+    This rebase uses the same mechanism as the existing settlement proof
+    verification window — it adjusts epoch_balance during the grace period.
+
+  Step 5: Normal operation resumes
+    After quarantine closes, all nodes (main + reconnected partition)
+    have a consistent view. CRDT state has converged. Supply reflects
+    only accepted minting.
+```
+
+**Why this doesn't break CRDTs**: The CRDT merge (Cases 1-3 above) is unconditional — `epoch_balance`, `delta_earned`, `delta_spent` GCounters, and the settlement GSet converge without modification. The supply audit adjusts `epoch_balance` *during* the verification window through the same mechanism that settlement proofs already use (re-applying missed settlements adjusts deltas, which affects derived balances). The quarantine and rebase are *economic policy* applied on top of convergent data, not modifications to convergence itself.
+
+**Interaction with settlement proofs**: During the quarantine window, settlement proofs and trust proofs are processed in parallel. Settlement proofs recover lost transactions (existing mechanism); trust proofs validate minting (new mechanism). Both modify the same `epoch_balance` through their respective adjustments. The extended verification window (8 epochs for cross-partition merges, up from 4) ensures both processes complete before epoch finalization.
+
+**Extended verification window**: Cross-partition merges extend the standard 4-epoch verification window to 8 epochs. The first 4 epochs handle settlement proof recovery (existing). Epochs 5-8 overlap with the quarantine window for trust proof submission. The supply audit quarantine (Q = 10 epochs) extends beyond the verification window — any balance rebase from rejected minting in epochs 9-10 is applied as a separate adjustment to the already-finalized epoch, similar to how late-arriving settlement proofs are handled after the standard window closes.
+
+For the full economic analysis and attack outcomes, see [Partition Defense](mhr-token#partition-defense) in the token economics specification.
+
 ### Late Arrivals After Compaction
 
 When a node reconnects after an epoch has been compacted, it checks its unprocessed settlements against the epoch's bloom filter:
