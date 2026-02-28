@@ -234,7 +234,7 @@ Minting eligibility rule (relay):
 
 ## Revenue-Capped Minting
 
-Even with demand-backed minting eligibility, an attacker could spend MHR on funded channels to generate minting-eligible traffic. The full anti-gaming defense combines **net-income revenue cap**, **non-deterministic service assignment**, and **service burn + active-set scaling** to ensure self-dealing is never profitable in a connected network and that isolated partitions converge to bounded equilibrium:
+Even with demand-backed minting eligibility, an attacker could spend MHR on funded channels to generate minting-eligible traffic. The full anti-gaming defense combines **net-income revenue cap**, **non-deterministic service assignment**, and **service burn + active-set scaling** to ensure self-dealing is never profitable in a connected network and that isolated partition supply growth is bounded by scaled emission per epoch:
 
 ```
 Revenue-capped minting formula (net-income based, with scaling and burn):
@@ -267,7 +267,8 @@ Revenue-capped minting formula (net-income based, with scaling and burn):
 
   Why active-set scaling:
     A 3-node partition gets 3% of full emission (not 100%).
-    Combined with 2% burn, supply converges to finite equilibrium.
+    The 2% burn provides additional friction (~4% reduction in
+    attacker growth rate) and absorbs excess supply after merge.
 ```
 
 See [Revenue-Capped Minting](mhr-token#revenue-capped-minting) in the MHR Token spec for the complete self-dealing analysis, and the [Security Analysis](mhr-token#security-analysis) for all attack vectors including cycling prevention and isolated partition bounds.
