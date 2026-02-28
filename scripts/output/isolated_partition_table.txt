@@ -1,0 +1,32 @@
+======================================================================
+MEHR NETWORK -- ISOLATED PARTITION SUPPLY DYNAMICS
+======================================================================
+
+Protocol constants:
+  Burn rate: 2.0%
+  Minting cap: 50.0% of net income
+  Reference size: 100 nodes
+
+Strategy comparison (N=3, start_epoch=100,000):
+  E_s = 15,000.0 MHR/epoch
+  Claimed equilibrium = 750,000.0 MHR
+
+     Epoch     Full Velocity           Optimal
+  --------  ----------------  ----------------
+         0             100.0             100.0
+        10           4,711.7           4,711.7
+        50         396,140.8         535,912.9
+       100         621,135.2       1,255,300.7
+       200         732,910.0       2,694,076.2
+       500         749,960.1       7,010,402.7
+       999         750,000.0      14,189,892.5
+
+  Full velocity final:       750,000.0 MHR (converges)
+  Optimal final:          14,204,280.3 MHR (linear growth)
+  Ratio:                18.9x claimed equilibrium
+
+Correct worst-case bounds:
+  Per-epoch: ≤ 15,000.0 MHR (actual ~14,385.0 with burn)
+  1 week (1000 epochs):    14,204,280.3 MHR
+  Infinite duration:     2,999,997,139.0 MHR (convergent sum)
+  As % of supply:        < 0.04%

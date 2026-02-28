@@ -1009,22 +1009,24 @@ Worst-case supply bound (optimal attacker, post-Phase 1):
   Simpler upper bound (per epoch):
     Supply growth ≤ E_s per epoch  (emission is the hard ceiling)
 
-  Example (3-node partition, bootstrap emission, 1000 epochs ≈ 1 week):
-    E_s = 30,000 MHR/epoch
-    Max excess after 1000 epochs: ~30,000 × 1000 = 30M MHR
+  Example (3-node partition, after first halving, 1000 epochs ≈ 1 week):
+    E_s = 15,000 MHR/epoch
+    Max excess after 1000 epochs: ~15,000 × 1000 = 15M MHR
     Total network supply at epoch 100,000: ~10^11 MHR
-    Impact: 0.00003% of supply  → negligible
+    Impact: 0.015% of supply  → negligible
 
   Example (3-node partition, after 5 halvings, 1000 epochs):
     E_s = 937.5 MHR/epoch
     Max excess after 1000 epochs: ~937,500 MHR  → negligible
 
   Total lifetime excess (infinite-duration partition, all halvings):
-    Σ E_s per halving period = (N/100) × E × 100,000 × Σ 2^(-n)
-    = (N/100) × E × 100,000 × 2 = (N/100) × 2 × 10^17 μMHR
-    For N=3: 6 × 10^15 μMHR = 6 × 10^9 MHR
-    As fraction of supply ceiling: 6 × 10^9 / 1.84 × 10^13 = 0.033%
-    → Even an infinitely long 3-node partition produces < 0.04% dilution
+    Σ E_s per halving period = (N/100) × Σ_{h=1}^{∞} E_h × 100,000
+    = (N/100) × 10^11 MHR (convergent geometric sum)
+    For N=3: 3 × 10^9 MHR
+    Total actual supply: ~2 × 10^11 MHR
+    Dilution: 3 × 10^9 / 2 × 10^11 = 1.5%
+    → Even an infinitely long 3-node partition produces ~1.5% dilution
+    → For realistic durations (weeks-months), dilution is < 0.1%
 ```
 
 **Note on the `E_s / burn_rate` formula**: Under 100% money velocity (attacker circulates ALL supply every epoch), a true equilibrium exists at `S* = E_s / burn_rate`. This is because `S_{k+1} = 0.98 × S_k + E_s`, which converges to `E_s / 0.02`. However, a rational attacker avoids this by spending only the minimum needed to saturate the minting cap, keeping a reserve that is never burned. The per-epoch growth bound (`≤ E_s`) and the convergent halving sum are the correct worst-case bounds.
@@ -1034,7 +1036,7 @@ Worst-case supply bound (optimal attacker, post-Phase 1):
 - Active-set scaling limits emission rate regardless of economic activity — this is the primary quantitative defense
 - Service burn imposes ~4% friction during isolation and, more importantly, absorbs excess supply after merge via ongoing 2% deflation on the entire network's economic activity
 
-**Residual risk**: Post-bootstrap (epoch > 100,000), an isolated partition's supply grows at most `E_s` per epoch (scaled emission). For small partitions at maturity, this is negligible: a 3-node partition after 5 halvings grows at most 937.5 MHR/epoch. Over realistic durations (days to weeks), the total excess is a vanishingly small fraction of circulating supply. Over infinite duration, the total excess is bounded by the convergent halving sum — less than 0.04% dilution for a 3-node partition. This is the inherent cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
+**Residual risk**: Post-bootstrap (epoch > 100,000), an isolated partition's supply grows at most `E_s` per epoch (scaled emission). For small partitions at maturity, this is negligible: a 3-node partition after 5 halvings grows at most 937.5 MHR/epoch. Over realistic durations (days to weeks), the total excess is a small fraction of circulating supply (< 0.1% for a 3-node partition lasting a month). Over infinite duration, the total excess is bounded by the convergent halving sum — ~1.5% of circulating supply for a 3-node partition, and proportionally more for larger partitions (N/200). This is the inherent cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
 
 ### Attack: Artificial Partition Creation
 
@@ -1138,7 +1140,7 @@ Channel opening requires both parties to sign the initial state. The balances mu
 | VRF lottery manipulation | Cryptographic (one output per input) | None |
 | Trust/credit exploitation | Credit limits + voucher absorbs debt | One-time credit loss |
 
-**All attack vectors are now bounded.** The isolated partition — previously the only vector with material residual risk — is now defended by three layers: genesis-anchored minting (eliminates the attack during bootstrap), active-set-scaled emission (limits small-partition minting rate — the primary quantitative defense), and 2% service burn (provides ~4% friction during isolation and absorbs excess supply after merge). The residual risk is quantifiable: at most `E_s` per epoch, where the halving schedule ensures cumulative excess converges even over infinite duration — less than 0.04% dilution for a 3-node partition. This is the inherent cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
+**All attack vectors are now bounded.** The isolated partition — previously the only vector with material residual risk — is now defended by three layers: genesis-anchored minting (eliminates the attack during bootstrap), active-set-scaled emission (limits small-partition minting rate — the primary quantitative defense), and 2% service burn (provides ~4% friction during isolation and absorbs excess supply after merge). The residual risk is quantifiable: at most `E_s` per epoch, where the halving schedule ensures cumulative excess converges — ~N/200 of circulating supply for an infinite-duration partition (1.5% for 3 nodes). Over realistic durations, dilution is far smaller (< 0.1% for a 3-node partition lasting a month). This is the inherent cost of partition tolerance without global consensus — bounded, predictable, and self-correcting.
 
 ## Long-Term Sustainability
 
