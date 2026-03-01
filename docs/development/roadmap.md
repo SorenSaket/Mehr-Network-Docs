@@ -1,6 +1,14 @@
 ---
 sidebar_position: 1
 title: Roadmap
+description: "Four-phase implementation roadmap from Linux server MVP to full mobile mesh ecosystem with bridges and advanced compute."
+keywords:
+  - roadmap
+  - implementation
+  - phases
+  - MVP
+  - development
+  - milestones
 ---
 
 # Implementation Roadmap
@@ -263,7 +271,7 @@ graph LR
 - Cloud storage via gateway (consumer stores files, gateway handles MHR)
 - Gateway-provided connectivity (ethernet ports, WiFi access points)
 
-The [genesis service gateway](../economics/mhr-token#genesis-service-gateway) is the first instance of this pattern — it bootstraps the economy in Phase 2. This milestone generalizes gateway mechanics for any operator to deploy.
+The [genesis service gateway](../economics/token-economics#genesis-service-gateway) is the first instance of this pattern — it bootstraps the economy in Phase 2. This milestone generalizes gateway mechanics for any operator to deploy.
 
 **Acceptance**: A consumer signs up with a gateway, pays fiat, and uses the network without seeing MHR. Traffic flows through gateway trust. Consumer can switch gateways without losing identity.
 

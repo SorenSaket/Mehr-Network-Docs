@@ -1,6 +1,14 @@
 ---
 sidebar_position: 4
 title: "MHR-Compute: Contract Execution"
+description: "MHR-Compute provides sandboxed execution via MHR-Byte bytecode for constrained devices and WASM for capable nodes."
+keywords:
+  - compute
+  - WASM
+  - bytecode
+  - smart contracts
+  - execution
+  - sandboxed
 ---
 
 # MHR-Compute: Contract Execution
@@ -8,6 +16,8 @@ title: "MHR-Compute: Contract Execution"
 MHR-Compute provides a restricted execution environment for data validation, state transitions, and access control. It supports two execution tiers: MHR-Byte (a minimal bytecode for constrained devices) and WASM (for capable nodes).
 
 ## MHR-Byte: Minimal Bytecode
+
+:::info[Specification]
 
 ```
 MHR-Contract {
@@ -20,6 +30,8 @@ MHR-Contract {
     functions: [FunctionSignature],
 }
 ```
+
+:::
 
 MHR-Byte is a minimal bytecode with a ~50 KB interpreter, designed to run on constrained devices like the ESP32. It supports:
 
@@ -125,7 +137,11 @@ This is transparent to the original requester — they don't need to know whethe
 
 ## Opaque Compute: Hardware-Accelerated Services
 
+:::tip[Key Insight]
+
 ML inference, transcription, translation, text-to-speech, and any other heavy computation are **not protocol primitives**. They are compute capabilities offered by nodes that have the hardware. The pattern is **opaque compute**: input goes in, output comes out. The protocol does not sandbox, inspect, or guarantee the compute method — the node can use GPU, NPU, FPGA, or any hardware.
+
+:::
 
 ```
 A GPU/NPU node advertises:
@@ -391,3 +407,44 @@ Tiers can be combined for defense in depth:
 - **Split + TEE**: Run the heavy middle layers inside a TEE. The TEE never sees raw input (early layers run locally), and you get hardware attestation for the critical computation.
 
 The consumer specifies the desired combination in the capability agreement. The marketplace handles discovery of nodes that support the requested privacy tier.
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>What kind of programs can run on MHR-Compute?</summary>
+
+MHR-Compute supports two tiers: MHR-Byte (a minimal 47-opcode bytecode) runs on any device including ESP32 microcontrollers and handles data validation, access control, and simple state transitions. WASM (WebAssembly) runs on more capable hardware and supports complex logic up to 256 MB memory. Neither tier can access the network, filesystem, or clock — all execution is pure and deterministic.
+
+</details>
+
+<details className="faq-item">
+<summary>Who pays for computation, and how?</summary>
+
+The node requesting the computation pays. Each opcode has a cycle cost, and compute providers set a price in μMHR per cycle in their capability advertisements. Payment flows through bilateral payment channels — the same mechanism used for all Mehr services. If your node can run the contract locally, there’s no payment to anyone else.
+
+</details>
+
+<details className="faq-item">
+<summary>Is this like smart contracts on a blockchain?</summary>
+
+Similar in concept (deterministic, verifiable programs) but fundamentally different in architecture. MHR-Compute contracts don’t require global consensus or a blockchain. They run on individual nodes, state lives in CRDT DataObjects that merge without consensus, and verification is bilateral (between the parties involved). There’s no gas auction, no block confirmation wait, and no global state.
+
+</details>
+
+<details className="faq-item">
+<summary>Can GPUs or other accelerators be used for computation?</summary>
+
+Yes, through **opaque compute**. Nodes with GPUs, NPUs, FPGAs, or TPUs advertise specific functions they can run (e.g., Whisper speech-to-text, image generation). These aren’t sandboxed like MHR-Byte/WASM — the protocol treats them as black boxes where input goes in and output comes out. Trust comes from reputation, redundant execution, or TEE attestation rather than deterministic verification.
+
+</details>
+
+<details className="faq-item">
+<summary>What if my device is too weak to run a contract?</summary>
+
+Your node automatically delegates to a more capable neighbor via the capability marketplace. The delegation is transparent — you send a request, a nearby node executes the contract, returns the result, and you verify it. You pay the provider’s compute fees. The original requester doesn’t need to know whether execution was local or delegated.
+
+</details>
+
+<!-- faq-end -->

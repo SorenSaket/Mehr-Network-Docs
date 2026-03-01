@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Design Decisions
+description: "Log of key architectural decisions including transport stack, routing, payment model, and storage design with rationale."
+keywords:
+  - design decisions
+  - architecture
+  - Reticulum
+  - routing
+  - trade-offs
+  - rationale
 ---
 
 # Design Decisions Log

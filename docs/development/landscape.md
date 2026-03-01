@@ -1,6 +1,14 @@
 ---
 sidebar_position: 5
 title: Landscape Analysis
+description: "Honest comparison of Mehr against existing decentralized and mesh networking projects like IPFS, Helium, and Holochain."
+keywords:
+  - landscape
+  - comparison
+  - IPFS
+  - Helium
+  - Holochain
+  - prior art
 ---
 
 # Landscape Analysis
@@ -423,7 +431,7 @@ Althea does paid relay but settles on a blockchain. Helium uses Solana. Mehr's [
 
 ### 3. Economic Partition Tolerance
 
-SSB and Holochain handle *data* partition tolerance well. No project addresses what happens to *money* when the network splits. Mehr's CRDT ledger with [partition-aware epoch compaction](../economics/crdt-ledger#epoch-triggers), GCounter rebase, and bounded overminting (max 1.5x) is designed for the case where a village on LoRa is a permanent partition with its own functioning economy.
+SSB and Holochain handle *data* partition tolerance well. No project addresses what happens to *money* when the network splits. Mehr's CRDT ledger with [partition-aware epoch compaction](../economics/epoch-compaction#epoch-triggers), GCounter rebase, and bounded overminting (max 1.5x) is designed for the case where a village on LoRa is a permanent partition with its own functioning economy.
 
 ### 4. Trust-Based Free Tier Integrated with Paid Economics
 

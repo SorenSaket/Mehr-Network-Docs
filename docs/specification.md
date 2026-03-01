@@ -37,11 +37,11 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 | Payment channel state size | 200 bytes | [Payment Channels](economics/payment-channels#channel-state) |
 | Dispute challenge window | 2,880 gossip rounds (~48h) | [Payment Channels](economics/payment-channels#channel-lifecycle) |
 | Channel abandonment threshold | 4 epochs | [Payment Channels](economics/payment-channels#channel-lifecycle) |
-| Epoch trigger: settlement count | ≥10,000 batches | [CRDT Ledger](economics/crdt-ledger#epoch-triggers) |
-| Epoch trigger: GSet memory | ≥500 KB | [CRDT Ledger](economics/crdt-ledger#epoch-triggers) |
-| Epoch acknowledgment threshold | 67% of active set | [CRDT Ledger](economics/crdt-ledger#epoch-lifecycle) |
-| Epoch verification window | 4 epochs after activation | [CRDT Ledger](economics/crdt-ledger#epoch-lifecycle) |
-| Bloom filter FPR (epoch) | 0.01% | [CRDT Ledger](economics/crdt-ledger#bloom-filter-sizing) |
+| Epoch trigger: settlement count | ≥10,000 batches | [CRDT Ledger](economics/epoch-compaction#epoch-triggers) |
+| Epoch trigger: GSet memory | ≥500 KB | [CRDT Ledger](economics/epoch-compaction#epoch-triggers) |
+| Epoch acknowledgment threshold | 67% of active set | [CRDT Ledger](economics/epoch-compaction#epoch-lifecycle) |
+| Epoch verification window | 4 epochs after activation | [CRDT Ledger](economics/epoch-compaction#epoch-lifecycle) |
+| Bloom filter FPR (epoch) | 0.01% | [CRDT Ledger](economics/epoch-compaction#bloom-filter-sizing) |
 | DHT replication factor | k=3 | [MHR-DHT](services/mhr-dht#replication-factor) |
 | DHT XOR weight (w_xor) | 0.7 | [MHR-DHT](services/mhr-dht#lookup-scoring-function) |
 | Storage chunk size | 4 KB | [MHR-Store](services/mhr-store#chunking) |
@@ -70,8 +70,8 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 | ProfileField value type: ContentHash | 1 | [MHR-ID](services/mhr-id#value-types) |
 | ProfileField value type: Coordinates | 2 | [MHR-ID](services/mhr-id#value-types) |
 | ProfileField value type: Integer | 3 | [MHR-ID](services/mhr-id#value-types) |
-| Identity challenge method: Crawler | 0 | [MHR-ID](services/mhr-id#identity-linking) |
-| Identity challenge method: OAuth | 1 | [MHR-ID](services/mhr-id#identity-linking) |
+| Identity challenge method: Crawler | 0 | [MHR-ID](services/mhr-id/verification#identity-linking) |
+| Identity challenge method: OAuth | 1 | [MHR-ID](services/mhr-id/verification#identity-linking) |
 | Max name length | 64 bytes | [MHR-Name](services/mhr-name#name-format) |
 | Name binding min size | 122 bytes | [MHR-Name](services/mhr-name#namebinding) |
 | Name expiry | 30 epochs | [MHR-Name](services/mhr-name#name-registration) |
@@ -81,17 +81,17 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 | Name context sub-type: Register | `0x08` | [MHR-Name](services/mhr-name#message-types) |
 | Name context sub-type: Lookup | `0x09` | [MHR-Name](services/mhr-name#message-types) |
 | Name context sub-type: LookupResponse | `0x0A` | [MHR-Name](services/mhr-name#message-types) |
-| AppManifest format version | 1 | [Distributed Apps](services/distributed-apps#manifest-wire-format) |
-| Max contracts per manifest | 15 | [Distributed Apps](services/distributed-apps#appmanifest) |
-| Max app dependencies per manifest | 8 | [Distributed Apps](services/distributed-apps#dependencies) |
-| Max pub topic templates per manifest | 4 | [Distributed Apps](services/distributed-apps#appmanifest) |
-| Max app display name | 32 bytes | [Distributed Apps](services/distributed-apps#appmanifest) |
-| App type: Full | 0 | [Distributed Apps](services/distributed-apps#app-types) |
-| App type: Headless | 1 | [Distributed Apps](services/distributed-apps#app-types) |
-| App type: Static | 2 | [Distributed Apps](services/distributed-apps#app-types) |
-| App context sub-type: ManifestPublish | `0x0B` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
-| App context sub-type: ManifestLookup | `0x0C` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
-| App context sub-type: ManifestLookupResponse | `0x0D` | [Distributed Apps](services/distributed-apps#manifest-message-types) |
+| AppManifest format version | 1 | [MHR-App](services/mhr-app#manifest-wire-format) |
+| Max contracts per manifest | 15 | [MHR-App](services/mhr-app#appmanifest) |
+| Max app dependencies per manifest | 8 | [MHR-App](services/mhr-app#dependencies) |
+| Max pub topic templates per manifest | 4 | [MHR-App](services/mhr-app#appmanifest) |
+| Max app display name | 32 bytes | [MHR-App](services/mhr-app#appmanifest) |
+| App type: Full | 0 | [MHR-App](services/mhr-app#app-types) |
+| App type: Headless | 1 | [MHR-App](services/mhr-app#app-types) |
+| App type: Static | 2 | [MHR-App](services/mhr-app#app-types) |
+| App context sub-type: ManifestPublish | `0x0B` | [MHR-App](services/mhr-app#manifest-message-types) |
+| App context sub-type: ManifestLookup | `0x0C` | [MHR-App](services/mhr-app#manifest-message-types) |
+| App context sub-type: ManifestLookupResponse | `0x0D` | [MHR-App](services/mhr-app#manifest-message-types) |
 | Geo verification: min vouches | 3 (for Verified level) | [Voting](applications/voting#geoverificationlevel) |
 | Protocol version encoding | 1 byte (major 4 bits, minor 4 bits) | [Versioning](development/versioning#version-field) |
 | Extended version escape | Major = 15 → read u16 pair from TLV | [Versioning](development/versioning#version-field) |
@@ -119,9 +119,9 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 ```mermaid
 graph TD
     L6["Layer 6: Applications<br/>Messaging, Social, Voice, Voting, Licensing, Cloud Storage, Roaming, Hosting"] --> L5
-    L5["Layer 5: Service Primitives<br/>MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute, MHR-Name, MHR-ID, Distributed Apps"] --> L4
+    L5["Layer 5: Service Primitives<br/>MHR-Store, MHR-DHT, MHR-Pub, MHR-Compute, MHR-Name, MHR-ID, MHR-App"] --> L4
     L4["Layer 4: Capability Marketplace<br/>Discovery, Agreements, Verification"] --> L3
-    L3["Layer 3: Economic Protocol<br/>MHR Token, Stochastic Rewards, CRDT Ledger, Trust Neighborhoods, Propagation"] --> L2
+    L3["Layer 3: Economic Protocol<br/>MHR Token, Token Economics, Token Security, Stochastic Rewards, CRDT Ledger, Epoch Compaction, Trust Neighborhoods, Propagation"] --> L2
     L2["Layer 2: Security<br/>Link encryption, E2E encryption, Authentication, Key management"] --> L1
     L1["Layer 1: Network Protocol<br/>Identity, Addressing, Routing, Gossip, Congestion Control"] --> L0
     L0["Layer 0: Physical Transport<br/>LoRa, WiFi, Cellular, LTE-M, NB-IoT, Ethernet, BLE, Fiber, Serial"]
@@ -183,9 +183,9 @@ Total: 200 bytes
 | 1. Layer 0: Physical Transport | [Physical Transport](protocol/physical-transport) |
 | 2. Layer 1: Network Protocol | [Network Protocol](protocol/network-protocol) |
 | 3. Layer 2: Security | [Security](protocol/security) |
-| 4. Layer 3: Economic Protocol | [MHR Token](economics/mhr-token), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Trust & Neighborhoods](economics/trust-neighborhoods), [Content Propagation](economics/propagation), [Content Governance](economics/content-governance), [Real-World Economics](economics/real-world-impact) |
+| 4. Layer 3: Economic Protocol | [MHR Token](economics/mhr-token), [Token Economics](economics/token-economics), [Token Security](economics/token-security), [Stochastic Relay Rewards](economics/payment-channels), [CRDT Ledger](economics/crdt-ledger), [Epoch Compaction](economics/epoch-compaction), [Trust & Neighborhoods](economics/trust-neighborhoods), [Content Propagation](economics/propagation), [Content Governance](economics/content-governance), [Real-World Economics](economics/real-world-impact) |
 | 5. Layer 4: Capability Marketplace | [Overview](marketplace/overview), [Discovery](marketplace/discovery), [Agreements](marketplace/agreements), [Verification](marketplace/verification) |
-| 6. Layer 5: Service Primitives | [MHR-Store](services/mhr-store), [MHR-DHT](services/mhr-dht), [MHR-Pub](services/mhr-pub), [MHR-Compute](services/mhr-compute), [MHR-Name](services/mhr-name), [MHR-ID](services/mhr-id) |
+| 6. Layer 5: Service Primitives | [MHR-Store](services/mhr-store), [MHR-DHT](services/mhr-dht), [MHR-Pub](services/mhr-pub), [MHR-Compute](services/mhr-compute), [MHR-Name](services/mhr-name), [MHR-ID](services/mhr-id), [MHR-App](services/mhr-app) |
 | 7. Layer 6: Applications | [Messaging](applications/messaging), [Social](applications/social), [Voice](applications/voice), [Community Apps](applications/community-apps), [Voting](applications/voting), [Digital Licensing](applications/licensing), [Cloud Storage](applications/cloud-storage), [Roaming](applications/roaming), [Hosting](applications/hosting) |
 | 8. Hardware Reference | [Reference Designs](hardware/reference-designs), [Device Tiers](hardware/device-tiers) |
 | 9. Implementation Roadmap | [Roadmap](development/roadmap) |

@@ -71,6 +71,8 @@ Data with a time-to-live (TTL). Automatically garbage-collected after expiration
 
 Storage on Mehr is maintained through **bilateral agreements** between data owners and storage nodes. This is how data stays alive on the network.
 
+:::info[Specification]
+
 ```
 StorageAgreement {
     data_hash: Blake3Hash,          // what's being stored
@@ -90,6 +92,8 @@ StorageAgreement {
     signatures: (Sig_Provider, Sig_Consumer),
 }
 ```
+
+:::
 
 ### Payment Model
 
@@ -403,3 +407,44 @@ Mehr deliberately chooses lightweight proofs over heavy cryptographic guarantees
 1. The economic incentive is weak — the node earns the same fee either way
 2. The data owner doesn't care *how* the node stores the data, only that it can return it on demand
 3. Erasure coding across multiple nodes provides real redundancy regardless
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>How long is my data stored on the network?</summary>
+
+Data persists as long as you pay for it. Storage agreements are pay-per-duration — like rent. When payment stops, the storage node garbage-collects your data after a one-epoch grace period. There is no permanent storage guarantee, but popular content that earns enough kickback revenue can become self-funding and persist indefinitely.
+
+</details>
+
+<details className="faq-item">
+<summary>What happens if the node storing my data goes offline?</summary>
+
+If you’re using erasure coding (recommended), your data is split across multiple nodes with redundancy. For example, with a 4+2 scheme, any 4 of 6 chunks can reconstruct the full file. If one node goes offline, an automated RepairAgent detects the shortfall and re-replicates to a replacement node, restoring full redundancy.
+
+</details>
+
+<details className="faq-item">
+<summary>Can I delete data I’ve stored on the mesh?</summary>
+
+Yes. Stop paying the storage agreement and the data will be garbage-collected after the grace period. For mutable DataObjects, you can publish a tombstone update. However, if someone else has already retrieved and cached your data, those copies are outside your control — similar to how deleting a social media post doesn’t remove screenshots.
+
+</details>
+
+<details className="faq-item">
+<summary>How much does storage cost?</summary>
+
+Storage prices are set by individual providers competing in the marketplace. Trusted peers store each other’s data for free. For non-trusted storage, costs are measured in μMHR per byte per epoch. Typical costs depend on local market conditions — areas with many storage providers will be cheaper than areas with few.
+
+</details>
+
+<details className="faq-item">
+<summary>Is my stored data encrypted?</summary>
+
+The protocol supports but does not require encryption. For cloud storage and messaging, data is always encrypted client-side before storage — storage nodes see only ciphertext. For public content (social posts, websites), data is stored unencrypted so anyone can retrieve it. The choice is application-level.
+
+</details>
+
+<!-- faq-end -->

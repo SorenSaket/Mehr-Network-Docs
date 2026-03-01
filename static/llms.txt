@@ -14,7 +14,7 @@ Mehr Network is an open protocol for decentralized mesh communication. It uses *
 ## Protocol Stack
 
 - [Layer 0: Physical Transport](https://mehr.network/docs/protocol/physical-transport): Physical layer supporting LoRa, WiFi Direct, Bluetooth, Ethernet, and cellular.
-- [Layer 1: Network Protocol](https://mehr.network/docs/protocol/network-protocol): Routing, addressing, and packet format for the mesh network.
+- [Layer 1: Network Protocol](https://mehr.network/docs/protocol/network-protocol): Routing, addressing, packet format, gossip protocol, congestion control, and time model.
 - [Layer 2: Security](https://mehr.network/docs/protocol/security): End-to-end encryption, key exchange, and threat model.
 
 ## Core Services
@@ -23,19 +23,26 @@ Mehr Network is an open protocol for decentralized mesh communication. It uses *
 - [MHR-DHT: Distributed Hash Table](https://mehr.network/docs/services/mhr-dht): Kademlia-based DHT for key-value lookups.
 - [MHR-Pub: Publish/Subscribe](https://mehr.network/docs/services/mhr-pub): Topic-based pub/sub messaging system.
 - [MHR-Compute: Contract Execution](https://mehr.network/docs/services/mhr-compute): Deterministic WASM-based computation contracts.
-- [Distributed Applications](https://mehr.network/docs/services/distributed-apps): Content-addressed application packages with no app store.
-- [MHR-Name](https://mehr.network/docs/services/mhr-name): Trust-graph-based name resolution.
-- [MHR-ID](https://mehr.network/docs/services/mhr-id): Self-sovereign identity with per-field visibility.
+- [MHR-Name: Naming Service](https://mehr.network/docs/services/mhr-name): Trust-graph-based name resolution.
+- [MHR-ID: Identity](https://mehr.network/docs/services/mhr-id): Self-sovereign identity with per-field visibility.
+- [MHR-ID: Verification](https://mehr.network/docs/services/mhr-id/verification): External identity linking and trust graph verification.
+- [MHR-ID: Mobility](https://mehr.network/docs/services/mhr-id/mobility): Geographic mobility and nomadic user support.
+- [MHR-App: Application Model](https://mehr.network/docs/services/mhr-app): Content-addressed application packages with no app store.
+- [MHR-App: Upgrades](https://mehr.network/docs/services/mhr-app/upgrades): Application upgrade flow and state migration.
+- [MHR-App: Security](https://mehr.network/docs/services/mhr-app/security): Application framework security analysis.
 
 ## Economics
 
 - [MHR Token](https://mehr.network/docs/economics/mhr-token): Proof of Service tokenomics and minting.
+- [Token Economics](https://mehr.network/docs/economics/token-economics): Free tier, bootstrapping, genesis gateway, and pricing.
+- [Token Security](https://mehr.network/docs/economics/token-security): Partition tolerance and security analysis (13+ attack vectors).
 - [Stochastic Relay Rewards](https://mehr.network/docs/economics/payment-channels): Probabilistic micropayments for relay services.
 - [CRDT Ledger](https://mehr.network/docs/economics/crdt-ledger): Conflict-free replicated ledger with partition tolerance.
+- [Epoch Compaction](https://mehr.network/docs/economics/epoch-compaction): Epoch lifecycle, GCounter rebase, and merge-time supply audit.
 - [Trust & Neighborhoods](https://mehr.network/docs/economics/trust-neighborhoods): Trust graph neighborhoods and reputation.
-- [Real-World Economics](https://mehr.network/docs/economics/real-world-impact): Economic impact analysis and sustainability.
 - [Content Propagation](https://mehr.network/docs/economics/propagation): Incentivized content distribution.
 - [Content Governance](https://mehr.network/docs/economics/content-governance): Community-driven content moderation.
+- [Real-World Economics](https://mehr.network/docs/economics/real-world-impact): Economic impact analysis and sustainability.
 
 ## Hardware
 
@@ -73,10 +80,11 @@ Mehr Network is an open protocol for decentralized mesh communication. It uses *
 ## Development
 
 - [Roadmap](https://mehr.network/docs/development/roadmap): Development milestones and timeline.
-- [Design Decisions](https://mehr.network/docs/development/design-decisions): Architectural rationale.
-- [Open Questions](https://mehr.network/docs/development/open-questions): Active research areas.
-- [Protocol Versioning](https://mehr.network/docs/development/versioning): Protocol evolution strategy.
 - [Landscape Analysis](https://mehr.network/docs/development/landscape): Comparison with existing projects.
+- [Design Decisions](https://mehr.network/docs/development/design-decisions): Architectural rationale.
+- [Partition Defense Comparison](https://mehr.network/docs/development/partition-defense-comparison): Defense mechanism analysis against network partitions.
+- [Protocol Versioning](https://mehr.network/docs/development/versioning): Protocol evolution strategy.
+- [Open Questions](https://mehr.network/docs/development/open-questions): Active research areas.
 
 ## Optional
 

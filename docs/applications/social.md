@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Social
+description: "Decentralized content distribution with free browsable envelopes, paid content retrieval, and creator kickback economics."
+keywords:
+  - social
+  - content distribution
+  - publishing
+  - kickbacks
+  - decentralized
+  - feeds
 ---
 
 # Social
@@ -19,6 +27,10 @@ While "social" implies short text posts, the same architecture handles **any con
 | Game / software | Name + description + screenshots | Binary + assets | High |
 | Podcast episode | Title + show notes | Audio file | Moderate |
 | Curated collection | Curator notes per item | References to originals | Curator earns on collection; authors earn on items |
+
+:::info[App Manifest]
+Social is packaged as a **Full** (UI + compute) [AppManifest](../services/mhr-app). It composes MHR-Store for envelopes, posts, profiles, and media DataObjects; MHR-Pub for feed subscriptions across geographic and interest scopes; MHR-Compute for moderation contracts and kickback accounting; MHR-DHT for content discovery; and MHR-Name for human-readable profile addresses. The state schema defines CRDT types for follow lists, feed indices, and profile fields.
+:::
 
 ## Architecture
 

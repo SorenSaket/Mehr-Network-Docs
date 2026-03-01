@@ -2,9 +2,16 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 const sidebars: SidebarsConfig = {
   docsSidebar: [
-    'introduction',
-    'eli5',
-    'faq',
+    {
+      type: 'category',
+      label: 'Getting Started',
+      collapsed: false,
+      items: [
+        'introduction',
+        'eli5',
+        'faq',
+      ],
+    },
     {
       type: 'category',
       label: 'Protocol Stack',
@@ -20,9 +27,26 @@ const sidebars: SidebarsConfig = {
       label: 'Economics',
       collapsed: false,
       items: [
-        'economics/mhr-token',
+        {
+          type: 'category',
+          label: 'MHR Token',
+          collapsed: true,
+          items: [
+            'economics/mhr-token',
+            'economics/token-economics',
+            'economics/token-security',
+          ],
+        },
         'economics/payment-channels',
-        'economics/crdt-ledger',
+        {
+          type: 'category',
+          label: 'Ledger & Settlement',
+          collapsed: true,
+          items: [
+            'economics/crdt-ledger',
+            'economics/epoch-compaction',
+          ],
+        },
         'economics/trust-neighborhoods',
         'economics/propagation',
         'economics/content-governance',
@@ -50,7 +74,28 @@ const sidebars: SidebarsConfig = {
         'services/mhr-pub',
         'services/mhr-compute',
         'services/mhr-name',
-        'services/mhr-id',
+        {
+          type: 'category',
+          label: 'MHR-ID: Identity',
+          collapsed: true,
+          items: [
+            'services/mhr-id/index',
+            'services/mhr-id/verification',
+            'services/mhr-id/mobility',
+            'services/mhr-id/faq',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'MHR-App: Applications',
+          collapsed: true,
+          items: [
+            'services/mhr-app/index',
+            'services/mhr-app/upgrades',
+            'services/mhr-app/security',
+            'services/mhr-app/faq',
+          ],
+        },
       ],
     },
     {
@@ -77,6 +122,7 @@ const sidebars: SidebarsConfig = {
         'interoperability/overview',
         'interoperability/meshtastic',
         'interoperability/reticulum-ecosystem',
+        'interoperability/bittorrent',
         'interoperability/scuttlebutt',
         'interoperability/matrix',
       ],

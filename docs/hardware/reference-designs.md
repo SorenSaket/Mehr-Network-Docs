@@ -1,6 +1,14 @@
 ---
 sidebar_position: 1
 title: Reference Designs
+description: "Hardware reference designs for Mehr nodes, from $30 solar-powered ESP32 relays to GPU inference workstations."
+keywords:
+  - hardware
+  - ESP32
+  - LoRa
+  - Raspberry Pi
+  - reference design
+  - solar
 ---
 
 # Hardware Reference Designs
@@ -8,6 +16,10 @@ title: Reference Designs
 Mehr is designed to run on hardware ranging from $30 solar-powered relays to GPU workstations. Every device participates at whatever level its hardware allows.
 
 ## Device Tiers Overview
+
+:::info[Specification]
+Mehr defines five hardware tiers spanning $30 solar relays to GPU workstations. Each tier maps to a protocol participation level: Minimal nodes relay only (L1), while Gateway and above run the full L2 stack with marketplace, storage, and compute.
+:::
 
 | Tier | Hardware | Cost | Power | Primary Role |
 |------|----------|------|-------|-------------|
@@ -44,6 +56,10 @@ Software:
 **Earns from**: Routing fees (1-5 μMHR per packet relayed)
 
 **Range**: 2-15 km line-of-sight with LoRa
+
+:::tip[Key Insight]
+A $30 solar-powered ESP32 relay earns MHR from routing fees at zero operating cost. The economics work because the node provides irreplaceable value — extending mesh range — that no centralized alternative can replicate from a data center.
+:::
 
 ## Community Bridge Node
 

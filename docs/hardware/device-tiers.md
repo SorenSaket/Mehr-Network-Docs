@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Device Capabilities by Tier
+description: "Capability matrix showing what each hardware tier can do on the Mehr network, from minimal relays to inference nodes."
+keywords:
+  - device tiers
+  - capabilities
+  - hardware
+  - relay
+  - gateway
+  - compute
 ---
 
 # Device Capabilities by Tier
@@ -8,6 +16,10 @@ title: Device Capabilities by Tier
 Each hardware tier has different capabilities, which determine what the node can do on the network and how it earns MHR.
 
 ## Capability Matrix
+
+:::tip[Key Insight]
+Every tier participates in gossip and payment channels — even the cheapest ESP32 relay. The protocol scales by restricting *what* each tier does (no WASM on Minimal, no ML on Gateway), not *whether* it participates in the economy.
+:::
 
 | Capability | Minimal | Community | Gateway | Backbone | Inference |
 |-----------|---------|-----------|---------|----------|-----------|
@@ -85,3 +97,7 @@ Inference node (GPU/NPU)
 ```
 
 Each delegation is a bilateral [capability agreement](../marketplace/agreements) with payment flowing through [channels](../economics/payment-channels).
+
+:::caution[Trade-off]
+Delegation chains add latency and cost at each hop. A Minimal relay delegating compute to a Community node, which delegates storage to a Gateway, creates a 3-link economic dependency. If any link fails, the upstream node must re-discover and re-negotiate — trading simplicity for resilience.
+:::

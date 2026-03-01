@@ -1,11 +1,23 @@
 ---
 sidebar_position: 1
 title: Messaging
+description: "End-to-end encrypted, store-and-forward messaging built on MHR-Store, MHR-Pub, and Mehr payment channels."
+keywords:
+  - messaging
+  - encryption
+  - store-and-forward
+  - offline delivery
+  - E2E
+  - chat
 ---
 
 # Messaging
 
 End-to-end encrypted, store-and-forward messaging built on the Mehr service primitives.
+
+:::info[App Manifest]
+Messaging is packaged as a **Full** (UI + compute) [AppManifest](../services/mhr-app). It composes MHR-Store for persistent message storage, MHR-Pub for delivery notifications and presence, and MHR-Compute contracts for group key management and co-admin delegation. The UI bundle handles compose/read views while pub/sub topic templates map to per-conversation and per-group notification channels.
+:::
 
 ## Architecture
 

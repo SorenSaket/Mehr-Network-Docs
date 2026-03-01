@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Stochastic Relay Rewards
+description: "Probabilistic micropayments via VRF-based lottery that compensate relay nodes with minimal bandwidth overhead."
+keywords:
+  - payment channels
+  - VRF
+  - relay rewards
+  - micropayments
+  - stochastic
+  - lottery
 ---
 
 # Stochastic Relay Rewards
@@ -9,7 +17,11 @@ Relay nodes are compensated through **probabilistic micropayments** rather than 
 
 ## Why Not Per-Packet Payment?
 
+:::tip[Key Insight]
+
 Per-packet payment requires a channel state update for every batch of relayed packets. Even batched, this consumes significant bandwidth on LoRa links. The insight: relay rewards don't need to be deterministic — they can be probabilistic, like mining, achieving the same expected value with far less overhead.
+
+:::
 
 ## How Stochastic Rewards Work
 
@@ -35,9 +47,13 @@ Relay reward lottery (VRF-based):
   5. Verification: VRF_verify(relay_public_key, packet_hash, vrf_output, vrf_proof)
 ```
 
+:::tip[Key Insight]
+
 **Why VRF, not a random nonce?** If the relay chose its own nonce, it could grind through values until it found a winner for every packet, extracting the maximum reward every time. The VRF produces exactly **one valid output** per (relay key, packet) pair — the relay cannot influence the lottery outcome. The proof lets any party verify the result without the relay's private key.
 
 The VRF used is **ECVRF-ED25519-SHA512-TAI** ([RFC 9381](https://www.rfc-editor.org/rfc/rfc9381)), which reuses the relay's existing Ed25519 keypair. VRF proof size is 80 bytes, included only in winning lottery claims (not in every packet).
+
+:::
 
 ### Example
 
@@ -201,7 +217,7 @@ graph LR
 A lottery win triggers compensation through one or both mechanisms:
 
 1. **Channel debit** (if a channel exists with the upstream sender): Bob's win debits Alice's channel with Bob; Carol's win debits Bob's channel with Carol. A **2% service burn** is applied — the relay receives 98% of the payout, and 2% is permanently destroyed. This is the steady-state mechanism once MHR is circulating.
-2. **Mining proof** (demand-backed): The channel debit (post-burn) is recorded as a service proof entitling the relay to a share of the epoch's [minting reward](mhr-token#demand-backed-proof-of-service-mining-mhr-genesis) — but only if the packet traversed a funded payment channel. Free-tier trusted traffic does not earn minting rewards. Relay channel debits contribute to the same minting pool as storage and compute debits (see [All-Service Minting](mhr-token#all-service-minting)). Minting is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
+2. **Mining proof** (demand-backed): The channel debit (post-burn) is recorded as a service proof entitling the relay to a share of the epoch's [minting reward](token-economics#demand-backed-proof-of-service-mining-mhr-genesis) — but only if the packet traversed a funded payment channel. Free-tier trusted traffic does not earn minting rewards. Relay channel debits contribute to the same minting pool as storage and compute debits (see [All-Service Minting](mhr-token#all-service-minting)). Minting is the dominant income source during bootstrap and provides a baseline subsidy that decays over time.
 
 Most packets trigger no channel update at all. Each hop is independent — no end-to-end payment coordination.
 
@@ -271,7 +287,7 @@ Revenue-capped minting formula (net-income based, with scaling and burn):
     attacker growth rate) and absorbs excess supply after merge.
 ```
 
-See [Revenue-Capped Minting](mhr-token#revenue-capped-minting) in the MHR Token spec for the complete self-dealing analysis, and the [Security Analysis](mhr-token#security-analysis) for all attack vectors including cycling prevention and isolated partition bounds.
+See [Revenue-Capped Minting](token-economics#revenue-capped-minting) in the MHR Token spec for the complete self-dealing analysis, and the [Security Analysis](token-security#security-analysis) for all attack vectors including cycling prevention and isolated partition bounds.
 
 **Impact on supply curve:**
 
@@ -293,3 +309,44 @@ The stochastic model fits within [Tier 2 (economic)](../protocol/network-protoco
 ## Trusted Peers: Free Relay
 
 Nodes relay traffic for [trusted peers](trust-neighborhoods) for free — no lottery, no channel updates. The stochastic reward system only activates for traffic between non-trusted nodes. This mirrors the real world: you help your neighbors for free, but charge strangers for using your infrastructure.
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>Why use a probabilistic lottery instead of paying per packet?</summary>
+
+Per-packet payment requires a channel state update for every batch of relayed packets, consuming significant bandwidth — especially on constrained LoRa links. The VRF-based stochastic lottery achieves the same expected value (e.g., 5 μMHR per packet) but only triggers a channel update on wins (~1 in 100 packets). This reduces payment overhead by approximately 8–10x while preserving the same average income for relay operators.
+
+</details>
+
+<details className="faq-item">
+<summary>How does the VRF prevent a relay from cheating the lottery?</summary>
+
+The VRF (ECVRF-ED25519-SHA512-TAI, RFC 9381) produces exactly one valid output per (relay private key, packet hash) pair. The relay cannot "grind" through nonces to find a winning value — there is only one possible output. Anyone can verify the result using the relay's public key without accessing the private key. Changing the relay key would mean changing the node identity and forfeiting all accumulated reputation.
+
+</details>
+
+<details className="faq-item">
+<summary>What happens if the other party in a payment channel goes offline?</summary>
+
+If the counterparty does not respond to a settlement request within 120 gossip rounds (~2 hours), the initiator can retry. After 3 failed attempts (~6 hours), the initiator may file a unilateral settlement using the last mutually-signed channel state. This enters a 48-hour challenge window where the counterparty can respond with a higher-sequence state. If a channel has no updates for 4 full epochs, either party can unilaterally close to prevent permanent fund lockup.
+
+</details>
+
+<details className="faq-item">
+<summary>Do payment channels require end-to-end coordination across multiple hops?</summary>
+
+No. Unlike Lightning-style multi-hop payment routing, Mehr uses simple per-hop bilateral channels between direct neighbors. Each relay independently runs the VRF lottery and debits the channel with its upstream sender. There is no end-to-end payment coordination — a packet traversing 5 hops involves 5 independent per-hop lottery checks, each settled on its own bilateral channel.
+
+</details>
+
+<details className="faq-item">
+<summary>How does the 2% service burn work with stochastic relay rewards?</summary>
+
+When a relay wins the VRF lottery, 2% of the payout is permanently destroyed (burned) before crediting the relay. For example, on a 500 μMHR lottery win, the relay receives 490 μMHR and 10 μMHR is removed from circulation. This burn applies uniformly to all funded-channel payments — relay wins, storage debits, and compute debits alike. It creates a deflationary counterforce that bounds supply growth and absorbs excess supply after partition merges.
+
+</details>
+
+<!-- faq-end -->

@@ -61,6 +61,26 @@ function stripFrontMatter(content) {
   return body.trim();
 }
 
+/**
+ * Strip MDX-specific syntax that isn't valid plain text:
+ * - import statements
+ * - JSX self-closing component tags (e.g., <SomeComponent />)
+ * - Docusaurus admonition fences (:::tip, :::info, etc.) — keep inner content
+ */
+function stripMdx(content) {
+  let result = content;
+  // Remove import statements
+  result = result.replace(/^import\s+.*$/gm, '');
+  // Remove JSX self-closing tags
+  result = result.replace(/^<\w+[^>]*\/>\s*$/gm, '');
+  // Convert admonition fences to plain blockquotes: keep the label, strip the fence
+  result = result.replace(/^:::(tip|info|note|caution|danger|warning)(?:\[([^\]]*)\])?\s*$/gm, (_m, _type, label) => {
+    return label ? `> **${label}**` : '>';
+  });
+  result = result.replace(/^:::\s*$/gm, '');
+  return result;
+}
+
 function getSection(filePath) {
   const rel = relative(DOCS_DIR, filePath);
   const parts = rel.split(/[/\\]/);
@@ -91,7 +111,7 @@ async function main() {
       title,
       position,
       path: relative(DOCS_DIR, file).replace(/\\/g, '/'),
-      content: content.trim(),
+      content: stripMdx(content.trim()),
     });
   }
 

@@ -1,11 +1,23 @@
 ---
 sidebar_position: 3
 title: Voice
+description: "Voice communication ranging from Codec2 push-to-talk over LoRa to full-duplex Opus calls over WiFi."
+keywords:
+  - voice
+  - Codec2
+  - Opus
+  - push-to-talk
+  - LoRa
+  - VoIP
 ---
 
 # Voice
 
 Voice communication in Mehr ranges from push-to-talk over LoRa to full-duplex calls over WiFi, adapting to available bandwidth.
+
+:::info[App Manifest]
+Voice is packaged as a **Full** (UI + compute) [AppManifest](../services/mhr-app). It composes MHR-Pub for call signaling and presence, MHR-Compute for codec bridging contracts (Codec2 ↔ Opus transcoding and speech-to-text delegation), and MHR-Store for optional voicemail storage. Pub/sub topic templates handle per-call session channels, and the manifest declares `min_tier` based on codec requirements.
+:::
 
 ## Codec Selection by Link Quality
 

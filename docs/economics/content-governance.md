@@ -1,6 +1,13 @@
 ---
 sidebar_position: 7
 title: Content Governance
+description: "Distributed content governance where every node independently decides what to store, relay, and display — no central authority."
+keywords:
+  - content governance
+  - moderation
+  - censorship resistance
+  - node sovereignty
+  - filtering
 ---
 
 # Content Governance
@@ -89,6 +96,10 @@ Communities can establish shared content policies through social consensus:
 - "Our curators don't include Z in their feeds"
 
 These are enforced through trust relationships, not protocol rules. A node that violates community norms faces trust revocation — which has economic consequences. No formal governance or voting is needed for communities to establish and enforce norms.
+
+:::tip[Key Insight]
+Community moderation in Mehr mirrors real-world social enforcement: trust revocation costs the offender free relay, free storage, and credit lines. No formal governance is needed — a cluster of nodes independently removing someone from `trusted_peers` is economically equivalent to community expulsion.
+:::
 
 ## Why Illicit Content Is Harder on Mehr
 
@@ -232,7 +243,9 @@ flowchart TD
 ```
 
 This is the same tradeoff every free society makes: some bad actors will misuse freedom. The alternative — giving any central authority the power to decide what's allowed — creates a worse problem. Mehr is more resistant than centralized platforms to censorship, but also more resistant to centralized takedown. Both properties come from the same design: node sovereignty.
-
+:::caution[Trade-off]
+A well-funded bad actor can pay full market rates to distribute content — the protocol cannot prevent this. The five defense layers (node refusal, trust revocation, curator exclusion, local validation, economic attrition) limit reach and make it expensive, but they do not guarantee removal. This is the inherent tradeoff of node sovereignty.
+:::
 ## Not Censorship
 
 Refusing to store or relay content is **not censorship** — it is individual autonomy.

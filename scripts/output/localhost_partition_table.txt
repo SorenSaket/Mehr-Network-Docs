@@ -1,0 +1,39 @@
+==========================================================================
+LOCALHOST PARTITION ATTACK -- COST ANALYSIS SUMMARY
+==========================================================================
+
+THE PROBLEM:
+  The existing cost table assumes 1 VM per node ($5/month each).
+  Nothing prevents running 100 nodes on one machine.
+  100-node attack real cost: ~$60/year (not $6,000/year).
+
+CORRECTED COST TABLE (post-bootstrap, first halving period):
+      N     E_s/epoch   Annual dilution   Real $/yr    Old $/yr
+  -----  ------------  ----------------  ----------  ----------
+      3        15,000              0.8%  $      60  $     180
+     10        50,000              2.6%  $      60  $     600
+     50       250,000             13.2%  $      60  $   3,000
+    100       500,000             26.3%  $      60  $   6,000
+    200       500,000             26.3%  $      60  $  12,000
+
+BOOTSTRAP FROM 1 MHR:
+  Phase 1 → Phase 2 in ~36 epochs (~6 hours)
+  Initial capital is NOT a meaningful barrier.
+
+REAL DEFENSES:
+  1. Bootstrap GenesisAttestation (epoch < 100,000): COMPLETE block
+  2. Halving schedule: damage halves every ~1.9 years
+  3. Active-set cap at 100: no benefit from >100 nodes
+  4. Lifetime dilution cap: 50% (convergent sum)
+
+WEAK/INVALID DEFENSES:
+  - Hardware cost ($6,000/yr): Actually $60/yr
+  - Per-node return parity: Per-MACHINE, attacker wins 100-10,000x
+  - Token value destruction: Circular argument
+
+OPEN QUESTION:
+  Post-bootstrap, what makes this attack more expensive than
+  honest participation on a per-hardware-dollar basis?
+  Current answer: nothing in the protocol.
+  The defense relies on halving (time) and dilution (self-harm),
+  not on making the attack genuinely costly.

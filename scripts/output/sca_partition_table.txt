@@ -1,0 +1,17 @@
+==========================================================================
+SCA + MERGE AUDIT -- PARTITION DEFENSE SUMMARY
+==========================================================================
+
+Service Continuity Attestation (K = 10,000 epochs, ~69 days):
+
+  Scenario                               1yr dilution    5yr dilution
+  -----------------------------------  --------------  --------------
+  No SCA (current design)                      19.96%          43.46%
+  SCA only (K=10K)                             19.94%          43.42%
+  SCA + audit (fresh IDs)                       0.00%           0.00%
+  SCA + audit (1 trust link)                    0.00%           0.00%
+
+Recommended: K = 10,000 epochs (~69 days)
+  Fresh localhost attack: 0% dilution (fully blocked)
+  Pre-planned: bounded to K epochs, visible on reconnect
+  Legitimate village: mints for ~69 days, then pauses (can still transact)

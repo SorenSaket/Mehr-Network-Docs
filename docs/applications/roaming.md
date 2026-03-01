@@ -1,11 +1,23 @@
 ---
 sidebar_position: 10
 title: Roaming & Connectivity
+description: "Seamless roaming across WiFi, LoRa, cellular, and other transports using cryptographic identity instead of network addresses."
+keywords:
+  - roaming
+  - connectivity
+  - transport switching
+  - multi-interface
+  - mobility
+  - handoff
 ---
 
 # Roaming & Connectivity
 
 On the traditional internet, switching networks is disruptive — you change WiFi, your connections drop; you move between cells, there's a handoff delay; you plug into a different ethernet port, your IP changes. On Mehr, **your identity is your cryptographic key, not your network address.** Moving between transports, locations, and access points is seamless.
+
+:::info[App Manifest]
+Roaming is packaged as a **Headless** (compute only) [AppManifest](../services/mhr-app). It composes MHR-Pub for announce-based presence and transport change notifications, MHR-DHT for route discovery across transport boundaries, and MHR-Compute for link-quality scoring and handoff priority logic. No UI bundle is needed — the roaming service runs as a background daemon that other applications depend on for seamless transport switching.
+:::
 
 ## How Roaming Works
 
@@ -68,7 +80,7 @@ Ethernet roaming scenario:
 
 ### Gateway-Provided Ethernet
 
-[Gateway operators](../economics/mhr-token#gateway-operators-fiat-onramp) can deploy ethernet access points as part of their service. A co-working space, hotel, or campus deploys mesh-connected ethernet ports. Customers (gateway subscribers) plug in and have immediate access — the gateway handles authentication via its trusted peer relationship.
+[Gateway operators](../economics/token-economics#gateway-operators-fiat-onramp) can deploy ethernet access points as part of their service. A co-working space, hotel, or campus deploys mesh-connected ethernet ports. Customers (gateway subscribers) plug in and have immediate access — the gateway handles authentication via its trusted peer relationship.
 
 ```
 Gateway ethernet access:

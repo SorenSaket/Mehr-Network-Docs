@@ -1,11 +1,23 @@
 ---
 sidebar_position: 9
 title: Cloud Storage
+description: "Decentralized file storage with client-side encryption, multi-node replication, and cross-device sync via the mesh."
+keywords:
+  - cloud storage
+  - file sync
+  - encryption
+  - replication
+  - decentralized
+  - backup
 ---
 
 # Cloud Storage
 
 Mehr provides **decentralized file storage** — like Dropbox or iCloud, but backed by the mesh instead of a corporate data center. Your files are encrypted client-side, replicated across multiple nodes, and accessible from any of your devices. No account with a cloud provider, no monthly subscription to a tech company, no data on someone else's server.
+
+:::info[App Manifest]
+Cloud storage is packaged as a **Full** (UI + compute) [AppManifest](../services/mhr-app). It composes MHR-Store for encrypted file chunks, FileManifests, and SyncManifests; MHR-Pub for cross-device sync notifications; MHR-DHT for chunk location lookups; and MHR-Name for user-friendly file and folder addressing. The state schema tracks per-device sync state as CRDT registers, and the UI bundle provides file browser, upload, and sharing interfaces.
+:::
 
 ## Overview
 
@@ -226,7 +238,7 @@ StorageConfig {
 
 ## Gateway-Operated Cloud Storage
 
-The [genesis service gateway](../economics/mhr-token#genesis-service-gateway) is the first operator to offer fiat-priced cloud storage, providing the initial market benchmark for storage pricing. Any [gateway operator](../economics/mhr-token#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — consumers upload files through the gateway's app, the gateway handles MHR storage agreements on their behalf, and the consumer pays a monthly fiat subscription.
+The [genesis service gateway](../economics/token-economics#genesis-service-gateway) is the first operator to offer fiat-priced cloud storage, providing the initial market benchmark for storage pricing. Any [gateway operator](../economics/token-economics#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — consumers upload files through the gateway's app, the gateway handles MHR storage agreements on their behalf, and the consumer pays a monthly fiat subscription.
 
 ```
 Gateway cloud storage:

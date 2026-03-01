@@ -1,6 +1,13 @@
 ---
 sidebar_position: 4
 title: Verification
+description: "Verification methods for marketplace capabilities including delivery receipts, Merkle proofs, and challenge-response protocols."
+keywords:
+  - verification
+  - delivery receipts
+  - Merkle proof
+  - storage proof
+  - challenge-response
 ---
 
 # Verification
@@ -22,6 +29,10 @@ Bob proves: "I forwarded to Carol, here's the chain"
 ```
 
 A relay node can only earn routing fees by actually delivering packets to their destination.
+
+:::danger[Threat]
+Delivery receipts prove delivery, not legitimacy. A Sybil attacker can fabricate traffic between colluding nodes and produce valid receipts. Economic defenses (demand-backed minting, revenue-capped minting) make this self-dealing structurally unprofitable.
+:::
 
 **Note**: Delivery receipts prove that packets were delivered, not that the traffic represents legitimate demand. A Sybil attacker can fabricate traffic between colluding nodes and produce valid delivery receipts. The economic defense against this is [demand-backed minting](../economics/payment-channels#demand-backed-minting-eligibility) — VRF wins only count for minting if the packet traversed a funded payment channel, and [revenue-capped minting](../economics/payment-channels#revenue-capped-minting) ensures self-dealing is always unprofitable.
 
@@ -89,6 +100,10 @@ Redundant Execution:
 ```
 
 **Use for**: High-stakes operations where the result affects payments or irreversible state changes.
+
+:::tip[Key Insight]
+Compute verification is tiered by stakes, not by capability. Most operations use optimistic verification (accept then spot-check), keeping costs near 1x while maintaining deterrence through random audits. Only payment-affecting computation requires expensive redundant execution.
+:::
 
 ## Verification Cost Tradeoffs
 

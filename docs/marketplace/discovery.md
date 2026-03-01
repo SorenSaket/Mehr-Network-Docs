@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Capability Discovery
+description: "How Mehr nodes discover capabilities using concentric discovery rings that minimize bandwidth while finding nearby services first."
+keywords:
+  - discovery
+  - gossip
+  - capability
+  - rings
+  - DHT
+  - mesh routing
 ---
 
 # Capability Discovery
@@ -99,6 +107,10 @@ When a node needs a capability it doesn't have locally:
 
 Most requests resolve at Ring 0 or Ring 1. The further out a query goes, the higher the latency and cost — which naturally incentivizes local provision of common capabilities.
 
+:::tip[Key Insight]
+The concentric ring design means discovery bandwidth scales with detail — Ring 0 exchanges full capabilities for free between neighbors, while Ring 3 transmits zero proactive bytes. On constrained LoRa links, this keeps discovery overhead under 50 bytes per gossip round.
+:::
+
 ## Mobile Handoff
 
 When a mobile node (phone, laptop, vehicle) moves between areas, its Ring 0 neighbors change. Old relay agreements and payment channels become unreachable. The handoff protocol re-establishes connectivity in the new location.
@@ -106,6 +118,10 @@ When a mobile node (phone, laptop, vehicle) moves between areas, its Ring 0 neig
 ### Presence Beacons
 
 Mehr nodes periodically broadcast a lightweight presence beacon on all their interfaces:
+
+:::info[Specification]
+PresenceBeacons are only 20 bytes and broadcast every 10 seconds. They are **never relayed** — only originating nodes transmit them, keeping bandwidth overhead minimal even in dense deployments.
+:::
 
 ```
 PresenceBeacon {

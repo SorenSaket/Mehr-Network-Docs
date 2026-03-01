@@ -25,7 +25,9 @@ The transport layer must provide:
 The current transport implementation uses the [Reticulum Network Stack](https://reticulum.network/), which satisfies all requirements above and is proven on links as slow as 5 bps. Mehr extends it with [CompactPathCost](network-protocol#mehr-extension-compact-path-cost) annotations on announces and an economic layer above.
 
 Reticulum is an implementation choice, not an architectural dependency. Mehr extensions are carried as opaque payload data within Reticulum's announce DATA field — a clean separation that allows the transport to be replaced with a clean-room implementation in the future without affecting any layer above.
-
+:::tip[Key Insight]
+The transport layer is a swappable implementation detail. Mehr defines the interface it needs (half-duplex, ≥5 bps, ≥500 byte MTU, mandatory encryption), not the implementation. All economic extensions ride as opaque payload in transport announces — the transport never needs to understand Mehr.
+:::
 ### Participation Levels
 
 Not all nodes need to understand Mehr extensions. Three participation levels coexist on the same mesh:
@@ -89,6 +91,10 @@ graph LR
 
 The 20,000x range between the slowest and fastest supported transports (500 bps to 10 Gbps) has profound implications for protocol design:
 
+:::caution[Trade-off]
+Supporting 500 bps to 10 Gbps (a 20,000x range) means every protocol overhead byte must be budgeted. Data objects carry `min_bandwidth` requirements so large transfers are never attempted over constrained links — only hashes and metadata propagate on LoRa.
+:::
+
 - **All protocol overhead must be budgeted.** Gossip, routing updates, and economic state consume bandwidth that could carry user data. On a 1 kbps LoRa link, every byte matters.
 - **Data objects carry minimum bandwidth requirements.** A 500 KB image declares `min_bandwidth: 10000` (10 kbps). LoRa nodes never attempt to transfer it — they only propagate its hash and metadata.
 - **Applications adapt to link quality.** The protocol provides link metrics; applications decide what to send based on available bandwidth.
@@ -113,3 +119,44 @@ The transport layer provides packet delivery, routing, and encryption. Mehr adds
 | **[Congestion control](network-protocol#congestion-control)** | CSMA/CA, per-neighbor fair sharing, priority queuing, backpressure |
 
 These extensions ride on top of the transport's existing gossip and announce mechanisms, staying within the protocol's [bandwidth budget](network-protocol#bandwidth-budget).
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>Which radios should I buy to get started with Mehr?</summary>
+
+The easiest entry point is an [RNode](https://reticulum.network/manual/hardware.html) — a LoRa-based radio that serves as the reference hardware for the transport layer. For higher bandwidth, any WiFi-capable device (Raspberry Pi, laptop, phone) can participate. You don’t need a specific radio to join — any supported transport works, and nodes with multiple interfaces bridge between them automatically.
+
+</details>
+
+<details className="faq-item">
+<summary>What kind of range can I expect from LoRa?</summary>
+
+LoRa typically achieves 2–15 km line-of-sight depending on antenna height, terrain, and power settings. In urban areas with buildings in the way, expect 1–5 km. Directional antennas and elevated mounting points dramatically improve range. For longer distances, WiFi point-to-point links can reach 1–10 km.
+
+</details>
+
+<details className="faq-item">
+<summary>Can Mehr work over the regular internet, or does it require radio hardware?</summary>
+
+Mehr works over any transport — including the internet. Ethernet, WiFi, and cellular connections all function as valid transports. You can run a Mehr node on a home computer connected to your router. Radio hardware (LoRa, packet radio) extends the network into areas without internet connectivity, but it’s not required.
+
+</details>
+
+<details className="faq-item">
+<summary>What happens when a message crosses from LoRa to WiFi or vice versa?</summary>
+
+Bridge nodes with multiple interfaces handle this transparently. A packet arriving on LoRa is forwarded over WiFi (or any other interface) by the bridge node. The sender and receiver don’t need to know which transports were used — the routing layer picks the best path automatically. The bridge node can earn relay rewards for providing this service.
+
+</details>
+
+<details className="faq-item">
+<summary>Does mixing slow and fast transports create bottlenecks?</summary>
+
+The protocol is designed for this. Data objects carry a `min_bandwidth` field that prevents large transfers from being attempted over slow links. A 500 KB image won’t be pushed over LoRa — only its hash and metadata propagate. Applications adapt to link quality in real time, degrading gracefully on constrained links and resuming full quality on fast ones.
+
+</details>
+
+<!-- faq-end -->

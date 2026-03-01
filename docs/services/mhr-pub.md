@@ -1,6 +1,14 @@
 ---
 sidebar_position: 3
 title: "MHR-Pub: Publish/Subscribe"
+description: "MHR-Pub provides publish/subscribe notifications across the Mehr mesh with topic-based subscriptions and multiple delivery modes."
+keywords:
+  - publish
+  - subscribe
+  - notifications
+  - pub/sub
+  - real-time
+  - topics
 ---
 
 # MHR-Pub: Publish/Subscribe
@@ -64,6 +72,10 @@ Batched summaries delivered periodically. Reduces bandwidth by aggregating multi
 Only the hash of new content is delivered. The subscriber decides whether and when to pull the full data.
 
 **Use on**: LoRa and other constrained links where bandwidth is precious
+
+:::tip[Key Insight]
+Three delivery modes — Push, Digest, PullHint — let the application match notification overhead to link capacity. LoRa nodes receive 32-byte hash hints; WiFi nodes get full payloads. The protocol provides the tools; the application chooses the tradeoff.
+:::
 
 ## Application-Driven Delivery Selection
 
@@ -182,3 +194,37 @@ Applications should select delivery mode based on both link quality and scope br
 | Country/Global | Very high | PullHint |
 | Narrow interest topic | Low-moderate | Push |
 | Broad interest topic | High | Digest |
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>How is MHR-Pub different from regular messaging?</summary>
+
+Messaging is point-to-point: Alice sends a message to Bob. MHR-Pub is publish/subscribe: Alice publishes to a topic, and anyone subscribed to that topic receives the notification. It’s the backbone for feeds, real-time updates, sync notifications, and event-driven applications — one publisher can reach many subscribers without knowing who they are.
+
+</details>
+
+<details className="faq-item">
+<summary>Can I subscribe to topics from communities across the mesh, not just my local area?</summary>
+
+Yes. Scope subscriptions support both geographic and interest-based topics at any level of the hierarchy. You can subscribe to `Topic("gaming", "pokemon")` globally or `Geo("us", "oregon", "portland")` locally. Cross-scope subscriptions are bridged by interest relay nodes that connect geographic clusters. Content from distant scopes just costs more in relay fees.
+
+</details>
+
+<details className="faq-item">
+<summary>Won’t pub/sub flood my LoRa link with notifications?</summary>
+
+No. MHR-Pub offers three delivery modes precisely for this. On LoRa, you’d use **PullHint** — only a 32-byte hash is delivered per notification. You decide what’s worth fetching later over a faster link. On WiFi, you can use **Push** for full payloads. The application selects the mode based on current link quality, so constrained links are never overwhelmed.
+
+</details>
+
+<details className="faq-item">
+<summary>What happens to notifications if I’m offline?</summary>
+
+Notifications are not stored indefinitely by the pub/sub system — it’s real-time delivery. However, applications handle offline scenarios by storing state in MHR-Store. When you come back online, your node queries MHR-Store and MHR-DHT to catch up on missed updates. For social feeds, the envelope/post architecture means you can quickly scan what’s new without downloading everything.
+
+</details>
+
+<!-- faq-end -->

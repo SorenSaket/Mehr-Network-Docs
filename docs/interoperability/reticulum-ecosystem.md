@@ -1,6 +1,14 @@
 ---
 sidebar_position: 3
 title: Reticulum Ecosystem
+description: "How Mehr coexists with pure Reticulum applications like LXMF, Sideband, and NomadNet on a shared transport layer."
+keywords:
+  - Reticulum
+  - LXMF
+  - Sideband
+  - NomadNet
+  - coexistence
+  - transport
 ---
 
 # Reticulum Ecosystem
@@ -81,6 +89,10 @@ Because LXMF and Mehr both derive identity from Ed25519 keypairs via Reticulum's
 - If Alice's Sideband identity is `a1b2c3d4...`, her Mehr identity is `a1b2c3d4...`
 
 This means a "bridge" for existing Reticulum users is really just **running Mehr alongside their existing Reticulum applications**. Same key, same identity, additional capabilities.
+
+:::tip[Key Insight]
+LXMF and Mehr share the same Ed25519 keypair and Reticulum destination hash derivation. A user’s Sideband identity and Mehr identity are cryptographically identical — no attestation, registration, or bridge configuration needed.
+:::
 
 ## Sideband Integration
 
@@ -230,3 +242,6 @@ The Reticulum community values simplicity, volunteer operation, and freedom from
 5. **Upstream contribution**: Mehr development benefits Reticulum — performance improvements, hardware support, and testing capacity flow back to the transport layer.
 
 The goal is to be a **superset**, not a replacement. Reticulum is excellent at what it does. Mehr adds what it doesn't do (economics, storage, compute) without diminishing what it already provides.
+:::caution[Trade-off]
+Mehr’s economic layer risks alienating the Reticulum community, which values volunteer operation and simplicity. The coexistence model mitigates this: economics are strictly opt-in, LXMF traffic remains free, and L0 participation requires zero economic overhead.
+:::

@@ -1,15 +1,17 @@
 ---
 sidebar_position: 2
-title: "Layer 1: Network Protocol"
+title: "MHR-Net: Network Protocol"
 description: Network protocol layer for the Mehr mesh — addressing, routing, packet format, and multi-hop relay with incentivized forwarding.
 keywords: [network protocol, routing, mesh routing, packet format, addressing]
 ---
 
-# Layer 1: Network Protocol
+# MHR-Net: Network Protocol
 
 The network protocol handles identity, addressing, routing, and state propagation across the mesh. It uses [Reticulum](physical-transport) as the transport foundation and extends it with cost-aware routing and economic state gossip.
 
 ## Identity and Addressing
+
+:::info[Specification]
 
 Mehr uses Reticulum's identity model. Every node has a cryptographic identity generated locally with no registrar:
 
@@ -21,6 +23,8 @@ NodeIdentity {
     x25519_public: X25519PublicKey,      // derived via RFC 7748 birational map
 }
 ```
+
+:::
 
 ### Destination Hash
 
@@ -89,6 +93,8 @@ Nodes that don't understand the `0x4E` magic byte forward the DATA field as opaq
 
 #### Why No Per-Relay Signatures
 
+:::tip[Key Insight]
+
 Earlier designs signed each relay's cost annotation individually (~84 bytes per relay hop). This is unnecessary for three reasons:
 
 1. **Routing decisions are local.** You select a next-hop neighbor. You only need to trust your neighbor's cost claim — and your neighbor is already authenticated by the link-layer encryption.
@@ -96,6 +102,8 @@ Earlier designs signed each relay's cost annotation individually (~84 bytes per 
 3. **The market enforces honesty.** A relay that inflates path costs gets routed around. A relay that deflates costs loses money on every packet. Economic incentives are a cheaper and more robust enforcement mechanism than cryptographic proofs for cost claims.
 
 The announce itself remains signed by the destination node (proving authenticity of the route). The path cost summary is trusted transitively through link-layer authentication at each hop — analogous to how BGP trusts direct peers, not every AS along the path.
+
+:::
 
 ## Routing
 
@@ -222,6 +230,8 @@ Announce triggers:
 
 ## Gossip Protocol
 
+:::info[Specification]
+
 All protocol-level state propagation uses a common gossip mechanism:
 
 ```
@@ -232,6 +242,8 @@ GossipRound (every 60 seconds with each neighbor):
 3. Exchange deltas (compact, only what's new)
 4. Apply received state via CRDT merge rules
 ```
+
+:::
 
 ### Gossip Bloom Filter
 
@@ -276,6 +288,8 @@ Gossip Bandwidth Budget (per link):
   Tier 4 (social):    Trust graph, names               — up to 2%
 ```
 
+:::caution[Trade-off]
+
 **On constrained links (< 10 kbps)**, the budget adapts automatically:
 
 - Tiers 3–4 switch to **pull-only** (no proactive gossip — only respond to requests)
@@ -289,6 +303,8 @@ Gossip Bandwidth Budget (per link):
 | 10+ Mbps WiFi | ~1% | ~1% | ~2% | ~2% | ~6% |
 
 This tiered model ensures constrained links are never overwhelmed by protocol overhead, while higher-bandwidth links gossip more aggressively for faster convergence.
+
+:::
 
 ### Gossip Congestion Handling
 
@@ -434,7 +450,6 @@ CongestionSignal {
 ```
 
 The signal does not identify which internal interface is congested — upstream peers only need to know whether to reduce traffic through this node (`ThisLink` for targeted rerouting, `AllOutbound` if the node itself is overloaded). Internal link topology is not exposed.
-```
 
 ### Dynamic Cost Response
 
@@ -467,3 +482,79 @@ Epochs define coarse time boundaries. "Weekly" means approximately **10,000 sett
 The "30-day grace period" for epoch finalization is defined as **4 epochs after activation**, tolerating clock drift of up to 50% without protocol failure.
 
 All protocol `Timestamp` fields are `u64` values representing milliseconds on the node's local monotonic clock (not wall-clock). Conversion to neighbor-relative or epoch-relative time is performed at the protocol layer.
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>How does Mehr addressing work without a central authority?</summary>
+
+Every node generates its own Ed25519 keypair locally and derives a 16-byte destination hash from the public key. This gives each node a self-assigned, pseudonymous address with negligible collision probability across the 2^128 address space. No registrar, DNS, or allocation authority is involved — any device can create an identity and start participating immediately.
+
+</details>
+
+<details className="faq-item">
+<summary>Why doesn't the packet header include the sender's address?</summary>
+
+Sender anonymity is structural in Mehr. Packets carry only the destination hash, never the source address. A relay node knows which direct neighbor handed it a packet but cannot determine whether that neighbor originated it or is forwarding it from someone else. This design, inherited from Reticulum, prevents passive traffic analysis from identifying message senders.
+
+</details>
+
+<details className="faq-item">
+<summary>How does cost-aware routing scale to large networks?</summary>
+
+Mehr routing is based on the Kleinberg small-world model. Each announce carries a constant 6-byte CompactPathCost summary that relays update in-place as they forward. With O(1) long-range links per node, expected path length is O(log² N) hops. Backbone nodes with O(log N) connections reduce this to O(log N). The scoring function lets applications trade off between cost, latency, and reliability using a per-packet PathPolicy.
+
+</details>
+
+<details className="faq-item">
+<summary>Why are per-relay signatures on cost annotations unnecessary?</summary>
+
+Routing decisions are local — you only trust your direct neighbor's cost claim, and that neighbor is already authenticated by link-layer encryption. Trust is transitive at each hop (analogous to BGP trusting direct peers), and the market enforces honesty: relays that inflate costs get routed around, while relays that deflate costs lose money on every forwarded packet. This avoids ~84 bytes of signature overhead per relay hop.
+
+</details>
+
+<details className="faq-item">
+<summary>Can a node have multiple identities on the network?</summary>
+
+Yes. A single node can generate multiple Ed25519 keypairs, each producing a separate destination hash. This allows a node to maintain distinct identities for different purposes — personal communication, service endpoints, or anonymous identities. Each identity operates independently with its own routing announcements, reputation, and payment channels.
+
+</details>
+
+<details className="faq-item">
+<summary>How does gossip avoid overwhelming low-bandwidth LoRa links?</summary>
+
+The protocol automatically adapts to constrained links (below 10 kbps). Tiers 3–4 (services, trust/social) switch to pull-only mode, payment batching intervals increase from 60 seconds to 5 minutes, and capability advertisements are limited to direct neighbors only. Total protocol overhead on a 1 kbps LoRa link is approximately 2% of bandwidth — well below the 10% ceiling.
+
+</details>
+
+<details className="faq-item">
+<summary>What happens if gossip is starved by heavy user data traffic?</summary>
+
+A minimum guaranteed gossip rate is enforced: at least 2% of link bandwidth (or 10 bytes/sec, whichever is greater) is reserved for gossip. If gossip has been starved for more than 3 gossip intervals (3 minutes), the next packet slot is preemptively reserved for gossip. If starvation persists beyond 10 minutes, the node enters GOSSIP_RECOVERY mode, temporarily increasing the gossip budget to 20% until state converges.
+
+</details>
+
+<details className="faq-item">
+<summary>How does congestion on one link affect routing across the mesh?</summary>
+
+When a link's queue depth exceeds 50%, the effective cost increases quadratically: `effective_cost = base_cost × (1 + (queue_depth / queue_capacity)²)`. This updated cost propagates in the next gossip round's CompactPathCost, causing upstream nodes to naturally reroute traffic to less-congested paths. Additionally, a 3-byte backpressure signal is sent to direct upstream neighbors, telling them to reduce sending rate.
+
+</details>
+
+<details className="faq-item">
+<summary>Does Mehr require synchronized clocks across the network?</summary>
+
+No. Mehr uses three time mechanisms that avoid global clock synchronization: Lamport timestamps (logical clocks) for event ordering, neighbor-relative time (clock offsets exchanged during link establishment) for local agreement expiry, and epoch-relative time where "weekly" epochs are defined by settlement count (~10,000 batches), not wall-clock time. All timestamp fields use each node's local monotonic clock.
+
+</details>
+
+<details className="faq-item">
+<summary>How does the priority queuing system prevent voice traffic from being delayed?</summary>
+
+Voice traffic is assigned priority P0 (real-time), the highest level, with a strict 500ms tail-drop deadline. The scheduler uses strict priority ordering — P0 packets are always sent before P1/P2/P3 traffic. To prevent starvation of lower priorities, P3 (bulk) is guaranteed at least 10% of user bandwidth. On half-duplex links, preemption occurs only at packet boundaries.
+
+</details>
+
+<!-- faq-end -->

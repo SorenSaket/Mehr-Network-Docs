@@ -1,6 +1,14 @@
 ---
 sidebar_position: 4
 title: Trust & Neighborhoods
+description: "Emergent communities formed from trust graphs where nodes set per-peer relay costs and define hierarchical scopes."
+keywords:
+  - trust
+  - neighborhoods
+  - community
+  - trust graph
+  - scopes
+  - peer relationships
 ---
 
 # Trust & Neighborhoods
@@ -10,6 +18,10 @@ Communities in Mehr are **emergent, not declared**. There are no admin-created "
 ## The Trust Graph
 
 Each node maintains a set of trusted peers:
+
+:::info[Specification]
+`TrustConfig` is the core social primitive: trusted peers get free relay, non-trusted traffic is priced per-byte, and transitive credit extends to friends-of-friends at a configurable ratio (default 10%, max 50%). Scopes are self-assigned hierarchical namespaces (max 1 Geo + 3 Topic, ≤ 1 KB total).
+:::
 
 ```
 TrustConfig {
@@ -92,7 +104,9 @@ Transitive credit:
   This makes trust economically meaningful — you only trust people
   you'd lend to.
 ```
-
+:::tip[Key Insight]
+Trust in Mehr has real economic cost: vouching for a peer means absorbing their potential debts. This makes the trust graph a natural Sybil defense — creating fake identities is free, but getting anyone to trust (and financially back) them is not.
+:::
 The credit line is **rate-limited** for safety:
 
 | Trust Distance | Max Credit | Rate Limit |
@@ -227,7 +241,7 @@ Geo scopes can optionally be **verified** — see [MHR-ID](../services/mhr-id) f
 
 | Place Type | Verification Method | Precision |
 |-----------|-------------------|-----------|
-| **Physical neighborhood** | [RadioRangeProof](../services/mhr-id#radiorangeproof) — if you can hear a node's LoRa beacon, you're within physical range | ~1–15 km |
+| **Physical neighborhood** | [RadioRangeProof](../services/mhr-id/verification#radiorangeproof) — if you can hear a node's LoRa beacon, you're within physical range | ~1–15 km |
 | **Physical city/region** | Bottom-up aggregation of verified neighborhood claims | Aggregated |
 | **Virtual space** | Application-specific (e.g., server-signed attestation, invite-chain, admin vouch) | Varies |
 | **Organization** | Peer attestation from existing verified members | Social |
@@ -306,3 +320,37 @@ The trust graph provides natural Sybil resistance:
 | Communities aren't corporations | Neighborhoods have no admin |
 | You belong to multiple groups | Trust graph is continuous, not partitioned |
 | Reputation builds over time | Trust earned through reliable service |
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>How do communities actually form if there’s no “create community” button?</summary>
+
+You simply mark other people as trusted peers in your node’s configuration. When a cluster of people mutually trust each other, a neighborhood emerges organically — no one needs to create, name, or administrate it. It’s the same way friend groups form in real life: you start trusting individuals, and the group structure follows.
+
+</details>
+
+<details className="faq-item">
+<summary>What if I’m new and don’t trust anyone yet?</summary>
+
+You can still participate — you’ll just pay standard relay fees in MHR for traffic that crosses trust boundaries. As you interact with neighbors and build relationships, you’ll naturally add trusted peers. Gateway operators can also onboard new users by adding them as trusted peers, giving immediate free access within the gateway’s neighborhood.
+
+</details>
+
+<details className="faq-item">
+<summary>Can I revoke trust once I’ve granted it?</summary>
+
+Yes, instantly. Removing a node from your `trusted_peers` list takes effect immediately. That node loses free relay through you, and any stored data from them drops to normal priority in garbage collection. Trust is asymmetric and unilateral — you control your own trust list without needing the other party’s permission.
+
+</details>
+
+<details className="faq-item">
+<summary>Are my trust relationships visible to everyone on the network?</summary>
+
+Your trust graph is visible to your direct peers (they can see who you relay for free), but it is not broadcast globally. Neighbors observe trust relationships through relay behavior — if you relay someone’s traffic for free, nearby nodes can infer a trust link. There is no public trust directory that lists all relationships.
+
+</details>
+
+<!-- faq-end -->

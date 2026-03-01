@@ -1,0 +1,27 @@
+Defense Comparison: Trust-Gated+Audit (A) vs Neighborhood-Scoped (B)
+======================================================================
+
+Scenario                                    A:1yr    A:5yr    B:1yr    B:5yr
+----------------------------------------------------------------------
+Fresh localhost (0 trust)                   0.00%    0.00%    0.00%    0.00%
+Pre-planned, 1/100 trusted                  0.99%    0.99%    0.00%    0.00%
+Pre-planned, 10/100 trusted                 9.09%    9.09%    0.00%    0.00%
+Deep infiltration (50/100)                 33.33%   33.33%    0.00%    0.00%
+Extreme infiltration (90/100)              47.37%   47.37%    0.00%    0.00%
+
+
+Axis Comparison:
+----------------------------------------------------------------------
+Axis                           Approach A                Approach B               
+----------------------------------------------------------------------
+Security (fresh IDs)           0% dilution               0% dilution (structural) 
+Security (deep infiltrate)     ~9.5%/cycle               0% (different currency)  
+UX impact                      None                      Major (multi-currency)   
+Implementation                 ~500 lines                ~5,000+ lines            
+Architecture change            Moderate (overlay)        Massive (rewrite economy)
+CRDT impact                    None (economic layer)     Denomination-tagged CRDTs
+Partition tolerance            Full (audit on merge)     Perfect (independent)    
+Community sovereignty          Shared economy            Full sovereignty         
+Backward compatible            Yes (graceful)            No (breaking change)     
+
+Recommendation: Approach A (Trust-Gated + Merge-Time Audit)

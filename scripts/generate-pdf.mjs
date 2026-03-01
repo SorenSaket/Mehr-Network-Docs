@@ -30,9 +30,14 @@ const SECTIONS = [
     category: 'Economics',
     docs: [
       'economics/mhr-token',
+      'economics/token-economics',
+      'economics/token-security',
       'economics/payment-channels',
       'economics/crdt-ledger',
+      'economics/epoch-compaction',
       'economics/trust-neighborhoods',
+      'economics/propagation',
+      'economics/content-governance',
       'economics/real-world-impact',
     ],
   },
@@ -53,7 +58,12 @@ const SECTIONS = [
       'services/mhr-pub',
       'services/mhr-compute',
       'services/mhr-name',
-      'services/mhr-id',
+      'services/mhr-id/index',
+      'services/mhr-id/verification',
+      'services/mhr-id/mobility',
+      'services/mhr-app/index',
+      'services/mhr-app/upgrades',
+      'services/mhr-app/security',
     ],
   },
   {
@@ -63,7 +73,21 @@ const SECTIONS = [
       'applications/social',
       'applications/voice',
       'applications/community-apps',
+      'applications/voting',
+      'applications/licensing',
+      'applications/cloud-storage',
+      'applications/roaming',
       'applications/hosting',
+    ],
+  },
+  {
+    category: 'Interoperability',
+    docs: [
+      'interoperability/overview',
+      'interoperability/meshtastic',
+      'interoperability/reticulum-ecosystem',
+      'interoperability/scuttlebutt',
+      'interoperability/matrix',
     ],
   },
   {
@@ -74,7 +98,10 @@ const SECTIONS = [
     category: 'Development',
     docs: [
       'development/roadmap',
+      'development/landscape',
       'development/design-decisions',
+      'development/partition-defense-comparison',
+      'development/versioning',
       'development/open-questions',
     ],
   },
@@ -182,6 +209,33 @@ function processHeadings(markdown, docId) {
   });
 }
 
+/**
+ * Strip content between marker comments:
+ *   <!-- faq-start --> ... <!-- faq-end -->
+ *   <!-- explanation-start --> ... <!-- explanation-end -->
+ */
+function stripMarkedSections(md) {
+  return md
+    .replace(/<!--\s*faq-start\s*-->[\s\S]*?<!--\s*faq-end\s*-->/g, '')
+    .replace(/<!--\s*explanation-start\s*-->[\s\S]*?<!--\s*explanation-end\s*-->/g, '');
+}
+
+/**
+ * Strip Docusaurus admonitions of specific types (:::note[Explanation])
+ * Keeps the content inside :::info, :::tip, :::caution, :::danger etc.
+ */
+function stripExplanationAdmonitions(md) {
+  // Remove :::note[Explanation] blocks entirely
+  return md.replace(/^:::note\[Explanation\]\s*\n[\s\S]*?^:::\s*$/gm, '');
+}
+
+/**
+ * Strip HTML <details> FAQ blocks (collapsible FAQ items)
+ */
+function stripDetailsFaq(md) {
+  return md.replace(/<details\s+className="faq-item"[\s\S]*?<\/details>/g, '');
+}
+
 async function readDoc(docId) {
   const filePath = join(DOCS_DIR, `${docId}.md`);
   try {
@@ -193,12 +247,23 @@ async function readDoc(docId) {
 
   const raw = await readFile(filePath, 'utf-8');
   const { content, data } = matter(raw);
+
+  // Skip pages with pdf: false in frontmatter (e.g., FAQ sub-pages)
+  if (data.pdf === false) {
+    console.log(`  Skipped (pdf: false): ${docId}`);
+    return null;
+  }
+
   const title = data.title || docId;
 
   let processed = content.trim();
   // Strip MDX: import statements and JSX component tags (not valid in plain markdown)
   processed = processed.replace(/^import\s+.*$/gm, '');
   processed = processed.replace(/^<\w+[^>]*\/>\s*$/gm, '');
+  // Strip FAQ / explanation sections for a clean spec PDF
+  processed = stripMarkedSections(processed);
+  processed = stripExplanationAdmonitions(processed);
+  processed = stripDetailsFaq(processed);
   processed = processHeadings(processed, docId);
   processed = rewriteLinks(processed, docId);
 

@@ -1,6 +1,14 @@
 ---
 sidebar_position: 4
 title: Scuttlebutt Bridge
+description: "Bridge between Mehr and Scuttlebutt (SSB), connecting two gossip-based, offline-first protocols with Ed25519 identity."
+keywords:
+  - Scuttlebutt
+  - SSB
+  - bridge
+  - gossip
+  - offline-first
+  - social
 ---
 
 # Scuttlebutt Bridge
@@ -8,6 +16,10 @@ title: Scuttlebutt Bridge
 [Scuttlebutt](https://scuttlebutt.nz/) (SSB) is the protocol most philosophically aligned with Mehr. Both are gossip-based, offline-first, community-centric, and built on Ed25519 cryptographic identity. Both reject global consensus in favor of local-first operation. Both believe social networks should emerge from relationships, not platforms.
 
 The differences are complementary: SSB has a mature social ecosystem with thousands of users. Mehr has economic incentives, radio mesh transport, and a capability marketplace. A bridge between them lets each side benefit from what the other provides.
+
+:::tip[Key Insight]
+SSB and Mehr are the two most aligned protocols in the decentralized ecosystem: both are gossip-based, offline-first, Ed25519-identity, and reject global consensus. Their differences — SSB has the social network, Mehr has the economic layer — are complementary rather than competing.
+:::
 
 ## Protocol Alignment
 
@@ -124,6 +136,10 @@ Going the other direction, Mehr social posts become SSB feed messages:
 SSB uses `private-box` (asymmetric encryption for up to 7 recipients). Mehr uses per-recipient E2E encryption.
 
 **Bridge handling**: Private messages require re-encryption at the bridge. The bridge decrypts from one format and re-encrypts in the other. This means:
+
+:::danger[Threat]
+Private messages crossing the SSB–Mehr bridge require re-encryption. The bridge operator can read plaintext during translation. For sensitive conversations, both parties should use the same protocol or establish a sealed E2E channel through the bridge.
+:::
 
 - The bridge operator can read private messages that cross the bridge
 - Users are warned about this trust requirement

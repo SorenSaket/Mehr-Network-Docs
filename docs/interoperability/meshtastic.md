@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: Meshtastic Bridge
+description: "Transport-level bridge between Mehr and Meshtastic, enabling access to thousands of deployed LoRa nodes worldwide."
+keywords:
+  - Meshtastic
+  - LoRa
+  - bridge
+  - transport
+  - radio
+  - mesh hardware
 ---
 
 # Meshtastic Bridge
@@ -63,7 +71,9 @@ MehrOverMeshtastic {
 **MTU handling**: Meshtastic's maximum payload is ~228 bytes (varies by region/settings). Mehr packets that exceed this are fragmented at the bridge and reassembled at the destination bridge. The `fragment_id` field allows interleaving fragments from different Mehr packets.
 
 **Key property**: Existing Meshtastic nodes require **zero changes**. They see a Meshtastic packet and forward it like any other. The Mehr content is opaque — encrypted and meaningless to nodes that don't understand it.
-
+:::tip[Key Insight]
+Mode 1 (opaque relay) gives Mehr instant access to the entire deployed Meshtastic network with zero firmware changes. Existing nodes forward Mehr packets as regular Meshtastic messages — they never need to understand the content.
+:::
 #### Mode 2: Meshtastic Nodes as Mehr L0 (Firmware Extension)
 
 A lightweight firmware module lets Meshtastic nodes understand Mehr's announce format and participate in Mehr routing as L0 transport nodes.
@@ -182,6 +192,10 @@ For users who want to reach Meshtastic contacts from Mehr:
 5. Meshtastic recipient sees: `[MHR:alice] Hello from the other side`
 
 **Security note**: E2E encryption breaks at the bridge. Mehr uses per-recipient Ed25519-based encryption; Meshtastic uses shared channel PSK. The bridge must decrypt and re-encrypt. Users are warned that messages crossing the bridge are readable by the bridge operator. For sensitive content, both parties should be on the same protocol.
+
+:::caution[Trade-off]
+The Meshtastic bridge is trust-sensitive: E2E encryption terminates at the bridge node. The bridge operator can read plaintext of all messages crossing protocols. For sensitive conversations, both parties must be on the same protocol — the bridge is only suitable for non-confidential traffic.
+:::
 
 ### Meshtastic-to-Mehr
 

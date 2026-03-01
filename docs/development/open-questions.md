@@ -1,6 +1,14 @@
 ---
 sidebar_position: 3
 title: Open Questions
+description: "Tracking of resolved specification questions from v1.0 and v1.1 review rounds with links to their resolutions."
+keywords:
+  - open questions
+  - specification
+  - review
+  - resolved
+  - governance
+  - protocol design
 ---
 
 # Open Questions
@@ -23,8 +31,8 @@ All open questions from the v1.0 and v1.1 spec review rounds have been resolved 
 
 | # | Question | Resolution | Location |
 |---|----------|-----------|----------|
-| 4 | **AppManifest State Migration** — Execution semantics | Full state delivered via LOAD opcode as CBOR. Success requires HALT + valid CBOR output + schema conformance + within max_cycles. All-or-nothing (no partial migration). Determinism enforced; hash comparison detects violations. No automatic rollback — users pin old manifest hash. | [Distributed Apps — Migration](../services/distributed-apps#migration-contract-execution-semantics) |
-| 5 | **AppManifest Schema Compatibility** — Formal definition | Programmatic compatibility checker: no removed fields, no type changes, new fields with defaults only, required→optional allowed. CRDT types cannot change between versions. Unknown fields from newer schemas preserved via LWW fallback during merge. | [Distributed Apps — Schema Compatibility](../services/distributed-apps#schema-compatibility-rules) |
+| 4 | **AppManifest State Migration** — Execution semantics | Full state delivered via LOAD opcode as CBOR. Success requires HALT + valid CBOR output + schema conformance + within max_cycles. All-or-nothing (no partial migration). Determinism enforced; hash comparison detects violations. No automatic rollback — users pin old manifest hash. | [MHR-App — Migration](../services/mhr-app/upgrades#migration-contract-execution-semantics) |
+| 5 | **AppManifest Schema Compatibility** — Formal definition | Programmatic compatibility checker: no removed fields, no type changes, new fields with defaults only, required→optional allowed. CRDT types cannot change between versions. Unknown fields from newer schemas preserved via LWW fallback during merge. | [MHR-App — Schema Compatibility](../services/mhr-app/upgrades#schema-compatibility-rules) |
 | 6 | **MHR-Name Cross-Scope Query Routing** — Vague algorithm | DHT-guided scope routing: nodes register as ScopeAnchors at Blake3(scope_string) in DHT. Cross-scope queries look up the scope key, route to nearest anchor by trust distance → hop count → XOR distance. TTL = 5 × gossip_interval (adapts to transport speed). SCOPE_UNREACHABLE returned if no anchor exists. Hierarchical registration ensures ancestor scopes are queryable. | [MHR-Name — Cross-scope queries](../services/mhr-name#trust-weighted-propagation) |
 | 7 | **Visibility-Controlled Claim Updates** — Key rotation + versioning | Revoked peers lose forward access (new key), retain historical access (old key). Claims versioned by (claimant, claim_type, qualifier) with created timestamp ordering. Encrypted claims cached as ciphertext; decrypted on key receipt. Partition key rotation reconciled via KEY UNIFICATION when claimant reconnects. | [MHR-ID — Key Rotation and Claim Updates](../services/mhr-id#key-rotation-and-claim-update-semantics) |
 | 8 | **Payment Channel Settlement Atomicity** — Protocol not fully specified | Two-phase signing with 120-gossip-round timeout. Half-signed records are never published. After 3 failed attempts: unilateral settlement with 2,880-round challenge window. Strictly all-or-nothing — CRDT ledger only accepts dual-signed records. Channel close via standard 4-epoch abandonment rules. | [Payment Channels — Settlement](../economics/payment-channels#bilateral-payment-channels) |

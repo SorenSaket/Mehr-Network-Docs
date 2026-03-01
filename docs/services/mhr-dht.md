@@ -1,6 +1,14 @@
 ---
 sidebar_position: 2
 title: "MHR-DHT: Distributed Hash Table"
+description: "MHR-DHT maps keys to storage nodes using proximity-weighted gossip instead of strict Kademlia routing for mesh networks."
+keywords:
+  - DHT
+  - distributed hash table
+  - Kademlia
+  - gossip
+  - key-value
+  - routing
 ---
 
 # MHR-DHT: Distributed Hash Table
@@ -43,6 +51,10 @@ Where:
 - `w_xor = 0.7` (default — favor key-space closeness, but avoid expensive paths)
 
 This produces the same iterative-closest-node behavior as Kademlia but routes around expensive links rather than blindly following XOR distance.
+
+:::info[Specification]
+DHT lookups minimize `w_xor × norm_xor_distance + (1 - w_xor) × norm_network_cost` with default `w_xor = 0.7`. XOR distance determines the **target** (who stores the data); network cost determines the **path** (how to reach them efficiently).
+:::
 
 ### Replication Factor
 
@@ -215,3 +227,37 @@ If the client's relay is in its [trust graph](../economics/trust-neighborhoods),
 | Mutable, trusted relay | 0 | 0 |
 | Mutable, untrusted relay | +1 | ~192 bytes |
 | Name resolution | +1 | ~192 bytes |
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>What is a DHT and why does Mehr need one?</summary>
+
+A Distributed Hash Table (DHT) is a decentralized lookup system — given a key (like a content hash), it tells you which nodes store the corresponding data. Mehr needs it so any node can find any piece of data without asking a central server. Think of it as a phone book that’s spread across everyone’s devices instead of sitting in one place.
+
+</details>
+
+<details className="faq-item">
+<summary>How do lookups work if some nodes are offline?</summary>
+
+Each key is stored on k=3 nodes for redundancy. If one node is offline, the other two can still serve the data. Lookups query multiple nodes in parallel (α=3 concurrently) and use the first valid response. If a node goes offline for too long (~6 minutes), the remaining storage nodes re-replicate the data to a replacement, restoring full redundancy.
+
+</details>
+
+<details className="faq-item">
+<summary>Are there limits on how much data I can store in the DHT?</summary>
+
+The DHT itself stores only lightweight metadata (~129 bytes per entry) — not the full data. Full data lives in MHR-Store. The metadata includes the content hash, size, owner, and a signature. There’s no hard per-node limit, but cache eviction uses least-recently-used policy when local storage is full, and TTLs ensure stale entries expire.
+
+</details>
+
+<details className="faq-item">
+<summary>Can a malicious node return fake data from a DHT lookup?</summary>
+
+For content-addressed lookups (most common), fakery is impossible — the hash you already know *is* the proof. If `Blake3(returned_data) != requested_hash`, the data is rejected. For mutable data, the owner’s Ed25519 signature prevents forgery. A malicious relay can return stale data but cannot fabricate new data. Multi-source queries catch staleness.
+
+</details>
+
+<!-- faq-end -->

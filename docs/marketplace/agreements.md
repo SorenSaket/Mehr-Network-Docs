@@ -1,6 +1,14 @@
 ---
 sidebar_position: 3
 title: Capability Agreements
+description: "How Mehr nodes form bilateral capability agreements with cost structures, SLA terms, and escrow-based payment channels."
+keywords:
+  - agreements
+  - payment channels
+  - SLA
+  - escrow
+  - capability
+  - bilateral negotiation
 ---
 
 # Capability Agreements
@@ -39,6 +47,10 @@ CostStructure: enum {
 | Internet gateway | `PerByte` or `PerDuration` |
 
 ## Agreement Structure
+
+:::info[Specification]
+A `CapabilityAgreement` is a bilateral, time-bounded contract signed by both parties. It references an existing payment channel and specifies a cryptographic proof method for verification — no third party or network-wide registration is involved.
+:::
 
 ```
 CapabilityAgreement {
@@ -155,7 +167,9 @@ CapabilityOffer {
 ```
 
 **Timeout**: If the provider doesn't respond within 30 seconds (or 3 gossip rounds on constrained links), the request is considered rejected. The consumer may retry with a different provider.
-
+:::caution[Trade-off]
+Single-round negotiation (take-it-or-leave-it) sacrifices price optimality for latency. On LoRa links where each message takes seconds, a multi-round auction would be impractical. Consumers who want better terms must retry with different providers or adjusted parameters.
+:::
 **No counter-offers**: The provider either meets or undercuts the consumer's desired cost, or rejects. This keeps negotiation to a single round-trip — critical for LoRa where each message takes seconds. If the consumer wants to negotiate, they send a new request with adjusted terms.
 
 Prices are set by providers based on their own cost structure. Within [trust neighborhoods](../economics/trust-neighborhoods), trusted peers often offer discounted or free services.

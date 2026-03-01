@@ -26,7 +26,7 @@ Most decentralized networks create tokens through artificial work (hashing) or c
 
 The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable in connected networks: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). No staking, no slashing, no trust scores required. Identity is just a keypair — but opening a payment channel requires visible balance on the [CRDT ledger](economics/crdt-ledger), and building [reputation](protocol/security#reputation) requires sustained honest service, so Sybil identities face economic friction even without explicit identity verification.
 
-In isolated partitions — where an attacker could control all nodes and nullify non-deterministic assignment — three defense layers [bound damage to a predictable amount](economics/mhr-token#attack-isolated-partition). During bootstrap (epoch < 100,000), **genesis-anchored minting** prevents all minting without provable connectivity to genesis nodes. **Active-set-scaled emission** limits minting to the partition's fraction of the network (`min(active_nodes, 100) / 100` of full emission — a 3-node partition gets at most 3%). A **2% service burn** on every payment provides friction during isolation and absorbs excess supply after reconnection. Cumulative excess is bounded because emission halves geometrically — even an infinitely long 3-node partition produces ~1.5% total supply dilution, and realistic durations (weeks to months) produce less than 0.1% (see [Supply Dynamics Proof](economics/mhr-token#supply-dynamics-proof)). When a partition reconnects, the [CRDT merge rules](economics/crdt-ledger#partition-safe-merge-rules) adopt the winning epoch's snapshot and recover missed settlements via proofs. Excess supply dilutes all holders equally, and the halving schedule makes any supply shock negligible over time.
+In isolated partitions — where an attacker could control all nodes and nullify non-deterministic assignment — three defense layers [bound damage to a predictable amount](economics/token-security#attack-isolated-partition). During bootstrap (epoch < 100,000), **genesis-anchored minting** prevents all minting without provable connectivity to genesis nodes. **Active-set-scaled emission** limits minting to the partition's fraction of the network (`min(active_nodes, 100) / 100` of full emission — a 3-node partition gets at most 3%). A **2% service burn** on every payment provides friction during isolation and absorbs excess supply after reconnection. Cumulative excess is bounded because emission halves geometrically — even an infinitely long 3-node partition produces ~1.5% total supply dilution, and realistic durations (weeks to months) produce less than 0.1% (see [Supply Dynamics Proof](economics/token-security#supply-dynamics-proof)). When a partition reconnects, the [CRDT merge rules](economics/epoch-compaction#partition-safe-merge-rules) adopt the winning epoch's snapshot and recover missed settlements via proofs. Excess supply dilutes all holders equally, and the halving schedule makes any supply shock negligible over time.
 
 ### Free Between Friends
 
@@ -38,11 +38,11 @@ Your identity is your cryptographic key — not an account on someone else's ser
 
 ### Subjective Naming
 
-There is no global DNS. [MHR-Name](services/mhr-name) provides human-readable names (`alice@geo:portland`, `my-blog@topic:tech`) that resolve from each viewer's position in the trust graph. Names registered by people you trust outrank names from strangers. Two communities can have different "alice" users — that's by design. Names can point to people, content, or [distributed applications](services/distributed-apps).
+There is no global DNS. [MHR-Name](services/mhr-name) provides human-readable names (`alice@geo:portland`, `my-blog@topic:tech`) that resolve from each viewer's position in the trust graph. Names registered by people you trust outrank names from strangers. Two communities can have different "alice" users — that's by design. Names can point to people, content, or [distributed applications](services/mhr-app).
 
 ### Distributed Applications
 
-Applications on Mehr are not hosted on servers — they are [content-addressed packages](services/distributed-apps) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
+Applications on Mehr are not hosted on servers — they are [content-addressed packages](services/mhr-app) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
 
 ## Vision
 
@@ -89,7 +89,7 @@ Network fragmentation is not an error state — it is expected operation. A vill
 
 The [CRDT ledger](economics/crdt-ledger) prevents unbounded state growth through **epoch compaction**: settlement history is periodically snapshotted into a compact bloom filter, GCounter deltas are rebased to zero, and nodes discard individual settlement records. Epochs are triggered by settlement count (≥ 10,000), memory pressure (≥ 500 KB), or a small-partition floor — so even a 20-node village compacts regularly.
 
-When a partition reconnects after a long offline period, the epoch with the highest settlement count wins. The losing partition's settlements are recovered via [settlement proofs](economics/crdt-ledger#late-arrivals-after-compaction) during a 4-epoch verification window — bounded bandwidth, not an unbounded merge. Constrained devices store only their own balance and their neighbors' balances (~1.2 KB) plus the Merkle root, and verify any other balance [on demand](economics/crdt-ledger#snapshot-scaling) via a 640-byte Merkle proof.
+When a partition reconnects after a long offline period, the epoch with the highest settlement count wins. The losing partition's settlements are recovered via [settlement proofs](economics/epoch-compaction#late-arrivals-after-compaction) during a 4-epoch verification window — bounded bandwidth, not an unbounded merge. Constrained devices store only their own balance and their neighbors' balances (~1.2 KB) plus the Merkle root, and verify any other balance [on demand](economics/epoch-compaction#snapshot-scaling) via a 640-byte Merkle proof.
 
 ### 4. Anonymous by Default
 
@@ -135,7 +135,7 @@ No central server. No accounts. No subscriptions. Just cryptographic identities,
 - **Understand the protocol**: Start with [Physical Transport](protocol/physical-transport) and work up the stack
 - **Explore the economics**: Learn how [MHR tokens](economics/mhr-token) and [stochastic relay rewards](economics/payment-channels) enable decentralized resource markets
 - **Identity and naming**: See how [MHR-ID](services/mhr-id) builds self-sovereign profiles and how [MHR-Name](services/mhr-name) provides trust-weighted naming
-- **Distributed apps**: Learn how [AppManifests](services/distributed-apps) package and distribute applications across the mesh
+- **Distributed apps**: Learn how [AppManifests](services/mhr-app) package and distribute applications across the mesh
 - **See the real-world impact**: Understand [how Mehr affects existing economics](economics/real-world-impact) and how participants earn
 - **See the hardware**: Check out the [reference designs](hardware/reference-designs) for building Mehr nodes
 - **Read the full spec**: The complete [protocol specification](specification) covers every detail

@@ -1,6 +1,14 @@
 ---
 sidebar_position: 6
 title: BitTorrent Bridge
+description: "A BitTorrent bridge that brings torrent content into the Mehr mesh, translating between content-addressed systems."
+keywords:
+  - BitTorrent
+  - torrent
+  - bridge
+  - content addressing
+  - gateway
+  - file sharing
 ---
 
 # BitTorrent Bridge

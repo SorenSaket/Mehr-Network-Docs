@@ -1,11 +1,23 @@
 ---
 sidebar_position: 5
 title: Forums, Marketplace & Wiki
+description: "Community applications — forums, marketplaces, and wikis — built on MHR-Compute contracts with CRDT state."
+keywords:
+  - forums
+  - marketplace
+  - wiki
+  - community
+  - CRDT
+  - moderation
 ---
 
 # Community Applications
 
 Community applications — forums, marketplaces, and wikis — are built on [MHR-Compute](../services/mhr-compute) contracts managing CRDT state. All degrade gracefully to text-only on constrained links.
+
+:::info[App Manifest]
+Community apps are packaged as **Full** (UI + compute) [AppManifests](../services/mhr-app). Each variant (forum, marketplace, wiki) bundles MHR-Compute moderation and escrow contracts, MHR-Store for posts, listings, or wiki pages as CRDT DataObjects, MHR-Pub for neighborhood-scoped notifications, and MHR-DHT for local search indexing. The state schema defines CRDT merge rules per content type — append-only logs for forums, mutable registers for listings, and operational-transform text for wikis.
+:::
 
 ## Forums
 

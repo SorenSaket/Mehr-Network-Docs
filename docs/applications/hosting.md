@@ -1,11 +1,23 @@
 ---
 sidebar_position: 6
 title: Hosting & Websites
+description: "Host websites on Mehr by storing DataObjects in MHR-Store — no server, no DNS, no certificate authority required."
+keywords:
+  - hosting
+  - websites
+  - static sites
+  - MHR-Name
+  - DataObjects
+  - decentralized web
 ---
 
 # Hosting on Mehr
 
 Traditional web hosting requires a server, a domain name, a certificate, and ongoing payment to a hosting provider. On Mehr, hosting is just storing DataObjects and letting the network serve them. No server. No DNS. No certificate authority.
+
+:::info[App Manifest]
+Hosting is packaged as a **Static** (content only) [AppManifest](../services/mhr-app) for simple sites, or **Full** (UI + compute) for dynamic sites with server-side logic. It composes MHR-Store for HTML, CSS, JavaScript, and media DataObjects; MHR-Name for human-readable site addresses (e.g., `mysite@geo:portland`); and optionally MHR-Pub for feed updates and MHR-Compute for dynamic content generation or forum moderation contracts.
+:::
 
 ## Hosting a Website
 

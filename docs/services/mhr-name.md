@@ -1,9 +1,11 @@
 ---
 sidebar_position: 5
 title: "MHR-Name"
+description: Human-readable subjective naming for the Mehr mesh — trust-scoped resolution, name format, and conflict handling.
+keywords: [MHR-Name, naming, DNS, trust graph, subjective names]
 ---
 
-# Naming (MHR-Name)
+# MHR-Name: Naming Service
 
 MHR-Name provides human-readable names for the Mehr mesh. There is no global namespace and no central authority — names are **subjective**, resolved from each node's own position in the [trust graph](../economics/trust-neighborhoods). Two nodes may resolve the same name to different targets, and that's by design.
 
@@ -58,9 +60,9 @@ NameTarget {
 |-------------|----------|---------|
 | **NodeID** | People, devices, relays, service operators | `alice@geo:portland` resolves to Alice's node |
 | **ContentHash** | Websites, documents, media | `my-blog@topic:tech` resolves to a blog stored in MHR-Store |
-| **AppManifest** | Distributed applications | `forum-app@topic:apps/forums` resolves to an [AppManifest](distributed-apps#appmanifest) |
+| **AppManifest** | Distributed applications | `forum-app@topic:apps/forums` resolves to an [AppManifest](mhr-app#appmanifest) |
 
-ContentHash targets are integrity-verified by definition — the hash guarantees the content hasn't been tampered with. AppManifest targets identify [distributed applications](distributed-apps#appmanifest) — the manifest binds together contract code, UI, and state schema into a single installable artifact. Live services (APIs, bots) are discovered through the [capability marketplace](../marketplace/discovery), not through naming — naming identifies *what* something is, the marketplace discovers *where* it's running.
+ContentHash targets are integrity-verified by definition — the hash guarantees the content hasn't been tampered with. AppManifest targets identify [distributed applications](mhr-app#appmanifest) — the manifest binds together contract code, UI, and state schema into a single installable artifact. Live services (APIs, bots) are discovered through the [capability marketplace](../marketplace/discovery), not through naming — naming identifies *what* something is, the marketplace discovers *where* it's running.
 
 ## Name Registration
 
@@ -78,6 +80,10 @@ NameBinding {
     signature: Ed25519Signature,        // signs all fields above
 }
 ```
+
+:::info[Specification]
+NameBindings are signed, scoped, and sequence-numbered. They expire after 30 epochs and propagate via gossip within their matching scope. Updates require strictly increasing sequence numbers. Minimum wire size: 122 bytes.
+:::
 
 **Signature**: Covers all fields except the signature itself. Verified using the registrant's Ed25519 public key (obtained via announce or [MHR-ID](mhr-id) claims).
 
@@ -297,7 +303,7 @@ Petnames:
 
 **Attack**: A stolen private key is used to publish new name bindings, hijacking the victim's name.
 
-**Mitigation**: The victim performs [key rotation](mhr-id#key-rotation) via MHR-ID. The new key publishes a higher-sequence binding for the same name. Trusted peers who vouch for the key rotation accelerate propagation of the legitimate binding. The old key's bindings become superseded.
+**Mitigation**: The victim performs [key rotation](mhr-id/mobility#key-rotation) via MHR-ID. The new key publishes a higher-sequence binding for the same name. Trusted peers who vouch for the key rotation accelerate propagation of the legitimate binding. The old key's bindings become superseded.
 
 ### 6. Name-Content Binding Abuse
 
@@ -334,7 +340,7 @@ Petnames:
 |------|-----|-------------|----------|
 | NodeID | 0x01 | 16 bytes | Destination hash |
 | ContentHash | 0x02 | 32 bytes | Blake3 hash |
-| AppManifest | 0x03 | 32 bytes | Blake3 hash of [AppManifest](distributed-apps#appmanifest) |
+| AppManifest | 0x03 | 32 bytes | Blake3 hash of [AppManifest](mhr-app#appmanifest) |
 
 Minimum binding size: 1 + 1 + 3 + 1 + 16 + 16 + 8 + 8 + 4 + 64 = **122 bytes** (1-char name, minimal scope, NodeID target). Fits in a single Mehr packet (max 465 bytes data).
 
@@ -370,3 +376,37 @@ Old bindings without a `target_type` field default to NodeID using the `node_id`
 **[Trust Graph](../economics/trust-neighborhoods)**: The trust graph is the foundation of name resolution. Trust distance determines binding priority. The `trust_decay` product along the shortest path yields the trust score.
 
 **[MHR-Pub](mhr-pub)**: Applications can subscribe to name change events via pub/sub. When a name binding is updated (new sequence number), subscribers are notified — useful for contact list sync and service discovery.
+
+<!-- faq-start -->
+
+## Frequently Asked Questions
+
+<details className="faq-item">
+<summary>How do names work without DNS?</summary>
+
+MHR-Name uses scoped, trust-weighted naming instead of global DNS. Names follow the format `name@scope` (e.g., `alice@geo:portland`) and resolve from your position in the trust graph. There’s no central registry — bindings propagate via gossip within their matching scope and are ranked by trust distance, verification level, and scope specificity. Different nodes may resolve the same name differently, and that’s by design.
+
+</details>
+
+<details className="faq-item">
+<summary>Can someone squat on a popular name?</summary>
+
+Name resolution is trust-weighted, not first-come-first-served globally. If two people register `alice@geo:portland`, the one with stronger trust relationships in your network wins from your perspective. A squatter with no real trust connections will rank below a legitimate user. Names also expire after 30 epochs and must be renewed, preventing indefinite squatting by inactive accounts.
+
+</details>
+
+<details className="faq-item">
+<summary>Can constrained devices (like ESP32) resolve names?</summary>
+
+Constrained devices delegate name lookups to a nearby relay, just like DHT lookups. The relay resolves the name and returns the result. The client verifies the response using the binding’s Ed25519 signature — the relay cannot forge a name binding. For extra assurance, the client can query multiple relays and compare results.
+
+</details>
+
+<details className="faq-item">
+<summary>What if I want to reach someone in a completely different scope?</summary>
+
+Cross-scope lookups use DHT-guided scope routing. Your node computes the hash of the target scope, queries MHR-DHT for scope anchors (nodes in that scope), and forwards the name query to the nearest anchor. The anchor resolves the name locally and returns the result. The response is cached with a TTL that adapts to your transport speed.
+
+</details>
+
+<!-- faq-end -->

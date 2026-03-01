@@ -1,6 +1,14 @@
 ---
 sidebar_position: 5
 title: Real-World Economics
+description: "Analysis of Mehr's economic impact on ISP costs, shared connectivity, and real-world infrastructure scenarios."
+keywords:
+  - economics
+  - ISP
+  - shared connectivity
+  - cost reduction
+  - infrastructure
+  - real-world
 ---
 
 # Real-World Economics
@@ -90,7 +98,9 @@ Resident savings:
 ```
 
 Both sides win. Gateway operators earn significant income from hardware they'd have anyway. Residents save money. The only loser is the ISP's per-household billing model — which was always an artifact of last-mile economics, not actual cost.
-
+:::tip[Key Insight]
+Mehr doesn’t kill ISPs — it restructures them. Last-mile distribution moves to the mesh, letting ISPs focus on backbone transit. A 50-unit apartment building drops from 50 subscriptions to 2–3 shared gateways, saving residents ~75% while creating income for gateway operators.
+:::
 ## How You Earn on Mehr
 
 Every node earns proportionally to the value it provides:
@@ -241,7 +251,7 @@ Three protocol-level mechanisms prevent capital from capturing the network:
 
 1. **Non-deterministic service assignment**: Clients cannot choose which node serves their request. [DHT ring assignment](../services/mhr-dht) uses `hash(content_id || epoch_hash)` — the epoch hash is unpredictable, preventing a large operator from grinding assignments toward their own nodes.
 
-2. **Net-income revenue cap**: [Minting eligibility](mhr-token#revenue-capped-minting) is based on net income (income minus spending), not gross revenue. An operator cycling MHR between their own nodes generates net income of zero — no minting. Self-dealing is structurally unprofitable in any connected network.
+2. **Net-income revenue cap**: [Minting eligibility](token-economics#revenue-capped-minting) is based on net income (income minus spending), not gross revenue. An operator cycling MHR between their own nodes generates net income of zero — no minting. Self-dealing is structurally unprofitable in any connected network.
 
 3. **Active-set scaled emission**: A 3-node partition (or a 3-node cluster operated by one entity) receives only 3% of full emission. You cannot earn more by concentrating — you earn proportionally to the network's active set size.
 
@@ -268,3 +278,6 @@ Mehr does not solve the concentration of compute. It restructures incentives so 
 - **Not all workloads benefit equally.** Latency-sensitive edge workloads (inference, real-time processing, content delivery) benefit most from proximity-based pricing. Batch processing workloads with no latency requirements may still be cheaper in centralized facilities.
 
 The claim is not that Mehr eliminates inequality. The claim is that Mehr's economic structure — uniquely among decentralized networks — **values where you are, not how much you have.** A solar-powered relay on a rooftop in Lagos serving its neighborhood earns based on the traffic it carries, not the capital behind it. That is a structural difference from every proof-of-work, proof-of-stake, and existing decentralized compute market.
+:::tip[Key Insight]
+Mehr’s anti-concentration mechanisms (non-deterministic assignment, net-income revenue cap, active-set scaled emission) ensure that 1,000 independent operators each running one node in different locations earn more per node than a single entity running 1,000 nodes in a data center. Proximity to demand — not capital — determines value.
+:::

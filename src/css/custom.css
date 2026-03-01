@@ -12,6 +12,16 @@
   --ifm-color-primary-lightest: #5c9cf0;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  /* ── Color system: spec vs explanation ── */
+  --mehr-spec-bg: #e8f0fe;
+  --mehr-spec-border: #1a73e8;
+  --mehr-explain-bg: #e6f4ea;
+  --mehr-explain-border: #34a853;
+  --mehr-warn-bg: #fef7e0;
+  --mehr-warn-border: #f9ab00;
+  --mehr-danger-bg: #fce8e6;
+  --mehr-danger-border: #d93025;
 }
 
 [data-theme='dark'] {
@@ -23,4 +33,235 @@
   --ifm-color-primary-lighter: #7bbdff;
   --ifm-color-primary-lightest: #b3d9ff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  --mehr-spec-bg: #1a2332;
+  --mehr-spec-border: #4da3ff;
+  --mehr-explain-bg: #1a2e1f;
+  --mehr-explain-border: #5bb974;
+  --mehr-warn-bg: #2e2a1a;
+  --mehr-warn-border: #fdd663;
+  --mehr-danger-bg: #2e1a1a;
+  --mehr-danger-border: #f28b82;
 }
+
+/* ══════════════════════════════════════════════
+   FAQ dropdowns — fix native marker + polish
+   ══════════════════════════════════════════════ */
+
+details.faq-item {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 0;
+  margin-bottom: 0.6em;
+  background: var(--ifm-background-surface-color);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+details.faq-item:hover {
+  border-color: var(--ifm-color-primary-light);
+}
+
+details.faq-item[open] {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+details.faq-item summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.75em 1em;
+  margin: 0;
+  /* Remove ALL native markers */
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+/* Hide WebKit/Blink native disclosure triangle */
+details.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+details.faq-item summary::marker {
+  content: '';
+  display: none;
+}
+
+details.faq-item summary:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* Custom chevron indicator */
+details.faq-item summary::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  background-color: var(--ifm-color-primary);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E");
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  transition: transform 0.2s ease;
+}
+
+details.faq-item[open] summary::before {
+  transform: rotate(90deg);
+}
+
+/* FAQ answer body */
+details.faq-item > *:not(summary) {
+  padding: 0 1em 0.75em;
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+
+details.faq-item > p:first-of-type {
+  padding-top: 0;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding: 0.75em 1em;
+}
+
+/* FAQ section header styling */
+.faq-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 2.5em;
+  margin-bottom: 1em;
+}
+
+.faq-section-heading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ifm-color-emphasis-200);
+}
+
+/* ══════════════════════════════════════════════
+   Admonition enhancements — spec vs explanation
+   ══════════════════════════════════════════════ */
+
+.theme-admonition {
+  margin-bottom: 1.2em;
+}
+
+/* Specification admonitions — distinctive blue band */
+[class*='admonition-info'] {
+  border-left: 4px solid var(--mehr-spec-border);
+  background: var(--mehr-spec-bg);
+}
+
+/* Key Insight — green accent, stands out from spec */
+[class*='admonition-tip'] {
+  border-left: 4px solid var(--mehr-explain-border);
+  background: var(--mehr-explain-bg);
+}
+
+/* Explanation / context — subtle green, clearly non-normative */
+[class*='admonition-note'] {
+  border-left: 4px solid var(--mehr-explain-border);
+  background: var(--mehr-explain-bg);
+  opacity: 0.92;
+}
+
+/* Trade-off — amber */
+[class*='admonition-caution'] {
+  border-left: 4px solid var(--mehr-warn-border);
+  background: var(--mehr-warn-bg);
+}
+
+/* Threat/danger — red */
+[class*='admonition-danger'] {
+  border-left: 4px solid var(--mehr-danger-border);
+  background: var(--mehr-danger-bg);
+}
+
+/* Small label pill inside admonitions */
+.admonition-heading .admonition-icon + span {
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════
+   Code blocks and tables
+   ══════════════════════════════════════════════ */
+
+pre {
+  font-size: 0.88em;
+}
+
+table {
+  display: table;
+  width: 100%;
+}
+
+table th {
+  white-space: nowrap;
+}
+
+/* Better table striping for readability */
+table tbody tr:nth-child(even) {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* ══════════════════════════════════════════════
+   Navigation / hierarchy visual aids
+   ══════════════════════════════════════════════ */
+
+/* Breadcrumb-style context for deeply nested pages */
+.theme-doc-breadcrumbs {
+  margin-bottom: 1em;
+  font-size: 0.85em;
+}
+
+/* TOC sidebar — slightly more prominent current section */
+.table-of-contents__link--active {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+/* Sidebar category labels */
+.menu__list-item--collapsed .menu__link {
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* ══════════════════════════════════════════════
+   Spec-page visual key (admonition legend)
+   ══════════════════════════════════════════════ */
+
+.admonition-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8em;
+  padding: 0.6em 0.8em;
+  border-radius: 6px;
+  background: var(--ifm-color-emphasis-100);
+  font-size: 0.8em;
+  margin-bottom: 1.5em;
+}
+
+.admonition-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.admonition-legend__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
+.admonition-legend__swatch--spec { background: var(--mehr-spec-border); }
+.admonition-legend__swatch--insight { background: var(--mehr-explain-border); }
+.admonition-legend__swatch--tradeoff { background: var(--mehr-warn-border); }
+.admonition-legend__swatch--threat { background: var(--mehr-danger-border); }

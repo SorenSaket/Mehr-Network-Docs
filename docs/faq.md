@@ -185,7 +185,7 @@ You pay only for storage (tiny amounts of MHR), and popular content gets cheaper
 
 Yes. Mehr provides [decentralized cloud storage](applications/cloud-storage) — like Dropbox, but your files are encrypted on your device before being stored across multiple mesh nodes. No cloud provider has access to your files. Your devices sync automatically through the mesh. You can share files with specific people by granting them a decryption key.
 
-If you don't want to deal with tokens, a [gateway operator](economics/mhr-token#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — same experience as any cloud storage app, but backed by the mesh.
+If you don't want to deal with tokens, a [gateway operator](economics/token-economics#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — same experience as any cloud storage app, but backed by the mesh.
 
 ### Can I earn by sharing my storage?
 
@@ -249,7 +249,7 @@ Yes. **Gateway operators** handle this. A gateway is a regular node that accepts
 
 The gateway adds you as a trusted peer and extends credit, so your traffic flows through them for free. The gateway handles MHR costs on your behalf. Multiple gateways compete in any area, so pricing stays competitive. You can switch gateways at any time — your identity is yours, not the gateway's.
 
-See [Gateway Operators](economics/mhr-token#gateway-operators-fiat-onramp) for details.
+See [Gateway Operators](economics/token-economics#gateway-operators-fiat-onramp) for details.
 
 ### Can I get rich from MHR?
 

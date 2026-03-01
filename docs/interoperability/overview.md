@@ -1,6 +1,14 @@
 ---
 sidebar_position: 1
 title: Cross-Network Compatibility
+description: "How Mehr bridges to other networks using standalone gateway services that integrate with the capability marketplace."
+keywords:
+  - interoperability
+  - bridges
+  - gateway
+  - Matrix
+  - SSB
+  - cross-network
 ---
 
 # Cross-Network Compatibility
@@ -12,6 +20,10 @@ Mehr is not an island. A decentralized mesh protocol that can't talk to other ne
 Mehr deliberately avoids building interoperability into the protocol layer. Instead, bridges are **standalone gateway services** that advertise in the [capability marketplace](../marketplace/overview) like any other service — storage, compute, or relay.
 
 This was an explicit [design decision](../development/design-decisions#protocol-bridges-standalone-gateway-services). The rationale:
+
+:::tip[Key Insight]
+Bridges are marketplace services, not protocol primitives. Each bridge is discoverable, negotiable, verifiable, and payable through the same capability marketplace that handles storage and compute — no special protocol support required.
+:::
 
 - **Protocol bridges need persistent connections** to external systems (Matrix federation, SSB replication, Nostr relays). MHR-Compute contracts are sandboxed with no network I/O — bridges don't fit the compute model.
 - **Each external protocol evolves independently.** A protocol-level primitive would need to track Matrix spec changes, SSB protocol upgrades, and Nostr NIPs — an endless maintenance burden on the core spec.
@@ -36,9 +48,9 @@ Each bridge is an L2 Mehr node that also speaks an external protocol. From the M
 
 ## Identity Attestation
 
-The core interop mechanism builds on [MHR-ID's ExternalIdentity claims](../services/mhr-id#identity-linking). An ExternalIdentity claim is a signed assertion linking a Mehr identity to an external platform account, verified via [crawler or OAuth challenges](../services/mhr-id#crawler-challenge) — the same methods used by [FUTO ID](https://docs.polycentric.io/futo-id/).
+The core interop mechanism builds on [MHR-ID's ExternalIdentity claims](../services/mhr-id/verification#identity-linking). An ExternalIdentity claim is a signed assertion linking a Mehr identity to an external platform account, verified via [crawler or OAuth challenges](../services/mhr-id/verification#crawler-challenge) — the same methods used by [FUTO ID](https://docs.polycentric.io/futo-id/).
 
-For protocol bridges specifically, the bridge node acts as a **verification oracle** — it can verify the user's external identity via OAuth and publish a vouch, just like any [verification oracle](../services/mhr-id#verification-oracles). The bridge also stores a protocol-specific attestation for message routing:
+For protocol bridges specifically, the bridge node acts as a **verification oracle** — it can verify the user's external identity via OAuth and publish a vouch, just like any [verification oracle](../services/mhr-id/verification#verification-oracles). The bridge also stores a protocol-specific attestation for message routing:
 
 ```
 BridgeAttestation {
@@ -148,6 +160,10 @@ These operate at the application layer — translating messages, posts, or data 
 
 **Advantage**: No changes needed to the external protocol. The bridge is just another client/server on both sides.
 
+:::caution[Trade-off]
+Protocol-level bridges face semantic mismatch: Mehr’s immutable DataObjects don’t map 1:1 to Matrix’s mutable room state or SSB’s append-only feeds. Each bridge needs protocol-specific translation logic, and E2E encryption breaks at the bridge boundary.
+:::
+
 **Challenge**: Semantic mismatch. Mehr's immutable DataObjects don't map 1:1 to Matrix's mutable room state or SSB's append-only feeds. Each bridge needs protocol-specific translation logic.
 
 ### Ecosystem Bridges
@@ -200,7 +216,7 @@ These connect Mehr to protocols it already shares infrastructure with — partic
 Some things are deliberately out of scope:
 
 - **Cross-protocol atomic swaps.** Mehr's CRDT ledger has different finality guarantees than blockchains. Token exchange happens through gateway operators or bilateral agreement, not protocol-level swap primitives.
-- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. [ExternalIdentity claims](../services/mhr-id#identity-linking) link your Mehr key to external platforms, but each bridge maintains its own routing attestations. Users choose which bridges they trust.
+- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. [ExternalIdentity claims](../services/mhr-id/verification#identity-linking) link your Mehr key to external platforms, but each bridge maintains its own routing attestations. Users choose which bridges they trust.
 - **Protocol-level name resolution for external systems.** Mehr's [naming system](../services/mhr-name) resolves Mehr names via trust-weighted resolution. External names resolve through their own systems, with bridges translating at the boundary.
 - **Backward compatibility shims.** Bridge operators handle version mismatches. The Mehr protocol doesn't adapt its wire format to accommodate external protocol changes.
 

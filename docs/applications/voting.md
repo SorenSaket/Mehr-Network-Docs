@@ -1,11 +1,23 @@
 ---
 sidebar_position: 7
 title: Voting
+description: "Sybil-resistant voting using trust-flow analysis instead of one-person-one-vote, with secret ballot support."
+keywords:
+  - voting
+  - Sybil resistance
+  - trust flow
+  - secret ballot
+  - governance
+  - PageRank
 ---
 
 # Voting
 
 Voting on a decentralized mesh has a fundamental problem: **how do you tell 1 person with 50 keys apart from 50 people with 1 key each?** You can't. So instead of trying to count people, Mehr counts **trust flow** — how much trust the honest network places in you. Creating 50 fake accounts doesn't increase the trust flowing into you. It just divides it thinner.
+
+:::info[App Manifest]
+Voting is packaged as a **Headless** (compute only) [AppManifest](../services/mhr-app). It composes MHR-Compute contracts for trust-flow analysis, vote tallying, and secret ballot commit/reveal logic; MHR-Store for signed ballot storage and election configuration DataObjects; and MHR-DHT for voter eligibility lookups. No UI bundle is included — front-end rendering is handled by the host application that triggers the voting contract.
+:::
 
 ## The Attack
 

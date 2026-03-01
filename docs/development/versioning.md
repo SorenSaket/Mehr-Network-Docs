@@ -1,6 +1,14 @@
 ---
 sidebar_position: 4
 title: Protocol Versioning
+description: "Version negotiation strategy for a decentralized mesh where nodes may be offline for months or never updated."
+keywords:
+  - versioning
+  - protocol upgrades
+  - compatibility
+  - MEP
+  - migration
+  - governance
 ---
 
 # Protocol Versioning
@@ -299,7 +307,7 @@ Assumptions: 1 epoch per 10 minutes, 52,560 epochs/year, 1000 years = 52.56 mill
 
 **Version byte (solved)**: Major version 15 is reserved as an escape hatch into [extended versioning](#version-field). When major = 15, the actual version is read from a TLV extension as a u16 pair — supporting 65,535 major versions. At one major version per 50 years, this covers 3.2 million years.
 
-**GCounters (solved)**: [Epoch compaction](../economics/crdt-ledger#gcounter-rebase) rebases GCounters to net balance at each epoch. Instead of tracking cumulative lifetime earnings (which grows with money velocity), the snapshot stores only current balance. Counters never exceed current circulating supply — the protocol runs indefinitely.
+**GCounters (solved)**: [Epoch compaction](../economics/epoch-compaction#gcounter-rebase) rebases GCounters to net balance at each epoch. Instead of tracking cumulative lifetime earnings (which grows with money velocity), the snapshot stores only current balance. Counters never exceed current circulating supply — the protocol runs indefinitely.
 
 **Emission bit-shift (solved)**: The halving formula `10^12 >> (e / 100_000)` overflows when the shift operand reaches 64 at epoch 6.4 million (~year 1218). Implementations must [clamp the shift to 63](../economics/mhr-token#supply-model). At shift = 63, the halved reward is 0, so the tail emission floor takes over — which is the correct behavior.
 

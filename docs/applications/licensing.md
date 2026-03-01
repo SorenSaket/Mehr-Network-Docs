@@ -1,11 +1,22 @@
 ---
 sidebar_position: 8
 title: Digital Licensing
+description: "Cryptographically verifiable digital licensing for assets like images, music, and software stored on the Mehr mesh."
+keywords:
+  - licensing
+  - digital rights
+  - cryptographic proof
+  - content licensing
+  - creator economy
 ---
 
 # Digital Licensing
 
 Mehr enables **cryptographically verifiable licensing** for digital assets — images, music, software, datasets, or any content. A license is a signed agreement between a licensor and licensee, stored on the mesh and verifiable by anyone. No enforcement mechanism exists at the protocol level — just like the real world, enforcement is social and legal. Mehr provides the *proof*.
+
+:::info[App Manifest]
+Digital licensing is packaged as a **Headless** (compute only) [AppManifest](../services/mhr-app). It composes MHR-Store for immutable LicenseOffer and LicenseGrant DataObjects, MHR-Compute for verification contracts that validate signature chains and expiry, MHR-DHT for license and asset discovery, and MHR-Name for licensor identity resolution. The manifest has no UI bundle — licensing logic is invoked by content applications (social, hosting) that embed license verification in their own interfaces.
+:::
 
 ## Overview
 
@@ -162,7 +173,7 @@ Subscription payment is bilateral — the licensor and licensee maintain a [paym
 
 For off-network payments (fiat, barter, or any other arrangement), the `payment_proof` field is `None`. The LicenseGrant still proves the license was issued (both parties signed it) — the payment happened off-protocol.
 
-This is the expected model for [gateway operator](../economics/mhr-token#gateway-operators-fiat-onramp) customers who pay fiat and don't hold MHR.
+This is the expected model for [gateway operator](../economics/token-economics#gateway-operators-fiat-onramp) customers who pay fiat and don't hold MHR.
 
 ## Use Cases
 

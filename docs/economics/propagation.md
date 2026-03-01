@@ -1,6 +1,13 @@
 ---
 sidebar_position: 6
 title: Content Propagation
+description: "How content propagates through the Mehr mesh following economic gravity — local content is cheap, global content costs more."
+keywords:
+  - propagation
+  - content distribution
+  - caching
+  - geographic scope
+  - economics
 ---
 
 # Content Propagation
@@ -53,6 +60,10 @@ Storage node decision:
 ### The Self-Funding Loop
 
 When a post earns more in [kickback](../services/mhr-store#revenue-sharing-kickback) than it costs to store, it becomes **self-sustaining**:
+
+:::tip[Key Insight]
+Popular content funds its own propagation. When kickback revenue exceeds storage cost, content becomes self-sustaining and climbs scope levels automatically — no algorithm, no promotion, just economics. Unpopular content dies naturally when funding stops.
+:::
 
 ```mermaid
 graph TD
@@ -172,6 +183,10 @@ An interest relay node can set its own thresholds — a high-traffic relay might
 | **Quality gate** | Retrieval demand drives scope promotion | Local validation gates outbound relay |
 
 Interest content is generally more expensive to propagate because it crosses more trust boundaries and relay hops. But interest communities can compensate by having dedicated relay infrastructure — nodes that specialize in bridging a specific topic.
+
+:::caution[Trade-off]
+Interest content is inherently more expensive than geographic content — it crosses more trust boundaries and relay hops to reach a sparse global audience. Self-funding is harder because fewer readers are nearby. Dedicated interest relay nodes help but add infrastructure cost.
+:::
 
 ## Intersection: Geographic + Interest
 

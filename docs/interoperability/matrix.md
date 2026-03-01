@@ -1,6 +1,14 @@
 ---
 sidebar_position: 5
 title: Matrix Bridge
+description: "A Matrix bridge gives Mehr transitive access to IRC, Slack, Discord, Signal, Telegram, and dozens of other platforms."
+keywords:
+  - Matrix
+  - bridge
+  - federation
+  - messaging
+  - Slack
+  - Discord
 ---
 
 # Matrix Bridge
@@ -21,6 +29,10 @@ title: Matrix Bridge
 ```
 
 One bridge. Dozens of reachable networks. This is the multiplier effect.
+
+:::tip[Key Insight]
+Matrix is the strategic bridge target because of its transitive connectivity. A single Mehr↔Matrix bridge gives Mehr access to IRC, Slack, Discord, Signal, Telegram, and every other platform Matrix already bridges to — one integration, dozens of networks.
+:::
 
 ## Why Matrix
 
@@ -235,6 +247,10 @@ For **E2E rooms**, the bridge must be a member of the room's Megolm session to d
 - Users are warned: E2E guarantee is bridge-to-endpoint, not true end-to-end across the bridge
 
 For **unencrypted rooms** (common for public channels), no re-encryption is needed — the bridge simply translates the message format.
+
+:::caution[Trade-off]
+Matrix E2E (Megolm group ratchet) and Mehr E2E (per-recipient encryption) are fundamentally different. The bridge must be a Megolm session member to decrypt, making it a trust boundary. True end-to-end encryption across the bridge is not possible — only bridge-to-endpoint.
+:::
 
 **Recommendation**: Use unencrypted Matrix rooms for public/community bridging. For private conversations that require E2E, both parties should be on the same protocol.
 
