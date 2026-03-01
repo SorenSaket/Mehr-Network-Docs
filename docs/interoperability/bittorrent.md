@@ -34,19 +34,24 @@ A BitTorrent bridge brings the entire BitTorrent content library into the Mehr m
 
 The BitTorrent bridge is a **gateway node** (internet-connected) that participates in both networks simultaneously:
 
-```
-                Mehr Mesh                           Internet
-                   │                                   │
-    [Mesh Node A]──┤                                   │
-    [Mesh Node B]──┤                                   │
-                   │                                   │
-              ┌────┴────┐                              │
-              │   BT    │──── Mainline DHT (UDP) ──────┤
-              │ Bridge  │──── BitTorrent peers (uTP) ──┤
-              │  (L2)   │──── Trackers (HTTP/UDP) ─────┤
-              └────┬────┘                              │
-                   │                                   │
-    [Mesh Node C]──┤                                   │
+```mermaid
+flowchart LR
+    subgraph mesh["Mehr Mesh"]
+        A["Mesh Node A"]
+        B["Mesh Node B"]
+        C["Mesh Node C"]
+    end
+    A --- BR["BT Bridge\n(L2)"]
+    B --- BR
+    C --- BR
+    subgraph internet["Internet"]
+        DHT["Mainline DHT\n(UDP)"]
+        BTP["BitTorrent Peers\n(uTP)"]
+        TR["Trackers\n(HTTP/UDP)"]
+    end
+    BR --- DHT
+    BR --- BTP
+    BR --- TR
 ```
 
 The bridge runs a full BitTorrent client (DHT, peer wire protocol, tracker announcements) and a full Mehr L2 node (MHR-Store, MHR-DHT, marketplace). It translates between the two worlds.

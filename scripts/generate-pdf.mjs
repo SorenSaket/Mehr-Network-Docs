@@ -24,6 +24,7 @@ const SECTIONS = [
       'protocol/physical-transport',
       'protocol/network-protocol',
       'protocol/security',
+      'protocol/versioning',
     ],
   },
   {
@@ -78,6 +79,7 @@ const SECTIONS = [
       'applications/cloud-storage',
       'applications/roaming',
       'applications/hosting',
+      'applications/business',
     ],
   },
   {
@@ -101,7 +103,6 @@ const SECTIONS = [
       'development/landscape',
       'development/design-decisions',
       'development/partition-defense-comparison',
-      'development/versioning',
       'development/open-questions',
     ],
   },
@@ -230,10 +231,10 @@ function stripExplanationAdmonitions(md) {
 }
 
 /**
- * Strip HTML <details> FAQ blocks (collapsible FAQ items)
+ * Strip HTML <details> FAQ and security blocks (collapsible items)
  */
 function stripDetailsFaq(md) {
-  return md.replace(/<details\s+className="faq-item"[\s\S]*?<\/details>/g, '');
+  return md.replace(/<details\s+className="(?:faq|security)-item"[\s\S]*?<\/details>/g, '');
 }
 
 async function readDoc(docId) {

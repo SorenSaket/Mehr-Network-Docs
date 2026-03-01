@@ -105,11 +105,11 @@ Nodes naturally specialize based on hardware and market dynamics:
 
 Delegation cascades naturally:
 
-```
-Node A (LoRa relay)
-  └── delegates compute to → Node B (Raspberry Pi)
-      └── delegates storage to → Node C (Mini PC + SSD)
-          └── delegates connectivity to → Node D (Gateway)
+```mermaid
+flowchart TB
+    A["Node A\n(LoRa relay)"] -->|delegates compute| B["Node B\n(Raspberry Pi)"]
+    B -->|delegates storage| C["Node C\n(Mini PC + SSD)"]
+    C -->|delegates connectivity| D["Node D\n(Gateway)"]
 ```
 
 Each link is a bilateral agreement with its own [payment channel](../economics/payment-channels). No central coordination required.

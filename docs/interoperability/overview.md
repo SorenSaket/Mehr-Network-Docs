@@ -30,18 +30,15 @@ Bridges are marketplace services, not protocol primitives. Each bridge is discov
 - **The marketplace already solves service discovery.** A bridge is just another capability: discoverable, negotiable, verifiable, payable.
 - **Bridge operators can specialize.** One operator runs a Matrix bridge. Another runs SSB. A third bridges both plus Nostr. They set their own pricing and compete on quality.
 
-```
-                Mehr Network
-                     │
-        ┌────────────┼────────────┐
-        │            │            │
-   ┌────┴────┐  ┌────┴────┐  ┌───┴─────┐
-   │ Matrix  │  │  SSB    │  │  Nostr  │
-   │ Bridge  │  │ Bridge  │  │ Bridge  │
-   │ (L2)    │  │ (L2)    │  │ (L2)    │
-   └────┬────┘  └────┬────┘  └────┬────┘
-        │            │            │
-   Matrix Federation SSB Pubs   Nostr Relays
+```mermaid
+flowchart TB
+    MEHR["Mehr Network"]
+    MEHR --> MB["Matrix Bridge\n(L2)"]
+    MEHR --> SB["SSB Bridge\n(L2)"]
+    MEHR --> NB["Nostr Bridge\n(L2)"]
+    MB --> MF["Matrix Federation"]
+    SB --> SP["SSB Pubs"]
+    NB --> NR["Nostr Relays"]
 ```
 
 Each bridge is an L2 Mehr node that also speaks an external protocol. From the Mehr side, it's a service provider. From the external side, it's a participant in that protocol's network.

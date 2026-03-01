@@ -17,20 +17,14 @@ Mehr is built on [Reticulum](https://reticulum.network/). This isn't a bridge �
 
 ## The Relationship
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  Shared Transport                     │
-│               (Reticulum Wire Protocol)               │
-│                                                       │
-│   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│   │   Pure       │  │  Mehr L1    │  │  Mehr L2    │ │
-│   │  Reticulum   │  │  (Relay +   │  │  (Full      │ │
-│   │  (LXMF,      │  │   economy)  │  │   stack)    │ │
-│   │   Sideband,  │  │             │  │             │ │
-│   │   NomadNet)  │  │             │  │             │ │
-│   └─────────────┘  └─────────────┘  └─────────────┘ │
-│         L0               L1               L2          │
-└─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph transport["Shared Transport — Reticulum Wire Protocol"]
+        direction LR
+        RE["Pure Reticulum\n(LXMF, Sideband,\nNomadNet)\n**L0**"]
+        L1["Mehr L1\n(Relay +\neconomy)\n**L1**"]
+        L2["Mehr L2\n(Full\nstack)\n**L2**"]
+    end
 ```
 
 All three participation levels share the same Reticulum transport. An L0 node running Sideband and an L2 node running full Mehr relay packets for each other on the same mesh. They use the same encryption, the same announce mechanism, the same link establishment protocol.

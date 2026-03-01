@@ -23,21 +23,16 @@ Roaming is packaged as a **Headless** (compute only) [AppManifest](../services/m
 
 Mehr's transport layer handles multiple interfaces simultaneously and routes through whichever is best. Your identity doesn't change when your network connection does:
 
-```
-                       Roaming Across Transports
-
-  TIME ───────────────────────────────────────────────────────▶
-
-  ┌────────────┐  ┌─────────────┐  ┌───────────┐  ┌─────────┐
-  │ Home WiFi  │  │ Walk to café│  │ Café WiFi │  │ Walk to │
-  │ 100 Mbps   │→ │ LoRa only  │→ │ 50 Mbps   │→ │ park    │
-  │ Full media │  │ Text only   │  │ Full media│  │ LTE-M   │
-  └────────────┘  └─────────────┘  └───────────┘  └─────────┘
-       │                │                │              │
-       └────────────────┴────────────────┴──────────────┘
-                 Your identity: same key throughout
-                 Your conversations: uninterrupted
-                 Your app: adapts to link quality
+```mermaid
+flowchart LR
+    A["Home WiFi\n100 Mbps\nFull media"] -->|walk| B["LoRa only\nText only"]
+    B -->|arrive| C["Café WiFi\n50 Mbps\nFull media"]
+    C -->|walk| D["LTE-M\nModerate"]
+    ID(["Your identity: same key throughout"]) -.-> A
+    ID -.-> B
+    ID -.-> C
+    ID -.-> D
+    style ID fill:none,stroke:none,color:#666
 ```
 
 **Key properties:**
@@ -97,16 +92,16 @@ Gateway ethernet access:
 
 WiFi roaming works the same way — your device automatically discovers and connects to nearby mesh WiFi nodes:
 
-```
-WiFi roaming:
-
-  [Home AP] ──── walk ────▶ [Café AP] ──── walk ────▶ [Library AP]
-       │                         │                          │
-  Connected                 Auto-connect              Auto-connect
-  via WiFi                  via WiFi                  via WiFi
-       │                         │                          │
-  announce ──▶              announce ──▶              announce ──▶
-  routes set                routes update             routes update
+```mermaid
+flowchart LR
+    H["Home AP"] -->|walk| C["Café AP"]
+    C -->|walk| L["Library AP"]
+    H -.-|announce| H2(["routes set"])
+    C -.-|announce| C2(["routes update"])
+    L -.-|announce| L2(["routes update"])
+    style H2 fill:none,stroke:none
+    style C2 fill:none,stroke:none
+    style L2 fill:none,stroke:none
 ```
 
 The transition between WiFi access points takes under a second — the time for an announce to propagate and routes to update. Active connections (messaging, voice) continue without interruption because they're addressed to your NodeID, not to a network address.
@@ -133,18 +128,21 @@ When WiFi drops:
 
 Voice calls demonstrate seamless handoff:
 
-```
-Voice call across transports:
+```mermaid
+stateDiagram-v2
+    [*] --> WiFi_Home: Start call\n16 kbps Opus
+    WiFi_Home --> LoRa: Walk out of range
+    LoRa --> WiFi_Dest: Arrive at destination
+    WiFi_Dest --> [*]: Call ends
 
-  Start call on WiFi (high quality, 16 kbps Opus)
-    → Walk out of WiFi range
-    → Call continues on LoRa (lower quality, 2.4 kbps Codec2)
-    → Arrive at destination, connect to new WiFi
-    → Quality returns to high (16 kbps Opus)
+    WiFi_Home: WiFi (High Quality)
+    LoRa: LoRa (2.4 kbps Codec2)
+    WiFi_Dest: WiFi (16 kbps Opus)
 
-  The call never drops. Quality adapts.
-  Interruption during handoff: <1 second.
+    note right of LoRa: Handoff < 1 second\nCall never drops
 ```
+
+The call never drops. Quality adapts. Interruption during handoff: < 1 second.
 
 ## How Announce-Based Routing Enables Roaming
 

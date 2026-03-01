@@ -15,17 +15,16 @@ keywords:
 
 [Matrix](https://matrix.org/) is the strategic bridge target for Mehr. Not because Matrix is the most philosophically aligned protocol — [Scuttlebutt](scuttlebutt) holds that distinction — but because Matrix is the **most connected**. Matrix's federation protocol already bridges to IRC, Slack, Discord, Signal, Telegram, WhatsApp, and dozens of other platforms. A single Mehr↔Matrix bridge gives Mehr transitive access to all of them.
 
-```
-                          ┌─────────┐
-                          │  Slack  │
-                          └────┬────┘
-                               │
-┌───────┐    ┌──────────┐    ┌─┴──────────┐    ┌──────────┐    ┌─────────┐
-│ Mehr  │────│  Mehr↔   │────│   Matrix   │────│ Matrix↔  │────│ Discord │
-│ Mesh  │    │  Matrix  │    │  Network   │    │ Platform │    │  IRC    │
-│       │    │  Bridge  │    │            │    │  Bridges │    │  Signal │
-└───────┘    └──────────┘    └────────────┘    └──────────┘    │  Telegram│
-                                                               └─────────┘
+```mermaid
+flowchart LR
+    MM["Mehr Mesh"] --> MMB["Mehr↔Matrix\nBridge"]
+    MMB --> MN["Matrix\nNetwork"]
+    MN --> MPB["Matrix↔Platform\nBridges"]
+    MPB --> Slack
+    MPB --> Discord
+    MPB --> IRC
+    MPB --> Signal
+    MPB --> Telegram
 ```
 
 One bridge. Dozens of reachable networks. This is the multiplier effect.

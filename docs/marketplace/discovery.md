@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Capability Discovery
-description: "How Mehr nodes discover capabilities using concentric discovery rings that minimize bandwidth while finding nearby services first."
+description: "How Mehr nodes discover capabilities using concentric discovery rings, and find communities via interest-based greedy routing."
 keywords:
   - discovery
   - gossip
@@ -9,6 +9,9 @@ keywords:
   - rings
   - DHT
   - mesh routing
+  - interest routing
+  - greedy routing
+  - community discovery
 ---
 
 # Capability Discovery
@@ -109,6 +112,81 @@ Most requests resolve at Ring 0 or Ring 1. The further out a query goes, the hig
 
 :::tip[Key Insight]
 The concentric ring design means discovery bandwidth scales with detail — Ring 0 exchanges full capabilities for free between neighbors, while Ring 3 transmits zero proactive bytes. On constrained LoRa links, this keeps discovery overhead under 50 bytes per gossip round.
+:::
+
+## Interest-Based Greedy Routing
+
+Capability discovery (Rings 0–3) answers "who can store my data?" or "who has compute?" — it finds **service providers**. Interest-based routing answers a different question: "who shares my interests?" or "where is the community discussing X?" — it finds **content and communities**.
+
+### Interests as Coordinates
+
+Each node maintains a lightweight **interest vector** derived from the topics it subscribes to (via [MHR-Pub](../services/mhr-pub)), the feeds it follows (via [social](../applications/social)), and the names it resolves frequently (via [MHR-Name](../services/mhr-name)). The interest vector is not shared directly — instead, nodes exchange **interest summaries**: a compact Bloom filter (64–256 bytes) encoding the topic hashes they care about.
+
+```
+InterestSummary {
+    node_id: [u8; 16],
+    bloom: [u8; 64],       // Bloom filter of subscribed topic hashes
+    depth: u8,             // 0 = own interests, 1 = neighbors' aggregate, etc.
+    cardinality_hint: u8,  // approximate number of distinct interests (log₂-encoded)
+}
+// 82 bytes — exchanged during Ring 1 gossip
+```
+
+The Bloom filter uses 3 hash functions over Blake3-hashed topic strings, giving a false-positive rate under 5% for up to 50 interests in a 512-bit filter.
+
+### Greedy Forwarding
+
+When a node wants to discover a community or topic it doesn't know about, it uses greedy routing — forwarding the query to the neighbor whose interest summary has the highest overlap with the target:
+
+1. **Encode the target** as a topic hash (e.g., `Blake3("community:urban-farming")`)
+2. **Check local subscriptions** — if you already follow this topic, done
+3. **Check Ring 0 neighbors** — does any neighbor's Bloom filter match the target hash?
+4. **Forward to best match** — pick the neighbor whose interest summary has the most bits in common with the query target
+5. **Repeat** — the next node checks its neighbors and forwards again
+
+This converges because trust graphs exhibit **small-world structure**: people cluster around shared interests, and a few "bridge" nodes connect disparate clusters. The interest overlap at each hop increases monotonically (on average), just like geographic distance decreases in Kleinberg's navigable small-world model.
+
+```mermaid
+flowchart LR
+    A["You<br/>(gardening, cooking)"] -->|"best overlap"| B["Neighbor<br/>(gardening, farming)"]
+    B -->|"best overlap"| C["Bridge Node<br/>(farming, urban ag)"]
+    C -->|"match!"| D["Community Hub<br/>(urban-farming)"]
+
+    style A fill:#4a90d9,color:#fff
+    style D fill:#27ae60,color:#fff
+    style C fill:#f39c12,color:#fff
+```
+
+### Convergence Properties
+
+Greedy routing on small-world graphs reaches the target in $O(\log^2 n)$ hops on average (Kleinberg, 2000). In Mehr's trust graph:
+
+- **Average path length**: For a network of 10,000 nodes, expected ~8–12 hops to reach any interest cluster
+- **Failure mode**: If no neighbor is closer to the target than the current node ("local minimum"), the query falls back to Ring 3 DHT lookup — broadcast to the wider network
+- **Loop prevention**: Queries carry a visited-set Bloom filter (128 bytes); nodes that detect themselves in the filter drop the query
+
+### Depth Aggregation
+
+Nodes don't just know their own interests — they aggregate neighbor interests at increasing depth:
+
+| Depth | Scope | Filter Size | Update Frequency |
+|-------|-------|-------------|------------------|
+| 0 | Own subscriptions | 64 bytes | On subscription change |
+| 1 | Direct neighbors' aggregated interests | 128 bytes | Every gossip round |
+| 2 | 2-hop neighborhood interests | 256 bytes | Every few minutes |
+
+Deeper aggregation uses larger Bloom filters to maintain acceptable false-positive rates as cardinality grows. A depth-2 summary lets a node answer "is anyone within 2 hops interested in X?" without forwarding the query — useful for deciding whether to subscribe to a new topic based on local demand.
+
+### Privacy Considerations
+
+Interest summaries reveal what topics a node cares about. To limit exposure:
+
+- **Noise injection**: Nodes add random bits to their Bloom filter (increasing false positives from 5% to ~15%), obscuring exact interests
+- **Depth-only sharing**: Nodes can share only depth ≥ 1 summaries (aggregate neighbor interests) without revealing their own subscriptions
+- **Opt-out**: Interest routing is optional. Nodes that don't publish an `InterestSummary` are simply skipped during greedy forwarding — they still participate in Ring-based capability discovery normally
+
+:::tip[Key Insight]
+Interest-based routing turns the trust graph into a navigable map of communities. Instead of searching "what services exist nearby?", you search "what communities exist that match my goals?" — and the small-world structure of human social connections ensures you reach them in logarithmically few hops.
 :::
 
 ## Mobile Handoff

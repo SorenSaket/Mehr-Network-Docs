@@ -275,47 +275,68 @@ Petnames:
 
 ## Security Considerations
 
-### 1. Name Squatting
+<details className="security-item">
+<summary>Name Squatting</summary>
 
-**Attack**: An attacker registers popular names (e.g., `signal@topic:apps`) early, hoping to intercept traffic.
+**Vulnerability:** An attacker registers popular names (e.g., `signal@topic:apps`) early, hoping to intercept traffic.
 
-**Mitigation**: Trust-weighted resolution means squatted names only win for nodes that trust the squatter. For the vast majority of the network, the legitimate service — which has real trust relationships — will outrank the squatter. A name squatter with no trust connections resolves at the 0.01 floor, making their binding nearly invisible.
+**Mitigation:** Trust-weighted resolution means squatted names only win for nodes that trust the squatter. For the vast majority of the network, the legitimate service — which has real trust relationships — will outrank the squatter. A name squatter with no trust connections resolves at the 0.01 floor, making their binding nearly invisible.
 
-### 2. Sybil Name Flooding
+</details>
 
-**Attack**: Create many identities, each claiming variations of a target name, to pollute lookup results.
+<details className="security-item">
+<summary>Sybil Name Flooding</summary>
 
-**Mitigation**: Gossip filtering by trust score. Sybil nodes with no trust relationships score 0.01 and their bindings are deprioritized during propagation. Because nodes only forward bindings above the minimum trust threshold, Sybil bindings don't propagate far. The cost of building genuine trust relationships limits the attacker's reach.
+**Vulnerability:** Create many identities, each claiming variations of a target name, to pollute lookup results.
 
-### 3. Partition Poisoning
+**Mitigation:** Gossip filtering by trust score. Sybil nodes with no trust relationships score 0.01 and their bindings are deprioritized during propagation. Because nodes only forward bindings above the minimum trust threshold, Sybil bindings don't propagate far. The cost of building genuine trust relationships limits the attacker's reach.
 
-**Attack**: During a network partition, inject false name bindings. After merge, these bindings compete with legitimate ones.
+</details>
 
-**Mitigation**: Sequence numbers prevent rollback — a legitimate node's higher-sequence binding always supersedes lower-sequence poison. Post-merge, trust-weighted resolution naturally favors the binding from the more-connected, more-trusted source.
+<details className="security-item">
+<summary>Partition Poisoning</summary>
 
-### 4. Homoglyph Impersonation
+**Vulnerability:** During a network partition, inject false name bindings. After merge, these bindings compete with legitimate ones.
 
-**Attack**: Register `аlice@geo:portland` using Cyrillic 'а' (U+0430) instead of Latin 'a' (U+0061) to impersonate `alice@geo:portland`.
+**Mitigation:** Sequence numbers prevent rollback — a legitimate node's higher-sequence binding always supersedes lower-sequence poison. Post-merge, trust-weighted resolution naturally favors the binding from the more-connected, more-trusted source.
 
-**Mitigation**: NFKC Unicode normalization on registration collapses many confusable characters. Applications should additionally display script-mixing warnings (e.g., "This name contains mixed Unicode scripts") and optionally reject names that mix scripts within a single label.
+</details>
 
-### 5. Key Compromise
+<details className="security-item">
+<summary>Homoglyph Impersonation</summary>
 
-**Attack**: A stolen private key is used to publish new name bindings, hijacking the victim's name.
+**Vulnerability:** Register `аlice@geo:portland` using Cyrillic 'а' (U+0430) instead of Latin 'a' (U+0061) to impersonate `alice@geo:portland`.
 
-**Mitigation**: The victim performs [key rotation](mhr-id/mobility#key-rotation) via MHR-ID. The new key publishes a higher-sequence binding for the same name. Trusted peers who vouch for the key rotation accelerate propagation of the legitimate binding. The old key's bindings become superseded.
+**Mitigation:** NFKC Unicode normalization on registration collapses many confusable characters. Applications should additionally display script-mixing warnings (e.g., "This name contains mixed Unicode scripts") and optionally reject names that mix scripts within a single label.
 
-### 6. Name-Content Binding Abuse
+</details>
 
-**Attack**: A trusted node registers a well-known name pointing to a ContentHash, then later updates it to point to malicious content.
+<details className="security-item">
+<summary>Key Compromise</summary>
 
-**Mitigation**: ContentHash targets are integrity-verified — the hash itself proves the content is what was originally published. If the name's target changes (new sequence number, different ContentHash), applications should alert the user that the content behind a name has changed, similar to SSH host key warnings.
+**Vulnerability:** A stolen private key is used to publish new name bindings, hijacking the victim's name.
 
-### 7. Global vs. Local Authority Conflict
+**Mitigation:** The victim performs [key rotation](mhr-id/mobility#key-rotation) via MHR-ID. The new key publishes a higher-sequence binding for the same name. Trusted peers who vouch for the key rotation accelerate propagation of the legitimate binding. The old key's bindings become superseded.
 
-**Attack**: A globally recognized application (e.g., a popular messaging service) uses the name `signal@topic:apps`. A local node in the same scope also registers `signal@topic:apps`.
+</details>
 
-**Mitigation**: There is no concept of "global authority" in Mehr — resolution is always subjective. The legitimate service will have trust relationships spanning the network, giving it a high trust score for most resolvers. The local squatter scores high only for nodes that directly trust them. For an attacker to successfully impersonate a well-known service, they would need to build trust relationships rivaling the legitimate service — which requires actually providing reliable service over time.
+<details className="security-item">
+<summary>Name-Content Binding Abuse</summary>
+
+**Vulnerability:** A trusted node registers a well-known name pointing to a ContentHash, then later updates it to point to malicious content.
+
+**Mitigation:** ContentHash targets are integrity-verified — the hash itself proves the content is what was originally published. If the name's target changes (new sequence number, different ContentHash), applications should alert the user that the content behind a name has changed, similar to SSH host key warnings.
+
+</details>
+
+<details className="security-item">
+<summary>Global vs. Local Authority Conflict</summary>
+
+**Vulnerability:** A globally recognized application (e.g., a popular messaging service) uses the name `signal@topic:apps`. A local node in the same scope also registers `signal@topic:apps`.
+
+**Mitigation:** There is no concept of "global authority" in Mehr — resolution is always subjective. The legitimate service will have trust relationships spanning the network, giving it a high trust score for most resolvers. The local squatter scores high only for nodes that directly trust them. For an attacker to successfully impersonate a well-known service, they would need to build trust relationships rivaling the legitimate service — which requires actually providing reliable service over time.
+
+</details>
 
 ## Wire Format
 

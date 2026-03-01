@@ -195,6 +195,35 @@ Applications should select delivery mode based on both link quality and scope br
 | Narrow interest topic | Low-moderate | Push |
 | Broad interest topic | High | Digest |
 
+## Security Considerations
+
+<details className="security-item">
+<summary>Topic Flooding / Subscription Spam</summary>
+
+**Vulnerability:** A malicious node publishes at high volume to popular scopes, exhausting subscriber bandwidth or storage quotas.
+
+**Mitigation:** Publishing costs relay fees (MHR). Subscribers filter by trust score — untrusted publishers' notifications are deprioritized or dropped. Scope-level rate limits cap notifications per epoch per publisher. The PullHint delivery mode ensures constrained links receive only 32-byte hashes, never full payloads, limiting the impact of flooding.
+
+</details>
+
+<details className="security-item">
+<summary>Scope Impersonation</summary>
+
+**Vulnerability:** A node publishes content tagged with a geographic or interest scope it doesn't genuinely belong to (e.g., claiming to be in Portland while physically elsewhere).
+
+**Mitigation:** Geographic scopes are trust-weighted — content tagged with `geo:us/or/portland` only propagates if nodes in that scope trust the publisher. A remote attacker with no Portland trust edges gets near-zero visibility. Interest-based scopes are inherently open (anyone can join `topic:gaming`), but curation and trust-weighted ranking ensure quality.
+
+</details>
+
+<details className="security-item">
+<summary>Notification Poisoning</summary>
+
+**Vulnerability:** A relay delivers fake PullHint hashes that point to nonexistent or malicious content, wasting subscriber retrieval attempts and bandwidth.
+
+**Mitigation:** Content-addressed lookups are self-verifying — if `Blake3(retrieved_data) != hint_hash`, the data is rejected. Subscribers track relay reliability; relays that consistently deliver invalid hints lose trust and are deprioritized. The cost of producing valid-looking but useless hashes is paid by the attacker in relay fees.
+
+</details>
+
 <!-- faq-start -->
 
 ## Frequently Asked Questions

@@ -35,15 +35,17 @@ The bridge operates at the **transport level** — deeper than a typical protoco
 
 Meshtastic nodes forward Mehr packets as opaque payloads without understanding them.
 
-```
-[Mehr L2 Node]                                            [Mehr L2 Node]
-      │                                                         ▲
-      ▼                                                         │
-[Bridge Node]                                             [Bridge Node]
-  Mehr L1 +        LoRa mesh (Meshtastic)                  Mehr L1 +
-  Meshtastic    ═══════════════════════════════            Meshtastic
-  firmware      [MT Node] → [MT Node] → [MT Node]        firmware
-                   L0          L0          L0
+```mermaid
+flowchart LR
+    L2A["Mehr L2 Node"] --> BA["Bridge Node\nMehr L1 + MT"]
+    BA --> MT1["MT Node\n(L0)"]
+    MT1 --> MT2["MT Node\n(L0)"]
+    MT2 --> MT3["MT Node\n(L0)"]
+    MT3 --> BB["Bridge Node\nMehr L1 + MT"]
+    BB --> L2B["Mehr L2 Node"]
+    style MT1 fill:#e8d5f5,stroke:#7b2d8e
+    style MT2 fill:#e8d5f5,stroke:#7b2d8e
+    style MT3 fill:#e8d5f5,stroke:#7b2d8e
 ```
 
 **How it works**:
@@ -78,12 +80,15 @@ Mode 1 (opaque relay) gives Mehr instant access to the entire deployed Meshtasti
 
 A lightweight firmware module lets Meshtastic nodes understand Mehr's announce format and participate in Mehr routing as L0 transport nodes.
 
-```
-[Mehr L2]  ←→  [Mehr L1]  ←→  [MT+L0]  ←→  [MT+L0]  ←→  [Mehr L1]  ←→  [Mehr L2]
-                                  │              │
-                            Meshtastic      Meshtastic
-                            firmware +      firmware +
-                            Mehr L0 module  Mehr L0 module
+```mermaid
+flowchart LR
+    A["Mehr L2"] <--> B["Mehr L1"]
+    B <--> C["MT + L0\nMehr L0 module"]
+    C <--> D["MT + L0\nMehr L0 module"]
+    D <--> E["Mehr L1"]
+    E <--> F["Mehr L2"]
+    style C fill:#e8d5f5,stroke:#7b2d8e
+    style D fill:#e8d5f5,stroke:#7b2d8e
 ```
 
 **What the L0 module does**:
@@ -101,23 +106,21 @@ A lightweight firmware module lets Meshtastic nodes understand Mehr's announce f
 
 A single device runs both Meshtastic and Mehr L1, sharing the same LoRa radio via time-division.
 
-```
-┌─────────────────────────────┐
-│        Dual-Protocol Node    │
-│                              │
-│  ┌──────────┐  ┌──────────┐ │
-│  │Meshtastic│  │ Mehr L1  │ │
-│  │ Stack    │  │ Stack    │ │
-│  └────┬─────┘  └────┬─────┘ │
-│       │              │       │
-│  ┌────┴──────────────┴────┐  │
-│  │   Radio Time-Division   │  │
-│  │   Manager (TDMA/slot)   │  │
-│  └────────────┬───────────┘  │
-│               │              │
-│          [LoRa Radio]        │
-│           SX1262/76          │
-└─────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph node["Dual-Protocol Node"]
+        direction TB
+        subgraph stacks[" "]
+            direction LR
+            MT["Meshtastic\nStack"]
+            MEHR["Mehr L1\nStack"]
+        end
+        TDMA["Radio Time-Division\nManager (TDMA/slot)"]
+        RADIO["LoRa Radio\nSX1262/76"]
+    end
+    MT --> TDMA
+    MEHR --> TDMA
+    TDMA --> RADIO
 ```
 
 **Time-division approach**:

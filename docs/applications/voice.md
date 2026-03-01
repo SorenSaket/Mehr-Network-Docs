@@ -44,19 +44,18 @@ Voice streams are **end-to-end encrypted** using the standard [E2E encryption](.
 
 When participants are on different link types, the application can use compute delegation to bridge:
 
-```
-Scenario: Alice is on LoRa, Bob is on WiFi
-
-Option 1: Codec conversion
-  Alice sends Codec2 audio over LoRa to a bridge node
-  Bridge node transcodes Codec2 → Opus
-  Bridge node sends Opus audio to Bob over WiFi
-
-Option 2: Speech-to-text bridging
-  Alice sends Codec2 audio over LoRa
-  A nearby compute node runs STT (Whisper) on the audio
-  Text is sent to Bob over WiFi
-  Bob's device optionally runs TTS to play it as audio
+```mermaid
+flowchart LR
+    subgraph opt1["Option 1: Codec Conversion"]
+        direction LR
+        A1["Alice\\n(LoRa, Codec2)"] -->|LoRa| BR1["Bridge Node\\n(transcode)"]
+        BR1 -->|WiFi, Opus| B1["Bob\\n(WiFi)"]
+    end
+    subgraph opt2["Option 2: Speech-to-Text Bridging"]
+        direction LR
+        A2["Alice\\n(LoRa, Codec2)"] -->|LoRa| STT["Compute Node\\n(Whisper STT)"]
+        STT -->|text| B2["Bob\\n(WiFi, optional TTS)"]
+    end
 ```
 
 This is an **application-level decision** using standard [compute delegation](../marketplace/agreements). The protocol has no concept of "voice" — it routes bytes. The application decides how to adapt between bandwidth tiers.

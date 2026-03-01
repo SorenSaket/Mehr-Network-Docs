@@ -301,14 +301,20 @@ A single post can have **one** geographic scope and **multiple** interest scopes
 | Sybil resistance | Admission policy | Trust is social and economic (you absorb their debts) |
 | UX complexity | Create, join, configure | Add contacts |
 
-## Sybil Mitigation
+## Security Considerations
 
-The trust graph provides natural Sybil resistance:
+<details className="security-item">
+<summary>Sybil Identity Flooding</summary>
 
-1. **Trust has economic cost**: Vouching for a node means absorbing its potential debts. Sybil identities with no real relationships get no credit.
-2. **Rate limiting**: Even if a malicious node gains one trust relationship, transitive credit is capped by configurable ratio (default 10%, max 50%) per hop.
-3. **Reputation**: A node's usefulness as a relay/service provider is what earns trust over time. Creating many identities dilutes reputation rather than concentrating it.
-4. **Local detection**: A node's trust graph is visible to its peers. A node trusting an unusual number of new, unproven identities is itself suspicious.
+**Vulnerability:** An attacker creates many fake identities to gain disproportionate influence or free relay in the network.
+
+**Mitigation:** The trust graph provides natural Sybil resistance through four layers:
+1. **Trust has economic cost** — vouching for a node means absorbing its potential debts. Sybil identities with no real relationships get no credit.
+2. **Rate limiting** — even if a malicious node gains one trust relationship, transitive credit is capped by configurable ratio (default 10%, max 50%) per hop.
+3. **Reputation dilution** — creating many identities dilutes reputation rather than concentrating it. A node's usefulness as a relay/service provider is what earns trust over time.
+4. **Local detection** — a node's trust graph is visible to its peers. A node trusting an unusual number of new, unproven identities is itself suspicious.
+
+</details>
 
 ## Real-World Parallels
 

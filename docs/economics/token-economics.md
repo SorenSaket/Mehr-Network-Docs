@@ -430,16 +430,34 @@ Trust-based gateway mechanics:
 - Gateways with many consumers generate high channel debit volume = proportionally more minting
 - Competition between gateways drives prices toward cost (standard market dynamics)
 
-**Risks and mitigations:**
+## Security Considerations
 
-| Risk | Mitigation |
-|------|-----------|
-| **Gateway goes down** | Consumer can switch gateways or run their own node. No lock-in — identity is self-certifying |
-| **Gateway censors** | Consumer switches gateway. Multiple gateways compete in any area with demand |
-| **Gateway overcharges** | Market competition. Consumers compare pricing. Low switching cost |
-| **Consumer abuses gateway** | Gateway revokes trust, cuts off credit. Fiat non-payment handled off-protocol |
+<details className="security-item">
+<summary>Gateway Failure or Censorship</summary>
 
-Gateways are not privileged protocol participants. They are regular nodes that choose to offer a service (fiat-to-network bridging) using standard trust and credit mechanics. Anyone can become a gateway operator — the barrier is having enough MHR to extend credit and enough fiat customers to sustain the business.
+**Vulnerability:** A gateway operator goes offline or begins censoring traffic, stranding consumers who depend on it for network access.
+
+**Mitigation:** Consumers can switch gateways at any time — identity is self-certifying and not tied to any gateway. Multiple gateways compete in any area with demand. No lock-in exists; the barrier to switching is zero.
+
+</details>
+
+<details className="security-item">
+<summary>Gateway Overcharging</summary>
+
+**Vulnerability:** A gateway operator charges excessive fiat fees for network access, exploiting consumers who don't understand the underlying economics.
+
+**Mitigation:** Market competition between gateways drives prices toward cost. Consumers can compare pricing across providers. Low switching cost means overcharging gateways lose customers.
+
+</details>
+
+<details className="security-item">
+<summary>Consumer Abuse of Gateway Credit</summary>
+
+**Vulnerability:** A consumer signs up with a gateway, consumes network resources on credit, then defaults on fiat payment.
+
+**Mitigation:** The gateway revokes trust and cuts off credit immediately. Fiat non-payment is handled off-protocol through standard billing mechanisms. Rate limiting via per-epoch credit caps in CreditState prevents abuse from accumulating before detection.
+
+</details>
 
 ## Economic Design Goals
 

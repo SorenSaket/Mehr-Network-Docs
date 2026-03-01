@@ -45,10 +45,11 @@
 }
 
 /* ══════════════════════════════════════════════
-   FAQ dropdowns — fix native marker + polish
+   Collapsible sections — FAQ & Security
    ══════════════════════════════════════════════ */
 
-details.faq-item {
+details.faq-item,
+details.security-item {
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 8px;
   padding: 0;
@@ -67,12 +68,21 @@ details.faq-item[open] {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-details.faq-item summary {
+details.security-item:hover {
+  border-color: var(--mehr-warn-border);
+}
+
+details.security-item[open] {
+  border-color: var(--mehr-danger-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+details.faq-item summary,
+details.security-item summary {
   font-weight: 600;
   cursor: pointer;
   padding: 0.75em 1em;
   margin: 0;
-  /* Remove ALL native markers */
   list-style: none;
   display: flex;
   align-items: center;
@@ -81,42 +91,60 @@ details.faq-item summary {
   transition: background 0.15s;
 }
 
-/* Hide WebKit/Blink native disclosure triangle */
-details.faq-item summary::-webkit-details-marker {
+/* Hide ALL native markers */
+details.faq-item summary::-webkit-details-marker,
+details.security-item summary::-webkit-details-marker {
   display: none;
 }
-details.faq-item summary::marker {
+details.faq-item summary::marker,
+details.security-item summary::marker {
   content: '';
   display: none;
 }
 
-details.faq-item summary:hover {
+details.faq-item summary:hover,
+details.security-item summary:hover {
   background: var(--ifm-color-emphasis-100);
 }
 
-/* Custom chevron indicator */
-details.faq-item summary::before {
+/* Chevron — expand_more (▼) rotated -90° when collapsed, 0° when open */
+details.faq-item summary::before,
+details.security-item summary::before {
   content: '';
   display: inline-block;
+  position: static; /* Override Docusaurus absolute positioning */
+  border: none;     /* Override Docusaurus CSS-triangle arrow */
   width: 20px;
   height: 20px;
   min-width: 20px;
-  background-color: var(--ifm-color-primary);
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E");
+  flex-shrink: 0;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z'/%3E%3C/svg%3E");
   mask-size: contain;
   -webkit-mask-size: contain;
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
+  transform: rotate(-90deg);
+  transform-origin: center;
   transition: transform 0.2s ease;
 }
 
-details.faq-item[open] summary::before {
-  transform: rotate(90deg);
+details.faq-item summary::before {
+  background-color: var(--ifm-color-primary);
 }
 
-/* FAQ answer body */
-details.faq-item > *:not(summary) {
+details.security-item summary::before {
+  background-color: var(--mehr-danger-border);
+}
+
+details.faq-item[open] summary::before,
+details.security-item[open] summary::before {
+  transform: rotate(0deg);
+}
+
+/* Answer / content body */
+details.faq-item > *:not(summary),
+details.security-item > *:not(summary) {
   padding: 0 1em 0.75em;
   margin: 0;
   color: var(--ifm-color-emphasis-700);
@@ -124,13 +152,14 @@ details.faq-item > *:not(summary) {
   line-height: 1.6;
 }
 
-details.faq-item > p:first-of-type {
+details.faq-item > p:first-of-type,
+details.security-item > p:first-of-type {
   padding-top: 0;
   border-top: 1px solid var(--ifm-color-emphasis-200);
   padding: 0.75em 1em;
 }
 
-/* FAQ section header styling */
+/* Section header styling */
 .faq-section-heading {
   display: flex;
   align-items: center;

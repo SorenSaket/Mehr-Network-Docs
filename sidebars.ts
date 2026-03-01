@@ -20,6 +20,7 @@ const sidebars: SidebarsConfig = {
         'protocol/physical-transport',
         'protocol/network-protocol',
         'protocol/security',
+        'protocol/versioning',
       ],
     },
     {
@@ -112,6 +113,7 @@ const sidebars: SidebarsConfig = {
         'applications/cloud-storage',
         'applications/roaming',
         'applications/hosting',
+        'applications/business',
       ],
     },
     {
@@ -145,7 +147,6 @@ const sidebars: SidebarsConfig = {
         'development/landscape',
         'development/design-decisions',
         'development/partition-defense-comparison',
-        'development/versioning',
         'development/open-questions',
       ],
     },

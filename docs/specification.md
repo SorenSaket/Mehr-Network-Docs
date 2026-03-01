@@ -93,9 +93,9 @@ This page is the normative reference for the Mehr protocol. Individual documenta
 | App context sub-type: ManifestLookup | `0x0C` | [MHR-App](services/mhr-app#manifest-message-types) |
 | App context sub-type: ManifestLookupResponse | `0x0D` | [MHR-App](services/mhr-app#manifest-message-types) |
 | Geo verification: min vouches | 3 (for Verified level) | [Voting](applications/voting#geoverificationlevel) |
-| Protocol version encoding | 1 byte (major 4 bits, minor 4 bits) | [Versioning](development/versioning#version-field) |
-| Extended version escape | Major = 15 → read u16 pair from TLV | [Versioning](development/versioning#version-field) |
-| Current protocol version | `0x10` (v1.0) | [Versioning](development/versioning#version-field) |
+| Protocol version encoding | 1 byte (major 4 bits, minor 4 bits) | [Versioning](protocol/versioning#version-field) |
+| Extended version escape | Major = 15 → read u16 pair from TLV | [Versioning](protocol/versioning#version-field) |
+| Current protocol version | `0x10` (v1.0) | [Versioning](protocol/versioning#version-field) |
 | Emission halving shift clamp | max 63 (prevents UB at epoch 6.4M+) | [MHR Token](economics/mhr-token#supply-model) |
 | Max curated feed entries | 256 per page | [Social](applications/social#5-curated-feed) |
 | LicenseOffer min size | ~160 bytes | [Digital Licensing](applications/licensing#wire-format) |
@@ -190,7 +190,7 @@ Total: 200 bytes
 | 8. Hardware Reference | [Reference Designs](hardware/reference-designs), [Device Tiers](hardware/device-tiers) |
 | 9. Implementation Roadmap | [Roadmap](development/roadmap) |
 | 10. Design Decisions | [Design Decisions](development/design-decisions) |
-| 11. Protocol Versioning | [Versioning](development/versioning) |
+| 11. Protocol Versioning | [Versioning](protocol/versioning) |
 | 12. Open Questions | [Open Questions](development/open-questions) |
 
 ## Version

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: "Layer 0: Physical Transport"
+title: "Physical Transport"
 description: Physical transport layer of the Mehr Network supporting LoRa, WiFi Direct, Bluetooth LE, Ethernet, and cellular with automatic medium selection.
 keywords: [LoRa, WiFi, Bluetooth, physical layer, mesh transport]
 ---

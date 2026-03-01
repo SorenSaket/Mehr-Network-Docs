@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: "Layer 2: Security"
+title: "Security"
 description: Security layer of the Mehr Network — end-to-end encryption, X25519 key exchange, forward secrecy, and threat model analysis.
 keywords: [security, encryption, E2EE, key exchange, threat model]
 ---

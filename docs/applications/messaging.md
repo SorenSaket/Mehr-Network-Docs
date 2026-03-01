@@ -93,3 +93,32 @@ The group creator can delegate admin authority to up to 3 co-admins via signed `
 A 1 KB text message over LoRa takes approximately 10 seconds to transmit — comparable to SMS delivery times. This is viable for text-based communication in constrained environments.
 
 Attachments are DataObjects with `min_bandwidth` set appropriately. A photo attachment might declare `min_bandwidth: 10000` (10 kbps), meaning it will transfer when the recipient has a WiFi link available but won't be attempted over LoRa.
+
+## Security Considerations
+
+<details className="security-item">
+<summary>Relay Metadata Leakage</summary>
+
+**Vulnerability:** Even though message content is end-to-end encrypted, relay nodes can observe traffic patterns — who is communicating with whom, when, and how often. Timing correlation attacks could de-anonymize users.
+
+**Mitigation:** Mehr's multi-hop relay architecture provides plausible deniability — a relay node cannot distinguish whether a neighbor originated a packet or is relaying it for someone else. Messages are encrypted blobs with no plaintext metadata. For high-sensitivity scenarios, users can pad messages to uniform sizes and introduce random delays.
+
+</details>
+
+<details className="security-item">
+<summary>Group Admin Key Compromise</summary>
+
+**Vulnerability:** If the group creator's private key is stolen, the attacker can add themselves to the group, rotate the symmetric key, and read all future messages. No threshold cryptography is used.
+
+**Mitigation:** The group creator can perform [key rotation](../services/mhr-id) via MHR-ID, which invalidates the compromised key. Co-admin delegation allows trusted members to manage the group if the creator is unavailable. Group members who notice unauthorized changes can leave and form a new group. The design trades multi-party key management complexity for simplicity — appropriate for a mesh network where constrained devices cannot run heavy MPC protocols.
+
+</details>
+
+<details className="security-item">
+<summary>No Forward Secrecy for Groups</summary>
+
+**Vulnerability:** Group messaging uses a shared symmetric key. Compromising this key exposes all past messages encrypted with it — there is no per-message forward secrecy as in Signal's Double Ratchet protocol.
+
+**Mitigation:** Admin-initiated key rotation periodically refreshes the group key, limiting the window of exposure. The key is distributed via individual X25519 key exchanges with each member, so compromising one member doesn't reveal the distribution channel to others. For conversations requiring forward secrecy, use direct (1:1) messaging, which supports per-session key exchange.
+
+</details>

@@ -23,9 +23,9 @@ All open questions from the v1.0 and v1.1 spec review rounds have been resolved 
 
 | # | Question | Resolution | Location |
 |---|----------|-----------|----------|
-| 1 | **Protocol Governance** — How does the protocol upgrade? | MEP (Mehr Enhancement Proposal) process with trust-weighted version signaling. Nodes signal MEP support via TLV extension in announces; acceptance at ≥67% trust-weighted support. Cross-fork compatibility via gateway bridges. Sunset clause prevents indefinite version limbo. | [Versioning — Governance](versioning#governance) |
+| 1 | **Protocol Governance** — How does the protocol upgrade? | MEP (Mehr Enhancement Proposal) process with trust-weighted version signaling. Nodes signal MEP support via TLV extension in announces; acceptance at ≥67% trust-weighted support. Cross-fork compatibility via gateway bridges. Sunset clause prevents indefinite version limbo. | [Versioning — Governance](../protocol/versioning#governance) |
 | 2 | **Secret Ballot Voting** — Commitment schemes on partition-prone mesh | Two-phase commit/reveal with partition-safe rules: reveal_period = 2× voting_period, 80% reveal threshold for valid tally, INCONCLUSIVE status for >20% unrevealed commits. Deliberate withhold penalized (0.5x weight after 3 consecutive non-reveals). Partition reconciliation via merged re-tally. | [Voting — Secret Ballot](../applications/voting#secret-ballot-protocol) |
-| 3 | **Post-Quantum VRF** — No production-ready standard | Two-track approach: lattice-based VRF candidate when standardized; hash-chain committed lottery as fallback. The fallback uses epoch-committed secrets (not proof-of-work) — one Blake3 hash per packet, no grinding. Per-channel migration via existing cryptographic migration phases. | [Versioning — PQ VRF Strategy](versioning#post-quantum-vrf-strategy) |
+| 3 | **Post-Quantum VRF** — No production-ready standard | Two-track approach: lattice-based VRF candidate when standardized; hash-chain committed lottery as fallback. The fallback uses epoch-committed secrets (not proof-of-work) — one Blake3 hash per packet, no grinding. Per-channel migration via existing cryptographic migration phases. | [Versioning — PQ VRF Strategy](../protocol/versioning#post-quantum-vrf-strategy) |
 
 #### Implementation — Specification
 

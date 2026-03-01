@@ -268,3 +268,32 @@ This makes Mehr cloud storage accessible to non-technical users — the same UX 
 | **Censorship** | Provider can terminate your account | No single entity controls your data |
 | **Earn by sharing** | Not possible | Share spare storage, earn μMHR |
 | **Works offline** | No (requires internet) | Yes — local mesh nodes serve cached content |
+
+## Security Considerations
+
+<details className="security-item">
+<summary>Corrupted Storage Chunks</summary>
+
+**Vulnerability:** A malicious storage node returns garbage data instead of the requested chunk, causing file corruption on retrieval.
+
+**Mitigation:** Every chunk is content-addressed — the client verifies `Blake3(chunk) == expected_hash` from the FileManifest's Merkle tree. Corrupted chunks are rejected immediately. The [Proof of Storage](../services/mhr-store#proof-of-storage) challenge-response protocol detects nodes that have silently lost or corrupted data, triggering re-replication to healthy nodes.
+
+</details>
+
+<details className="security-item">
+<summary>Device Compromise and SyncManifest Tampering</summary>
+
+**Vulnerability:** If one device in a multi-device setup is compromised, the attacker could push a malicious SyncManifest with a higher sequence number, deleting or replacing files across all synced devices.
+
+**Mitigation:** SyncManifest updates propagate via CRDT merge rules — deletions must be explicitly tombstoned and are visible in the version history. Users can restore from previous manifest versions stored across the erasure-coded mesh. Multi-device setups should use [co-admin delegation](messaging#group-messaging) patterns for critical shared state, requiring multiple device signatures for destructive operations.
+
+</details>
+
+<details className="security-item">
+<summary>Identity Key Compromise Exposes All Files</summary>
+
+**Vulnerability:** All file encryption keys derive from the owner's identity key via HKDF. Compromising the identity key exposes every stored file.
+
+**Mitigation:** Perform [key rotation](../services/mhr-id) immediately upon suspicion of compromise. Re-encrypt all files under the new identity key. The key rotation propagates through the trust graph, and old encrypted chunks become inaccessible once the old key is disavowed. For high-value data, use per-file random keys wrapped with the identity key — compromise then requires both the identity key and the wrapped key envelope.
+
+</details>

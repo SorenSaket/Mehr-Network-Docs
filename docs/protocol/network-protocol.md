@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: "MHR-Net: Network Protocol"
+title: "Network Protocol"
 description: Network protocol layer for the Mehr mesh — addressing, routing, packet format, and multi-hop relay with incentivized forwarding.
 keywords: [network protocol, routing, mesh routing, packet format, addressing]
 ---
