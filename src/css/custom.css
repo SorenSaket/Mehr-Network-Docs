@@ -69,7 +69,7 @@ details.faq-item[open] {
 }
 
 details.security-item:hover {
-  border-color: var(--mehr-warn-border);
+  border-color: var(--mehr-danger-border);
 }
 
 details.security-item[open] {
@@ -102,10 +102,11 @@ details.security-item summary::marker {
   display: none;
 }
 
-details.faq-item summary:hover,
-details.security-item summary:hover {
+details.faq-item summary:hover {
   background: var(--ifm-color-emphasis-100);
 }
+
+
 
 /* Chevron — expand_more (▼) rotated -90° when collapsed, 0° when open */
 details.faq-item summary::before,
@@ -152,11 +153,20 @@ details.security-item > *:not(summary) {
   line-height: 1.6;
 }
 
-details.faq-item > p:first-of-type,
-details.security-item > p:first-of-type {
+/* Remove Docusaurus collapsible content border/margin/padding */
+details.faq-item [class*='collapsibleContent'],
+details.security-item [class*='collapsibleContent'] {
+  border-top: none;
+  margin-top: 0;
   padding-top: 0;
-  border-top: 1px solid var(--ifm-color-emphasis-200);
-  padding: 0.75em 1em;
+}
+
+details.security-item a {
+  text-decoration-color: var(--mehr-danger-border);
+}
+
+details.security-item a:hover {
+  text-decoration-color: var(--mehr-danger-border);
 }
 
 /* Section header styling */

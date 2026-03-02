@@ -7,28 +7,32 @@ keywords: [LoRa, WiFi, Bluetooth, physical layer, mesh transport]
 
 # Layer 0: Physical Transport
 
-Mehr requires a transport layer that provides transport-agnostic networking over any medium supporting at least a half-duplex channel with ≥5 bps throughput and ≥500 byte MTU. The transport layer is a swappable implementation detail — Mehr defines the interface it needs, not the implementation.
+Mehr is transport-agnostic — any medium that can move bits is a valid link. LoRa, WiFi, Ethernet, cellular, packet radio, fiber, free-space optical: if it supports at least a half-duplex channel with ≥5 bps throughput and ≥500 byte MTU, Mehr will run on it. The transport layer is a swappable implementation detail — Mehr defines the interface it needs, not the implementation.
 
 ## Transport Requirements
 
 The transport layer must provide:
 
-- **Any medium is a valid link**: LoRa, LTE-M, NB-IoT, WiFi, Ethernet, serial, packet radio, fiber, free-space optical
+- **Any medium is a valid link**: LoRa, LTE-M, NB-IoT, WiFi, Ethernet, serial, packet radio, fiber, free-space optical, TCP/IP
 - **Multiple simultaneous interfaces**: A node can bridge between transports automatically
 - **Announce-based routing**: No manual configuration of addresses, subnets, or routing tables
 - **Mandatory encryption**: All traffic is encrypted; unencrypted packets are dropped as invalid
 - **Sender anonymity**: No source address in packets
 - **Constrained-link operation**: Functional at ≥5 bps
 
+:::info[Specification]
+Minimum transport interface: half-duplex channel, ≥5 bps throughput, ≥500 byte MTU, mandatory link-layer encryption. Any medium meeting these requirements is a valid Mehr transport.
+:::
+
 ## Current Implementation: Reticulum
 
-The current transport implementation uses the [Reticulum Network Stack](https://reticulum.network/), which satisfies all requirements above and is proven on links as slow as 5 bps. Mehr extends it with [CompactPathCost](network-protocol#mehr-extension-compact-path-cost) annotations on announces and an economic layer above.
+The current transport implementation uses the [Reticulum Network Stack](https://reticulum.network/), which satisfies all requirements above and is proven on links as slow as 5 bps. Mehr extends it with [CompactPathCost](network-protocol#mehr-extension-compact-path-cost) annotations on announces and an economic layer above. All Mehr extensions are carried as opaque payload data within Reticulum's announce DATA field — a clean separation that allows the transport to be replaced without affecting any layer above.
 
-Reticulum is an implementation choice, not an architectural dependency. Mehr extensions are carried as opaque payload data within Reticulum's announce DATA field — a clean separation that allows the transport to be replaced with a clean-room implementation in the future without affecting any layer above.
 :::tip[Key Insight]
-The transport layer is a swappable implementation detail. Mehr defines the interface it needs (half-duplex, ≥5 bps, ≥500 byte MTU, mandatory encryption), not the implementation. All economic extensions ride as opaque payload in transport announces — the transport never needs to understand Mehr.
+All economic extensions ride as opaque payload in transport announces — the transport never needs to understand Mehr. This means the transport can be swapped for a clean-room implementation in the future without changes to any protocol layer above.
 :::
-### Participation Levels
+
+## Participation Levels
 
 Not all nodes need to understand Mehr extensions. Three participation levels coexist on the same mesh:
 
@@ -44,7 +48,7 @@ Not all nodes need to understand Mehr extensions. Three participation levels coe
 
 **L2 nodes** implement the full protocol stack including capability marketplace, storage, compute, and application services.
 
-### Implementation Strategy
+## Implementation Strategy
 
 | Platform | Implementation |
 |---|---|
@@ -55,18 +59,19 @@ All implementations speak the same wire protocol and interoperate on the same ne
 
 ## Supported Transports
 
-| Transport | Typical Bandwidth | Typical Range | Duplex | Notes |
-|---|---|---|---|---|
-| **LoRa (ISM band)** | 0.3-50 kbps | 2-15 km | Half | Unlicensed, low power, high range. [RNode](https://reticulum.network/manual/hardware.html) as reference hardware. |
-| **WiFi Ad-hoc** | 10-300 Mbps | 50-200 m | Full | Ubiquitous, short range |
-| **WiFi P2P (directional)** | 100-800 Mbps | 1-10 km | Full | Point-to-point backbone links |
-| **Cellular (LTE/5G)** | 1-100 Mbps | Via carrier | Full | Requires carrier subscription |
-| **LTE-M** | 0.375-1 Mbps | Via carrier | Full | Licensed LPWAN; better building penetration than LoRa, carrier-managed |
-| **NB-IoT** | 0.02-0.25 Mbps | Via carrier | Half | Licensed LPWAN; extreme range and battery life, carrier-managed |
-| **Ethernet** | 100 Mbps-10 Gbps | Local | Full | Backbone, data center |
-| **Serial (RS-232, AX.25)** | 1.2-56 kbps | Varies | Half | Legacy radio, packet radio |
-| **Fiber** | 1-100 Gbps | Long haul | Full | Backbone |
-| **Bluetooth/BLE** | 1-3 Mbps | 10-100 m | Full | Wearables, phone-to-phone |
+| Transport | Typical Bandwidth | Typical Range | Typical Latency | Duplex | Notes |
+|---|---|---|---|---|---|
+| **LoRa (ISM band)** | 0.3-50 kbps | 2-15 km | 1-5 s | Half | Unlicensed, low power, high range. [RNode](https://reticulum.network/manual/hardware.html) as reference hardware. |
+| **WiFi (local)** | 10-300 Mbps | 50-200 m | 1-10 ms | Full | Infrastructure or mesh (802.11s); ubiquitous, short range |
+| **WiFi (point-to-point)** | 100-800 Mbps | 1-10 km | 1-5 ms | Full | Directional antennas for backbone links between fixed sites |
+| **Cellular (LTE/5G)** | 1-100 Mbps | Via carrier | 10-50 ms | Full | Requires carrier subscription |
+| **LTE-M** | 0.375-1 Mbps | Via carrier | 50-100 ms | Full | Licensed LPWAN; better building penetration than LoRa, carrier-managed |
+| **NB-IoT** | 0.02-0.25 Mbps | Via carrier | 1-10 s | Half | Licensed LPWAN; extreme range and battery life, carrier-managed |
+| **Ethernet** | 100 Mbps-10 Gbps | Local | ≤1 ms | Full | Backbone, data center |
+| **Serial (RS-232, AX.25)** | 1.2-56 kbps | Varies | 10-500 ms | Half | Legacy radio, packet radio |
+| **Fiber** | 1-100 Gbps | Long haul | ≤1 ms | Full | Backbone |
+| **Bluetooth/BLE** | 1-3 Mbps | 10-100 m | 5-30 ms | Full | Wearables, phone-to-phone |
+| **TCP/IP (Internet)** | Varies | Global | 10-200 ms | Full | Standard internet overlay; most accessible entry point for new nodes |
 
 A node can have **multiple interfaces active simultaneously**. The network layer selects the best interface for each destination based on cost, latency, and reliability.
 
@@ -83,16 +88,19 @@ The bridge node is where bandwidth characteristics change dramatically — and w
 
 ```mermaid
 graph LR
-    RS["Remote Sensor"] <-- "LoRa (10 kbps)" --> BN["Bridge Node"]
-    BN <-- "WiFi (100 Mbps)" --> GW["Gateway"]
+    S1["Sensor A"] <-- "LoRa" --> BN["Bridge Node"]
+    S2["Sensor B"] <-- "LoRa" --> BN
+    BN <-- "WiFi" --> N1["Local Node"]
+    BN <-- "WiFi" --> GW["Internet Gateway"]
+    GW <-- "TCP/IP" --> RN["Remote Node"]
 ```
 
 ## Bandwidth Ranges and Their Implications
 
-The 20,000x range between the slowest and fastest supported transports (500 bps to 10 Gbps) has profound implications for protocol design:
+The 20,000,000x range between the slowest and fastest supported transports (500 bps to 10 Gbps) has profound implications for protocol design:
 
 :::caution[Trade-off]
-Supporting 500 bps to 10 Gbps (a 20,000x range) means every protocol overhead byte must be budgeted. Data objects carry `min_bandwidth` requirements so large transfers are never attempted over constrained links — only hashes and metadata propagate on LoRa.
+Supporting 500 bps to 10 Gbps (a 20,000,000x range) means every protocol overhead byte must be budgeted. Data objects carry `min_bandwidth` requirements so large transfers are never attempted over constrained links — only hashes and metadata propagate on LoRa.
 :::
 
 - **All protocol overhead must be budgeted.** Gossip, routing updates, and economic state consume bandwidth that could carry user data. On a 1 kbps LoRa link, every byte matters.
@@ -101,7 +109,7 @@ Supporting 500 bps to 10 Gbps (a 20,000x range) means every protocol overhead by
 
 ## NAT Traversal
 
-Residential nodes behind NATs (common for WiFi and Ethernet interfaces) are handled at the transport layer. The Reticulum transport uses its link establishment protocol to traverse NATs — an outbound connection from behind the NAT establishes a bidirectional link without requiring port forwarding or STUN/TURN servers.
+Residential nodes behind NATs (common for WiFi and Ethernet interfaces) are handled at the transport layer. The NATed node initiates an outbound TCP or UDP connection to a publicly reachable peer, establishing a persistent bidirectional channel — the same mechanism that WebSockets and persistent TCP connections use to bypass NAT. No port forwarding, STUN, or TURN servers are required.
 
 For nodes that cannot establish outbound connections (rare), the announce mechanism still propagates their presence. Traffic destined for a NATed node is routed through a neighbor that does have a direct link — functionally equivalent to standard relay forwarding. No special NAT-awareness is needed at the Mehr protocol layers above transport.
 
@@ -119,6 +127,71 @@ The transport layer provides packet delivery, routing, and encryption. Mehr adds
 | **[Congestion control](network-protocol#congestion-control)** | CSMA/CA, per-neighbor fair sharing, priority queuing, backpressure |
 
 These extensions ride on top of the transport's existing gossip and announce mechanisms, staying within the protocol's [bandwidth budget](network-protocol#bandwidth-budget).
+
+## Security Considerations
+
+<details className="security-item">
+<summary>RF Jamming / Denial of Service</summary>
+
+**Vulnerability:** An adversary overwhelms LoRa, WiFi, or BLE frequencies with noise, denying service to all nodes within range.
+
+**Mitigation:** Multi-interface failover — if LoRa is jammed, WiFi or Ethernet interfaces continue operating. Mesh routing automatically reroutes traffic around the jammed area. Frequency-hopping radios (BLE, some LoRa modes) increase jamming cost. Sustained wideband jamming in close proximity can deny all RF links; wired fallback (Ethernet, serial) is the only complete counter.
+
+</details>
+
+<details className="security-item">
+<summary>Traffic Analysis via RF Observation</summary>
+
+**Vulnerability:** Encrypted content is unreadable, but an observer with a software-defined radio can detect *that* communication is happening, measure volume, and correlate timing patterns to infer activity.
+
+**Mitigation:** LoRa frames are [padded to fixed size](security#link-layer-encryption), preventing message-length analysis. Multi-path routing reduces timing correlation. Optional dummy traffic on quiet links raises the noise floor. A local observer with directional antennas can still detect RF activity from a specific location, but cannot determine content, sender, or recipient.
+
+</details>
+
+<details className="security-item">
+<summary>Direction Finding / Node Localization</summary>
+
+**Vulnerability:** An adversary with multiple receivers triangulates RF emissions to determine the physical location of a transmitting node.
+
+**Mitigation:** Omnidirectional antennas reduce bearing precision. The relay topology means the emitting node may not be the message originator — [sender anonymity](security#sender-anonymity) ensures a relay can't distinguish originator from forwarder. Low-power LoRa limits detection range. A determined adversary with multiple coordinated receivers can localize any actively transmitting node; operational countermeasures (elevated or concealed antenna placement) reduce this risk.
+
+</details>
+
+<details className="security-item">
+<summary>RF Fingerprinting</summary>
+
+**Vulnerability:** Each radio has unique analog characteristics (clock drift, power ramp shape, modulation quirks) that can identify a specific physical device across sessions, even if cryptographic identity changes.
+
+**Mitigation:** Not mitigated by protocol — this is a hardware-layer property below the transport abstraction. Identity is already pseudonymous (destination hashes, no source addresses), so fingerprinting reveals physical device continuity but not identity. Operational countermeasure: rotate or swap radio hardware. Practical impact is limited unless combined with direction finding.
+
+</details>
+
+<details className="security-item">
+<summary>Rogue Relay / Eclipse Attack</summary>
+
+**Vulnerability:** An adversary controls all physical links to a target node (e.g., operates the only LoRa gateway within range), enabling selective packet dropping, traffic manipulation, or isolation.
+
+**Mitigation:** Multiple simultaneous interfaces reduce single-point dependency — a node with both LoRa and WiFi is harder to eclipse. [Trust neighborhoods](../economics/trust-neighborhoods) detect behavioral anomalies from relays. The economic layer makes sustained eclipse costly — the attacker must fund [payment channels](../economics/payment-channels) and maintain them. A geographically isolated node with a single transport has no alternative path; physical diversity (adding a second radio or wired link) is the operational counter.
+
+</details>
+
+<details className="security-item">
+<summary>Physical Tampering</summary>
+
+**Vulnerability:** An adversary gains physical access to an unattended node (rooftop relay, solar station, rural repeater) and extracts cryptographic keys, installs modified firmware, or implants surveillance hardware.
+
+**Mitigation:** Tamper-evident enclosures for outdoor deployments. Secure boot on ESP32 and similar MCUs prevents unauthorized firmware. Keys stored in hardware secure elements where available. [KeyCompromiseAdvisory](security#key-compromise-and-identity-migration) enables identity migration after detected compromise. Unattended outdoor nodes are inherently vulnerable to physical access — deployments in hostile environments should assume eventual physical compromise and plan for key rotation.
+
+</details>
+
+<details className="security-item">
+<summary>Replay at RF Layer</summary>
+
+**Vulnerability:** An adversary captures RF frames and re-transmits them to inject duplicate packets, confuse routing, or replay old announces.
+
+**Mitigation:** [Link-layer encryption](security#link-layer-encryption) with rotating keys and sequence numbers ensures replayed frames fail authentication and are dropped as invalid. No residual risk — replay is fully mitigated by the transport's cryptographic layer.
+
+</details>
 
 <!-- faq-start -->
 

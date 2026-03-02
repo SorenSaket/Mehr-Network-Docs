@@ -16,7 +16,51 @@ Proof of work wastes electricity. Proof of stake rewards capital, not contributi
 
 Mehr is a decentralized network where every resource — bandwidth, compute, storage, connectivity — is a discoverable, negotiable, verifiable, payable capability. Nodes participate at whatever level their hardware allows. Nothing is required except a cryptographic keypair.
 
+## The State of the World
+
+The internet depends on centralized infrastructure: ISPs, cloud providers, DNS registrars, certificate authorities. Every packet, every query, every byte passes through chokepoints owned by a small number of corporations. When any of these fail — through censorship, natural disaster, corporate decision, or economic exclusion — people lose connectivity entirely. The architecture has a single point of failure, and that point is someone else's business model.
+
+The concentration is accelerating. Hyperscale data centers now account for 44% of global data center capacity, up from under 30% five years ago. Three cloud providers control 63% of the cloud infrastructure market. AI has made it worse — a single training run requires 15,000–25,000 advanced GPUs at a cost of $120M–$450M. NVIDIA controls 80–92% of the AI accelerator market. The specialized memory these chips require (HBM) is manufactured by exactly three companies, with the entire supply sold out years in advance. The ability to compute is being gatekept at the hardware level, and the gate is narrowing.
+
+The internet was supposed to connect people. Instead, it routed everything through distant data centers and handed control to platforms that optimize for engagement, not truth or community. Algorithmic feeds decide what you see. You know more about celebrities than what's happening on your own street. Your neighbor could be building something extraordinary and you'd never hear about it. The infrastructure that was meant to strengthen communities instead bypasses them entirely.
+
+Governments can shut down the internet with a phone call to a handful of ISPs. When all communication passes through centralized chokepoints, censorship is trivial. A country can be disconnected from the world — or from itself — overnight. Communities that depend entirely on infrastructure they don't own have no fallback when that infrastructure is turned against them.
+
+Most hardware sits idle most of the time. A home internet connection averages below 5% utilization. A desktop GPU sits unused 22 hours a day. A neighborhood full of powerful devices amounts to a distributed supercomputer that nobody can use, because there's no way to share it. People pay full price for dedicated connections and hardware that mostly does nothing.
+
+Decentralized networks were supposed to fix this. They haven't. Proof of Work concentrates around cheap electricity and specialized hardware — six mining pools mine over 95% of all Bitcoin blocks. Proof of Stake concentrates around existing capital — whale wallets hold 57% of Ethereum's supply, and the compounding effect makes wealth concentration self-reinforcing. Decentralized compute projects re-centralize through "Nodekeepers" and whale wallets. The pattern is consistent: when all compute is valued equally regardless of location, capital concentration wins.
+
+## Goals
+
+### Strengthen Communities
+
+Communication within a community is free, direct, and unstoppable. Trusted neighbors relay for each other at zero cost. The economic layer only activates when traffic crosses trust boundaries — just like the real world, where you help your neighbors for free but charge strangers for using your infrastructure. The network makes local connections stronger, not routes around them.
+
+### Democratize Infrastructure
+
+A village with no ISP can still communicate. A country under internet shutdown still has a mesh. A community that can't afford $30/month per household shares one uplink across a neighborhood. Communication infrastructure is a commons, not a product. Any medium that can move bytes — from 500 bps radio to 10 Gbps fiber — is a valid link. Every device contributes what it can and pays for what it needs. Hardware determines capability; the market determines role.
+
+### Distribute Power
+
+Compute, storage, and bandwidth are not gatekept by whoever can build the biggest data center. A solar-powered relay on a rooftop serving its neighborhood earns based on the traffic it carries, not the capital behind it. Proximity to demand — not capital — determines value. A GPU in your neighbor's garage is cheaper to use than a GPU farm across the continent. The network structurally resists concentration, not reproduces it.
+
+### Waste Nothing
+
+Idle hardware becomes shared infrastructure. Your phone delegates AI inference to a neighbor's GPU. Your Raspberry Pi stores data for the mesh. Communities need far less total hardware to achieve the same capabilities — you earn when others use your resources, and you pay when you use theirs.
+
+### Privacy as Default
+
+Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. Human-readable names are optional and trust-scoped. You decide what to reveal and to whom. This does not conflict with paid relay — [payment channels](economics/payment-channels#bilateral-payment-channels) are per-hop bilateral, so each relay settles with its direct neighbor without ever learning the end-to-end path.
+
+### Partition Tolerance
+
+Network fragmentation is not an error state — it is expected operation. A village on LoRa is a partition. A country with its internet cut is a partition. Every protocol layer functions correctly during partitions and converges correctly when partitions heal. The ledger compacts, the routing adapts, and the economics bound any damage to a predictable amount.
+
 ## What Makes Mehr Different
+
+### Capability Marketplace
+
+Nodes advertise what they can do. What they cannot do, they delegate to a neighbor and pay for the service. [Service discovery](marketplace/discovery) uses concentric rings so most requests resolve locally — your storage request finds a nearby provider before it ever discovers a distant data center. [Agreements](marketplace/agreements) are bilateral contracts between provider and client, and [verification](marketplace/verification) is cryptographic. A $30 solar relay and a GPU workstation participate on equal terms; the network routes requests to whoever can serve them best for the lowest cost.
 
 ### Proof of Service
 
@@ -24,17 +68,15 @@ Most decentralized networks create tokens through artificial work (hashing) or c
 
 ### Zero Trust Economics
 
-The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable in connected networks: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). No staking, no slashing, no trust scores required. Identity is just a keypair — but opening a payment channel requires visible balance on the [CRDT ledger](economics/crdt-ledger), and building [reputation](protocol/security#reputation) requires sustained honest service, so Sybil identities face economic friction even without explicit identity verification.
-
-In isolated partitions — where an attacker could control all nodes and nullify non-deterministic assignment — three defense layers [bound damage to a predictable amount](economics/token-security#attack-isolated-partition). During bootstrap (epoch < 100,000), **genesis-anchored minting** prevents all minting without provable connectivity to genesis nodes. **Active-set-scaled emission** limits minting to the partition's fraction of the network (`min(active_nodes, 100) / 100` of full emission — a 3-node partition gets at most 3%). A **2% service burn** on every payment provides friction during isolation and absorbs excess supply after reconnection. Cumulative excess is bounded because emission halves geometrically — even an infinitely long 3-node partition produces ~1.5% total supply dilution, and realistic durations (weeks to months) produce less than 0.1% (see [Supply Dynamics Proof](economics/token-security#supply-dynamics-proof)). When a partition reconnects, the [CRDT merge rules](economics/epoch-compaction#partition-safe-merge-rules) adopt the winning epoch's snapshot and recover missed settlements via proofs. Excess supply dilutes all holders equally, and the halving schedule makes any supply shock negligible over time.
+The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). No staking, no slashing, no trust scores required. In isolated partitions, [additional defense layers](economics/token-security#attack-isolated-partition) bound damage to a predictable amount — even an infinitely long 3-node partition produces less than 1.5% total supply dilution.
 
 ### Free Between Friends
 
-Communication within your trust network is free — no tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates at zero cost. The economic layer only activates when traffic crosses trust boundaries. This mirrors how communities actually work: you help your neighbors for free, but charge strangers for using your infrastructure.
+Nodes maintain [trust neighborhoods](economics/trust-neighborhoods) — sets of peers they relay for at zero cost. No tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates without the economic layer even activating. The boundary between free and paid is not set by the protocol — it emerges from each community's own trust relationships.
 
 ### Self-Sovereign Identity
 
-Your identity is your cryptographic key — not an account on someone else's server. [MHR-ID](services/mhr-id) lets you build a rich profile (name, bio, avatar, linked accounts, achievements) where every field is a signed claim that peers can vouch for or dispute. You control who sees each field: public, trusted friends only, friends-of-friends, or specific people. Geographic presence is verified by radio range proofs; external accounts are verified by [FUTO ID-style](https://docs.polycentric.io/futo-id/) crawler and OAuth challenges. No central identity provider. No data broker.
+Your identity is your cryptographic key — not an account on someone else's server. [MHR-ID](services/mhr-id) lets you build a rich profile (name, bio, avatar, linked accounts, achievements) where every field is a signed claim that peers can vouch for or dispute. You control who sees each field: public, trusted friends only, friends-of-friends, or specific people. No central identity provider. No data broker.
 
 ### Subjective Naming
 
@@ -44,70 +86,9 @@ There is no global DNS. [MHR-Name](services/mhr-name) provides human-readable na
 
 Applications on Mehr are not hosted on servers — they are [content-addressed packages](services/mhr-app) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
 
-## Vision
-
-### Strengthen Communities
-
-The internet was supposed to connect people. Instead, it routed everything through distant data centers owned by a handful of corporations. Mehr reverses this: communication within a community is **free, direct, and unstoppable**. Trusted neighbors relay for each other at zero cost. The economic layer only activates when traffic crosses trust boundaries — just like the real world.
-
-### Democratize Communication
-
-A village with no ISP should still be able to communicate. A country under internet shutdown should still have a mesh. A community that can't afford $30/month per household should be able to share one uplink across a neighborhood. Mehr makes communication infrastructure a commons, not a product.
-
-### One Decentralized Computer
-
-Every device on the network — from a $30 solar relay to a GPU workstation — contributes what it can. Storage, compute, bandwidth, and connectivity are pooled into a single capability marketplace. Your phone delegates AI inference to a neighbor's GPU. Your Raspberry Pi stores data for the mesh. No single point of failure, no single point of control. The network **is** the computer.
-
-### Share Hardware, Save Money
-
-Most hardware sits idle most of the time. A home internet connection averages less than 5% utilization. A desktop GPU sits unused 22 hours a day. Mehr turns idle capacity into shared infrastructure: you earn when others use your resources, and you pay when you use theirs. The result is that communities need far less total hardware to achieve the same capabilities.
-
-## Why Mehr?
-
-The internet depends on centralized infrastructure: ISPs, cloud providers, DNS registrars, certificate authorities. When any of these fail — through censorship, natural disaster, or economic exclusion — people lose connectivity entirely.
-
-Mehr is designed for a world where:
-
-- A village with no internet can still communicate internally over LoRa radio
-- A country with internet shutdowns can maintain mesh connectivity between citizens
-- A community can run its own local network and bridge to the wider internet through any available uplink
-- Every device — from a $30 solar-powered relay to a GPU workstation — contributes what it can and pays for what it needs
-
-## Core Principles
-
-### 1. Transport Agnostic
-
-Any medium that can move bytes is a valid link. The protocol never assumes IP, TCP, or any specific transport. It works from 500 bps radio to 10 Gbps fiber. A single node can bridge between multiple transports simultaneously.
-
-### 2. Capability Agnostic
-
-Nodes are not classified into fixed roles. A node advertises what it can do. What it cannot do, it delegates to a neighbor and pays for the service. Hardware determines capability; the market determines role.
-
-### 3. Partition Tolerant
-
-Network fragmentation is not an error state — it is expected operation. A village on LoRa **is** a partition. A country with internet cut **is** a partition. Every protocol layer functions correctly during partitions and converges correctly when partitions heal.
-
-The [CRDT ledger](economics/crdt-ledger) prevents unbounded state growth through **epoch compaction**: settlement history is periodically snapshotted into a compact bloom filter, GCounter deltas are rebased to zero, and nodes discard individual settlement records. Epochs are triggered by settlement count (≥ 10,000), memory pressure (≥ 500 KB), or a small-partition floor — so even a 20-node village compacts regularly.
-
-When a partition reconnects after a long offline period, the epoch with the highest settlement count wins. The losing partition's settlements are recovered via [settlement proofs](economics/epoch-compaction#late-arrivals-after-compaction) during a 4-epoch verification window — bounded bandwidth, not an unbounded merge. Constrained devices store only their own balance and their neighbors' balances (~1.2 KB) plus the Merkle root, and verify any other balance [on demand](economics/epoch-compaction#snapshot-scaling) via a 640-byte Merkle proof.
-
-### 4. Anonymous by Default
-
-Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. [Human-readable names](services/mhr-name) are optional and trust-scoped. [Profile fields](services/mhr-id#profile-fields) have per-field [visibility controls](services/mhr-id#visibility-controls) — you decide what to reveal and to whom. You can use the network, earn MHR, host content, and communicate without ever revealing who you are.
-
-This does not conflict with paid relay. [Payment channels](economics/payment-channels#bilateral-payment-channels) are **per-hop bilateral** — each relay settles with the direct neighbor that handed it the packet, not with the original sender. The relay knows its immediate neighbor (link-layer information) but not whether that neighbor originated or forwarded the packet. Attribution for payment happens at each hop independently; no relay ever learns the end-to-end path, and no end-to-end payment coordination is needed. See [Per-Hop Independent Relay Rewards](development/design-decisions#per-hop-independent-relay-rewards) for the full design rationale.
-
-### 5. Free Local, Paid Routed
-
-Direct neighbors communicate for free. You pay only when your packets traverse other people's infrastructure. This mirrors real-world economics — talking to your neighbor costs nothing, sending a letter across the country does.
-
-### 6. Layered Separation
-
-Each layer depends only on the layer below it. Applications never touch transport details. Payment never touches routing internals. Security is not bolted on — it is structural.
-
 ## Protocol Stack Overview
 
-Mehr is organized into seven layers, each building on the one below. Click any layer to read its full specification.
+Mehr is organized into seven layers, each building on the one below. Each layer depends only on the layer below it — applications never touch transport details, payment never touches routing internals, and security is structural, not bolted on. Click any layer to read its full specification.
 
 <StackDiagram />
 
