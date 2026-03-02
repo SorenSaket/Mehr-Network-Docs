@@ -182,6 +182,6 @@ graph LR
 
 - [FAQ](faq) — answers to common questions in plain language
 - [Introduction](introduction) — the full technical overview
-- [MHR Token](economics/mhr-token) — how the economy works in detail
-- [Social](applications/social) — how social media works on Mehr
-- [Real-World Economics](economics/real-world-impact) — actual cost savings and earnings
+- [MHR Token](/docs/L3-economics/mhr-token) — how the economy works in detail
+- [Social](/docs/L6-applications/social) — how social media works on Mehr
+- [Real-World Economics](/docs/L3-economics/real-world-impact) — actual cost savings and earnings

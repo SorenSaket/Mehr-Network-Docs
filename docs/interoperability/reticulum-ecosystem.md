@@ -29,7 +29,7 @@ flowchart TB
 
 All three participation levels share the same Reticulum transport. An L0 node running Sideband and an L2 node running full Mehr relay packets for each other on the same mesh. They use the same encryption, the same announce mechanism, the same link establishment protocol.
 
-Mehr's economic extensions ([CompactPathCost](../protocol/network-protocol#mehr-extension-compact-path-cost), VRF lottery proofs, settlement records) are carried as opaque payload in Reticulum's announce DATA field. Pure Reticulum nodes forward these announces without parsing the Mehr-specific bytes — they just see more data in the announce and relay it.
+Mehr's economic extensions ([CompactPathCost](/docs/L1-network/network-protocol#mehr-extension-compact-path-cost), VRF lottery proofs, settlement records) are carried as opaque payload in Reticulum's announce DATA field. Pure Reticulum nodes forward these announces without parsing the Mehr-specific bytes — they just see more data in the announce and relay it.
 
 ## LXMF Compatibility
 
@@ -67,9 +67,9 @@ LXMF Message                    Mehr Message
 
 1. **Identity**: LXMF uses Reticulum destination hashes (derived from Ed25519 keys). Mehr uses the same Ed25519 keys and the same destination hash derivation. **Identity is natively shared** — no attestation needed if the user controls the same key on both sides.
 
-2. **Content**: LXMF `content` field → Mehr immutable DataObject (stored in [MHR-Store](../services/mhr-store)). LXMF `fields` dict → Mehr DataObject metadata.
+2. **Content**: LXMF `content` field → Mehr immutable DataObject (stored in [MHR-Store](/docs/L5-services/mhr-store)). LXMF `fields` dict → Mehr DataObject metadata.
 
-3. **Delivery**: LXMF delivery → Mehr [MHR-Pub](../services/mhr-pub) notification. The bridge publishes a Pub notification that triggers Mehr-side delivery.
+3. **Delivery**: LXMF delivery → Mehr [MHR-Pub](/docs/L5-services/mhr-pub) notification. The bridge publishes a Pub notification that triggers Mehr-side delivery.
 
 4. **Encryption**: Both use the same underlying crypto (X25519 ECDH + symmetric cipher). LXMF link encryption maps directly to Reticulum link encryption, which is the same link encryption Mehr uses. No re-encryption needed at the bridge for transport-layer security. E2E encryption differs: LXMF uses Reticulum's built-in E2E; Mehr uses its own envelope format. The bridge re-wraps E2E content.
 
@@ -135,10 +135,10 @@ This path is **not a hostile takeover**. Each stage is optional. Many Sideband u
 
 | NomadNet Feature | Mehr Equivalent | Bridge Approach |
 |-----------------|----------------|-----------------|
-| Pages (microblog) | [Social posts](../applications/social) | NomadNet page → Mehr `PostEnvelope` DataObject |
-| File hosting | [MHR-Store](../services/mhr-store) | NomadNet hosted files → Mehr DataObjects with storage agreements |
-| Messaging | [Messaging](../applications/messaging) | LXMF translation (same as above) |
-| Node directory | [MHR-DHT](../services/mhr-dht) | NomadNet announces → Mehr DHT entries |
+| Pages (microblog) | [Social posts](/docs/L6-applications/social) | NomadNet page → Mehr `PostEnvelope` DataObject |
+| File hosting | [MHR-Store](/docs/L5-services/mhr-store) | NomadNet hosted files → Mehr DataObjects with storage agreements |
+| Messaging | [Messaging](/docs/L6-applications/messaging) | LXMF translation (same as above) |
+| Node directory | [MHR-DHT](/docs/L5-services/mhr-dht) | NomadNet announces → Mehr DHT entries |
 
 NomadNet's page system (Markdown-like `.mu` format) maps naturally to Mehr's social layer. A bridge can publish NomadNet pages as Mehr social posts and vice versa — expanding the audience for NomadNet content to Mehr users.
 
@@ -208,7 +208,7 @@ Mehr uses this encryption directly — no additional link-layer crypto. E2E encr
 
 ### Gossip Bandwidth
 
-Mehr's [gossip protocol](../protocol/network-protocol#gossip-protocol) operates within a strict bandwidth budget (10% of link capacity, tiered). On a shared Reticulum transport, this budget covers both Mehr gossip and Reticulum's native announce propagation:
+Mehr's [gossip protocol](/docs/L1-network/network-protocol#gossip-protocol) operates within a strict bandwidth budget (10% of link capacity, tiered). On a shared Reticulum transport, this budget covers both Mehr gossip and Reticulum's native announce propagation:
 
 | Traffic Type | Budget Allocation |
 |-------------|-------------------|
@@ -227,7 +227,7 @@ The Reticulum community values simplicity, volunteer operation, and freedom from
 
 1. **Opt-in economics**: No Reticulum user is forced to participate in Mehr economics. Running a pure Reticulum node alongside Mehr nodes works perfectly — L0 participation with zero economic overhead.
 
-2. **Free between friends**: Mehr's [trust-based free tier](../economics/trust-neighborhoods) means a local Reticulum community can adopt Mehr and still relay for free among trusted peers. Economics only activate when traffic crosses trust boundaries.
+2. **Free between friends**: Mehr's [trust-based free tier](/docs/L3-economics/trust-neighborhoods) means a local Reticulum community can adopt Mehr and still relay for free among trusted peers. Economics only activate when traffic crosses trust boundaries.
 
 3. **No protocol tax**: Mehr doesn't charge existing Reticulum traffic. LXMF messages between two Sideband users continue to flow for free even on a link shared with Mehr traffic.
 

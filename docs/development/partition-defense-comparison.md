@@ -13,7 +13,7 @@ keywords:
 
 # Distributed Exchange vs Trust Graph: Partition Defense Comparison
 
-The [isolated partition attack](../economics/token-security#attack-isolated-partition) is the most significant economic threat to Mehr's CRDT-based ledger. An attacker runs 100 virtual nodes on a single machine (~$60/year), isolates them in a partition, and mints MHR uncontested. Post-bootstrap (epoch > 100,000), [GenesisAttestation](../economics/mhr-token#genesis-anchored-minting) sunsets and the network needs a **fully distributed** defense — no genesis root, no central authority.
+The [isolated partition attack](/docs/L3-economics/token-security#attack-isolated-partition) is the most significant economic threat to Mehr's CRDT-based ledger. An attacker runs 100 virtual nodes on a single machine (~$60/year), isolates them in a partition, and mints MHR uncontested. Post-bootstrap (epoch > 100,000), [GenesisAttestation](/docs/L3-economics/mhr-token#genesis-anchored-minting) sunsets and the network needs a **fully distributed** defense — no genesis root, no central authority.
 
 Two architectures address this:
 
@@ -25,7 +25,7 @@ Two architectures address this:
 
 ## The Problem
 
-During bootstrap (epoch 0–100,000), [GenesisAttestation](../economics/mhr-token#genesis-anchored-minting) prevents all isolated partition minting by requiring a signed proof of connectivity to a genesis node. This works but is centralized — every attestation chain traces back to one root.
+During bootstrap (epoch 0–100,000), [GenesisAttestation](/docs/L3-economics/mhr-token#genesis-anchored-minting) prevents all isolated partition minting by requiring a signed proof of connectivity to a genesis node. This works but is centralized — every attestation chain traces back to one root.
 
 Post-bootstrap, three approaches are possible:
 
@@ -40,7 +40,7 @@ Post-bootstrap, three approaches are possible:
 ### Design
 
 **Continuous gate** (connected network):
-- A node is **minting-eligible** if it is in the [active set](../economics/epoch-compaction#epoch-lifecycle) AND has ≥1 mutual trust link with another active-set member
+- A node is **minting-eligible** if it is in the [active set](/docs/L3-economics/epoch-compaction#epoch-lifecycle) AND has ≥1 mutual trust link with another active-set member
 - "Mutual trust link" = both nodes have each other in `trusted_peers`
 - This is a soft Sybil gate — it doesn't prevent the partition attack (attacker nodes trust each other) but provides basic hygiene in the connected network
 
@@ -49,7 +49,7 @@ Post-bootstrap, three approaches are possible:
 - The **minting component** is audited: cross-partition trust scoring determines what fraction of partition minting is accepted
 - `partition_trust_score = (nodes trusted by main-network peers) / (total partition nodes)`
 - Untrusted minting enters quarantine (10 epochs), then is permanently rejected if unproven
-- See [merge-time trust audit](../economics/token-security#merge-time-trust-audit) for full spec
+- See [merge-time trust audit](/docs/L3-economics/token-security#merge-time-trust-audit) for full spec
 
 ### Attack Outcomes
 
@@ -182,7 +182,7 @@ Post-bootstrap, three approaches are possible:
 
 2. **Approach B solves one problem by creating three.** Exchange rate manipulation, liquidity bootstrapping, and cross-denomination UX are each individually harder unsolved problems than the partition attack itself.
 
-3. **10x simpler.** ~500 lines vs ~5,000+. Zero changes to payment channels, wallet UX, or protocol messages. The merge-time audit is already specified in [crdt-ledger.md](../economics/epoch-compaction#merge-time-supply-audit).
+3. **10x simpler.** ~500 lines vs ~5,000+. Zero changes to payment channels, wallet UX, or protocol messages. The merge-time audit is already specified in [crdt-ledger.md](/docs/L3-economics/epoch-compaction#merge-time-supply-audit).
 
 4. **B hurts legitimate users more than attackers.** Users moving between cities, paying for cross-community services, or running multi-region applications all face exchange friction. The attacker pays zero (their tokens are worthless either way).
 

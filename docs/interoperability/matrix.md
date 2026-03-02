@@ -103,7 +103,7 @@ The bridge registers as a [Matrix application service](https://spec.matrix.org/l
 
 ## Room ↔ Topic Mapping
 
-Matrix rooms map to Mehr [MHR-Pub](../services/mhr-pub) topics and [scope subscriptions](../economics/trust-neighborhoods).
+Matrix rooms map to Mehr [MHR-Pub](/docs/L5-services/mhr-pub) topics and [scope subscriptions](/docs/L3-economics/trust-neighborhoods).
 
 ### Mapping Rules
 
@@ -132,8 +132,8 @@ Matrix Room                        Mehr Equivalent
 
 1. Bridge's homeserver receives federated events for bridged rooms
 2. Translation layer converts each event to Mehr DataObjects
-3. DataObjects stored in [MHR-Store](../services/mhr-store)
-4. [MHR-Pub](../services/mhr-pub) notifies Mehr subscribers of the new content
+3. DataObjects stored in [MHR-Store](/docs/L5-services/mhr-store)
+4. [MHR-Pub](/docs/L5-services/mhr-pub) notifies Mehr subscribers of the new content
 5. Mehr users see Matrix messages attributed to Matrix identities (via bridge attestation)
 
 **Mehr → Matrix**:
@@ -216,7 +216,7 @@ Matrix event (m.room.message):          Mehr DataObject:
 Matrix media (images, video, files) are uploaded to the homeserver's media repository. The bridge:
 
 1. Downloads media from Matrix homeserver
-2. Stores as Mehr immutable DataObject in [MHR-Store](../services/mhr-store)
+2. Stores as Mehr immutable DataObject in [MHR-Store](/docs/L5-services/mhr-store)
 3. Sets `min_bandwidth` based on file size:
    - Images below 50 KB: `min_bandwidth: 1200` (OK for LoRa)
    - Images 50 KB-1 MB: `min_bandwidth: 10000` (WiFi only)
@@ -296,7 +296,7 @@ A community running its own bridge:
 
 - Operate a Raspberry Pi as both Matrix homeserver (Conduit) and Mehr L2 node
 - Bridge their community Matrix room to their local Mehr mesh
-- **Zero external cost** if all parties are in the community's [trust neighborhood](../economics/trust-neighborhoods) (free relay)
+- **Zero external cost** if all parties are in the community's [trust neighborhood](/docs/L3-economics/trust-neighborhoods) (free relay)
 - Internet connectivity only needed for Matrix federation to the wider Matrix network
 - If internet goes down, local Mehr mesh continues; Matrix bridge resumes when connectivity returns
 
@@ -330,7 +330,7 @@ Matrix assumes persistent internet. Mehr doesn't. The bridge handles the mismatc
 If the bridge is offline for an extended period:
 
 - Matrix: Federation handles backfill. Bridge catches up on all missed events when it reconnects (Matrix homeservers cache events for offline servers).
-- Mehr: [MHR-Store](../services/mhr-store) preserves messages. Bridge retrieves missed Mehr posts from the DHT on reconnection.
+- Mehr: [MHR-Store](/docs/L5-services/mhr-store) preserves messages. Bridge retrieves missed Mehr posts from the DHT on reconnection.
 
 No messages are lost in either direction, assuming storage nodes on both sides remain operational during the outage.
 

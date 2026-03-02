@@ -12,25 +12,6 @@
   max-width: 720px;
 }
 
-/* ── Group labels (side brackets) ── */
-
-.groupLabel {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.3rem 0.75rem 0.15rem;
-  border-radius: 6px 6px 0 0;
-  color: #fff;
-  max-width: 720px;
-}
-
-.groupLabel.protocol { background: #1565c0; }
-.groupLabel.economics { background: #00796b; }
-.groupLabel.marketplace { background: #e65100; }
-.groupLabel.services { background: #6a1b9a; }
-.groupLabel.applications { background: #c62828; }
-
 /* ── Layer rows ── */
 
 .layer {
@@ -49,27 +30,36 @@
   z-index: 1;
 }
 
-/* Group colors — left border + background tint */
+/* Rainbow colors by layer (frequency of light: red→violet) */
+/* L0 (Physical) = Red (lowest frequency) → L6 (Applications) = Violet (highest) */
 
-.layer.protocol {
-  border-left-color: #1565c0;
-  background: rgba(21, 101, 192, 0.06);
+.layer.layer0 {
+  border-left-color: #E53935;
+  background: rgba(229, 57, 53, 0.06);
 }
-.layer.economics {
-  border-left-color: #00796b;
-  background: rgba(0, 121, 107, 0.06);
+.layer.layer1 {
+  border-left-color: #FB8C00;
+  background: rgba(251, 140, 0, 0.06);
 }
-.layer.marketplace {
-  border-left-color: #e65100;
-  background: rgba(230, 81, 0, 0.06);
+.layer.layer2 {
+  border-left-color: #FDD835;
+  background: rgba(253, 216, 53, 0.08);
 }
-.layer.services {
-  border-left-color: #6a1b9a;
-  background: rgba(106, 27, 154, 0.06);
+.layer.layer3 {
+  border-left-color: #43A047;
+  background: rgba(67, 160, 71, 0.06);
 }
-.layer.applications {
-  border-left-color: #c62828;
-  background: rgba(198, 40, 40, 0.06);
+.layer.layer4 {
+  border-left-color: #1E88E5;
+  background: rgba(30, 136, 229, 0.06);
+}
+.layer.layer5 {
+  border-left-color: #5E35B1;
+  background: rgba(94, 53, 177, 0.06);
+}
+.layer.layer6 {
+  border-left-color: #8E24AA;
+  background: rgba(142, 36, 170, 0.06);
 }
 
 /* ── Layer number badge ── */
@@ -121,7 +111,7 @@
   white-space: nowrap;
 }
 
-/* ── Separators between layers in same group ── */
+/* ── Separators between layers ── */
 
 .layer + .layer {
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -132,7 +122,7 @@
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-top: 0.75rem;
   padding-left: 0.75rem;
 }
@@ -150,11 +140,13 @@
   border-radius: 2px;
 }
 
-.legendDot.protocol { background: #1565c0; }
-.legendDot.economics { background: #00796b; }
-.legendDot.marketplace { background: #e65100; }
-.legendDot.services { background: #6a1b9a; }
-.legendDot.applications { background: #c62828; }
+.legendDot.layer0 { background: #E53935; }
+.legendDot.layer1 { background: #FB8C00; }
+.legendDot.layer2 { background: #FDD835; }
+.legendDot.layer3 { background: #43A047; }
+.legendDot.layer4 { background: #1E88E5; }
+.legendDot.layer5 { background: #5E35B1; }
+.legendDot.layer6 { background: #8E24AA; }
 
 .legendText {
   font-size: 0.72rem;
@@ -164,11 +156,13 @@
 
 /* ── Dark mode overrides ── */
 
-[data-theme='dark'] .layer.protocol { background: rgba(77, 163, 255, 0.08); }
-[data-theme='dark'] .layer.economics { background: rgba(77, 208, 191, 0.08); }
-[data-theme='dark'] .layer.marketplace { background: rgba(255, 152, 0, 0.08); }
-[data-theme='dark'] .layer.services { background: rgba(186, 104, 255, 0.08); }
-[data-theme='dark'] .layer.applications { background: rgba(255, 99, 99, 0.08); }
+[data-theme='dark'] .layer.layer0 { background: rgba(239, 83, 80, 0.10); }
+[data-theme='dark'] .layer.layer1 { background: rgba(255, 167, 38, 0.10); }
+[data-theme='dark'] .layer.layer2 { background: rgba(255, 241, 118, 0.10); }
+[data-theme='dark'] .layer.layer3 { background: rgba(102, 187, 106, 0.10); }
+[data-theme='dark'] .layer.layer4 { background: rgba(66, 165, 245, 0.10); }
+[data-theme='dark'] .layer.layer5 { background: rgba(149, 117, 205, 0.10); }
+[data-theme='dark'] .layer.layer6 { background: rgba(186, 104, 200, 0.10); }
 
 [data-theme='dark'] .layerNumber {
   color: #90a4ae;
@@ -208,5 +202,9 @@
   .chip {
     font-size: 0.62rem;
     padding: 0.08rem 0.35rem;
+  }
+
+  .legend {
+    gap: 0.5rem;
   }
 }

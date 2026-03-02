@@ -57,14 +57,16 @@ graph LR
 
 ### Milestone 1.3: Routing + Gossip
 
-- `CompactPathCost` (6-byte encoding/decoding, log-scale math, relay update logic)
-- Routing table (`RoutingEntry` with cost, latency, bandwidth, hop count, reliability)
-- Greedy forwarding with `PathPolicy` scoring (Cheapest, Fastest, Balanced)
+- `CompactPathCost` (7-byte encoding/decoding, log-scale math, relay update logic including `bottleneck_mtu`)
+- Routing table (`RoutingEntry` with cost, latency, bandwidth, hop count, bottleneck MTU, reliability)
+- Greedy forwarding with `PathPolicy` scoring (Cheapest, Fastest, Balanced, LargestMTU)
 - Gossip protocol (60-second rounds, bloom filter state summaries, delta exchange)
 - Bandwidth budget enforcement (4-tier allocation)
 - Announce propagation rules (event-driven + 30-min refresh, hop limit, expiry, link failure detection)
+- Per-link MTU negotiation (`LinkCapabilities` exchange during link establishment)
+- Route probing (`ProbeRequest`/`ProbeResponse`, opt-in, rate-limited)
 
-**Acceptance**: A 10-node network converges routing tables within 3 gossip rounds. Packets are forwarded via cost-optimal paths. Removing a node causes re-routing within 3 minutes. Gossip overhead stays within 10% budget.
+**Acceptance**: A 10-node network converges routing tables within 3 gossip rounds. Packets are forwarded via cost-optimal paths. Removing a node causes re-routing within 3 minutes. Gossip overhead stays within 10% budget. Path MTU is correctly reported via `bottleneck_mtu` and packets are sized appropriately per path. Route probes return accurate RTT and MTU measurements.
 
 ### Milestone 1.4: Trust Graph + Free Relay
 
@@ -271,7 +273,7 @@ graph LR
 - Cloud storage via gateway (consumer stores files, gateway handles MHR)
 - Gateway-provided connectivity (ethernet ports, WiFi access points)
 
-The [genesis service gateway](../economics/token-economics#genesis-service-gateway) is the first instance of this pattern — it bootstraps the economy in Phase 2. This milestone generalizes gateway mechanics for any operator to deploy.
+The [genesis service gateway](/docs/L3-economics/token-economics#genesis-service-gateway) is the first instance of this pattern — it bootstraps the economy in Phase 2. This milestone generalizes gateway mechanics for any operator to deploy.
 
 **Acceptance**: A consumer signs up with a gateway, pays fiat, and uses the network without seeing MHR. Traffic flows through gateway trust. Consumer can switch gateways without losing identity.
 
@@ -407,13 +409,13 @@ Phase 1 is **fully implementable** with the current specification. All protocol-
 
 | Component | Spec Status | Key References |
 |-----------|------------|----------------|
-| Identity + Encryption | Complete | [Security](../protocol/security) |
-| Packet format + CompactPathCost | Complete (wire format specified) | [Network Protocol](../protocol/network-protocol#mehr-extension-compact-path-cost) |
-| Routing + Announce propagation | Complete (scoring, announce rules, expiry, failure detection) | [Network Protocol](../protocol/network-protocol#routing) |
-| Gossip protocol | Complete (bloom filter, bandwidth budget, 4-tier) | [Network Protocol](../protocol/network-protocol#gossip-protocol) |
-| Congestion control | Complete (3-layer, priority levels, backpressure) | [Network Protocol](../protocol/network-protocol#congestion-control) |
-| Trust neighborhoods | Complete (free relay, credit, scopes) | [Trust & Neighborhoods](../economics/trust-neighborhoods) |
-| MHR-Store | Complete (agreements, proofs, erasure coding, repair) | [MHR-Store](../services/mhr-store) |
-| MHR-DHT + MHR-Pub | Complete (routing, replication, subscriptions) | [MHR-DHT](../services/mhr-dht), [MHR-Pub](../services/mhr-pub) |
-| VRF lottery + Payment channels | Complete (RFC 9381, difficulty formula, channel lifecycle) | [Payment Channels](../economics/payment-channels) |
-| CRDT ledger + Settlement | Complete (validation rules, GCounter merge, GSet dedup, rebase) | [CRDT Ledger](../economics/crdt-ledger) |
+| Identity + Encryption | Complete | [Security](/docs/L2-security/security) |
+| Packet format + CompactPathCost | Complete (wire format specified) | [Network Protocol](/docs/L1-network/network-protocol#mehr-extension-compact-path-cost) |
+| Routing + Announce propagation | Complete (scoring, announce rules, expiry, failure detection) | [Network Protocol](/docs/L1-network/network-protocol#routing) |
+| Gossip protocol | Complete (bloom filter, bandwidth budget, 4-tier) | [Network Protocol](/docs/L1-network/network-protocol#gossip-protocol) |
+| Congestion control | Complete (3-layer, priority levels, backpressure) | [Network Protocol](/docs/L1-network/network-protocol#congestion-control) |
+| Trust neighborhoods | Complete (free relay, credit, scopes) | [Trust & Neighborhoods](/docs/L3-economics/trust-neighborhoods) |
+| MHR-Store | Complete (agreements, proofs, erasure coding, repair) | [MHR-Store](/docs/L5-services/mhr-store) |
+| MHR-DHT + MHR-Pub | Complete (routing, replication, subscriptions) | [MHR-DHT](/docs/L5-services/mhr-dht), [MHR-Pub](/docs/L5-services/mhr-pub) |
+| VRF lottery + Payment channels | Complete (RFC 9381, difficulty formula, channel lifecycle) | [Payment Channels](/docs/L3-economics/payment-channels) |
+| CRDT ledger + Settlement | Complete (validation rules, GCounter merge, GSet dedup, rebase) | [CRDT Ledger](/docs/L3-economics/crdt-ledger) |

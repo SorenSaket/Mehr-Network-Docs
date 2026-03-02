@@ -139,7 +139,7 @@ const config: Config = {
             },
             {
               label: 'Protocol Stack',
-              to: '/docs/protocol/physical-transport',
+              to: '/docs/L0-physical/physical-transport',
             },
             {
               label: 'Hardware',

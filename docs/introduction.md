@@ -50,7 +50,7 @@ Idle hardware becomes shared infrastructure. Your phone delegates AI inference t
 
 ### Privacy as Default
 
-Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. Human-readable names are optional and trust-scoped. You decide what to reveal and to whom. This does not conflict with paid relay — [payment channels](economics/payment-channels#bilateral-payment-channels) are per-hop bilateral, so each relay settles with its direct neighbor without ever learning the end-to-end path.
+Packets carry no source address. A relay node knows which neighbor handed it a packet, but not whether that neighbor originated it or is relaying it from someone else. Identity is a cryptographic keypair — not a name, not an IP address, not an account. Human-readable names are optional and trust-scoped. You decide what to reveal and to whom. This does not conflict with paid relay — [payment channels](/docs/L3-economics/payment-channels#bilateral-payment-channels) are per-hop bilateral, so each relay settles with its direct neighbor without ever learning the end-to-end path.
 
 ### Partition Tolerance
 
@@ -60,7 +60,7 @@ Network fragmentation is not an error state — it is expected operation. A vill
 
 ### Capability Marketplace
 
-Nodes advertise what they can do. What they cannot do, they delegate to a neighbor and pay for the service. [Service discovery](marketplace/discovery) uses concentric rings so most requests resolve locally — your storage request finds a nearby provider before it ever discovers a distant data center. [Agreements](marketplace/agreements) are bilateral contracts between provider and client, and [verification](marketplace/verification) is cryptographic. A $30 solar relay and a GPU workstation participate on equal terms; the network routes requests to whoever can serve them best for the lowest cost.
+Nodes advertise what they can do. What they cannot do, they delegate to a neighbor and pay for the service. [Service discovery](/docs/L4-marketplace/discovery) uses concentric rings so most requests resolve locally — your storage request finds a nearby provider before it ever discovers a distant data center. [Agreements](/docs/L4-marketplace/agreements) are bilateral contracts between provider and client, and [verification](/docs/L4-marketplace/verification) is cryptographic. A $30 solar relay and a GPU workstation participate on equal terms; the network routes requests to whoever can serve them best for the lowest cost.
 
 ### Proof of Service
 
@@ -68,23 +68,23 @@ Most decentralized networks create tokens through artificial work (hashing) or c
 
 ### Zero Trust Economics
 
-The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). No staking, no slashing, no trust scores required. In isolated partitions, [additional defense layers](economics/token-security#attack-isolated-partition) bound damage to a predictable amount — even an infinitely long 3-node partition produces less than 1.5% total supply dilution.
+The economic layer assumes every participant is adversarial. Two mechanisms make cheating structurally unprofitable: **non-deterministic service assignment** (the client can't choose who serves the request) and a **net-income revenue cap** (cycling MHR produces zero minting). No staking, no slashing, no trust scores required. In isolated partitions, [additional defense layers](/docs/L3-economics/token-security#attack-isolated-partition) bound damage to a predictable amount — even an infinitely long 3-node partition produces less than 1.5% total supply dilution.
 
 ### Free Between Friends
 
-Nodes maintain [trust neighborhoods](economics/trust-neighborhoods) — sets of peers they relay for at zero cost. No tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates without the economic layer even activating. The boundary between free and paid is not set by the protocol — it emerges from each community's own trust relationships.
+Nodes maintain [trust neighborhoods](/docs/L3-economics/trust-neighborhoods) — sets of peers they relay for at zero cost. No tokens, no channels, no economic overhead. A local mesh where everyone trusts each other operates without the economic layer even activating. The boundary between free and paid is not set by the protocol — it emerges from each community's own trust relationships.
 
 ### Self-Sovereign Identity
 
-Your identity is your cryptographic key — not an account on someone else's server. [MHR-ID](services/mhr-id) lets you build a rich profile (name, bio, avatar, linked accounts, achievements) where every field is a signed claim that peers can vouch for or dispute. You control who sees each field: public, trusted friends only, friends-of-friends, or specific people. No central identity provider. No data broker.
+Your identity is your cryptographic key — not an account on someone else's server. [MHR-ID](/docs/L5-services/mhr-id) lets you build a rich profile (name, bio, avatar, linked accounts, achievements) where every field is a signed claim that peers can vouch for or dispute. You control who sees each field: public, trusted friends only, friends-of-friends, or specific people. No central identity provider. No data broker.
 
 ### Subjective Naming
 
-There is no global DNS. [MHR-Name](services/mhr-name) provides human-readable names (`alice@geo:portland`, `my-blog@topic:tech`) that resolve from each viewer's position in the trust graph. Names registered by people you trust outrank names from strangers. Two communities can have different "alice" users — that's by design. Names can point to people, content, or [distributed applications](services/mhr-app).
+There is no global DNS. [MHR-Name](/docs/L5-services/mhr-name) provides human-readable names (`alice@geo:portland`, `my-blog@topic:tech`) that resolve from each viewer's position in the trust graph. Names registered by people you trust outrank names from strangers. Two communities can have different "alice" users — that's by design. Names can point to people, content, or [distributed applications](/docs/L5-services/mhr-app).
 
 ### Distributed Applications
 
-Applications on Mehr are not hosted on servers — they are [content-addressed packages](services/mhr-app) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
+Applications on Mehr are not hosted on servers — they are [content-addressed packages](/docs/L5-services/mhr-app) stored in the mesh. An AppManifest bundles contract code, UI, state schema, and dependencies into a single installable artifact. Users discover apps by name, install them locally, and upgrade via trust-weighted update propagation. No app store. No platform fee. No single point of removal.
 
 ## Protocol Stack Overview
 
@@ -113,10 +113,10 @@ No central server. No accounts. No subscriptions. Just cryptographic identities,
 
 ## Next Steps
 
-- **Understand the protocol**: Start with [Physical Transport](protocol/physical-transport) and work up the stack
-- **Explore the economics**: Learn how [MHR tokens](economics/mhr-token) and [stochastic relay rewards](economics/payment-channels) enable decentralized resource markets
-- **Identity and naming**: See how [MHR-ID](services/mhr-id) builds self-sovereign profiles and how [MHR-Name](services/mhr-name) provides trust-weighted naming
-- **Distributed apps**: Learn how [AppManifests](services/mhr-app) package and distribute applications across the mesh
-- **See the real-world impact**: Understand [how Mehr affects existing economics](economics/real-world-impact) and how participants earn
+- **Understand the protocol**: Start with [Physical Transport](/docs/L0-physical/physical-transport) and work up the stack
+- **Explore the economics**: Learn how [MHR tokens](/docs/L3-economics/mhr-token) and [stochastic relay rewards](/docs/L3-economics/payment-channels) enable decentralized resource markets
+- **Identity and naming**: See how [MHR-ID](/docs/L5-services/mhr-id) builds self-sovereign profiles and how [MHR-Name](/docs/L5-services/mhr-name) provides trust-weighted naming
+- **Distributed apps**: Learn how [AppManifests](/docs/L5-services/mhr-app) package and distribute applications across the mesh
+- **See the real-world impact**: Understand [how Mehr affects existing economics](/docs/L3-economics/real-world-impact) and how participants earn
 - **See the hardware**: Check out the [reference designs](hardware/reference-designs) for building Mehr nodes
 - **Read the full spec**: The complete [protocol specification](specification) covers every detail

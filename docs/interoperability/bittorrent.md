@@ -13,7 +13,7 @@ keywords:
 
 # BitTorrent Bridge
 
-[BitTorrent](https://www.bittorrent.org/) is the world's most widely deployed content distribution protocol, with 10–25 million active DHT nodes at any given time. It shares a key property with Mehr: **content addressing** — a torrent's info hash uniquely identifies its content, just as Blake3 hashes identify DataObjects in [MHR-Store](../services/mhr-store).
+[BitTorrent](https://www.bittorrent.org/) is the world's most widely deployed content distribution protocol, with 10–25 million active DHT nodes at any given time. It shares a key property with Mehr: **content addressing** — a torrent's info hash uniquely identifies its content, just as Blake3 hashes identify DataObjects in [MHR-Store](/docs/L5-services/mhr-store).
 
 A BitTorrent bridge brings the entire BitTorrent content library into the Mehr mesh. Mesh-only users — even those on LoRa with no internet — can request torrent content through the bridge. The bridge fetches it from the BitTorrent network, verifies piece hashes, stores it as DataObjects in MHR-Store, and serves it to mesh users through normal Mehr protocols.
 
@@ -23,7 +23,7 @@ A BitTorrent bridge brings the entire BitTorrent content library into the Mehr m
 |----------|-----------|------|---------------|
 | **Content addressing** | SHA-1 info hash (v1) or SHA-256 Merkle root (v2) | Blake3 DataObject hash | High — both content-addressed, different hash functions |
 | **Identity** | Random 20-byte peer ID (no cryptographic binding) | Ed25519 keypair → destination hash | None — BitTorrent has no identity system |
-| **DHT** | Mainline DHT: Kademlia over UDP, 160-bit XOR, k=8 | [MHR-DHT](../services/mhr-dht): Kademlia-style, k=3, XOR + cost weighting | Moderate — same algorithmic family, different parameters |
+| **DHT** | Mainline DHT: Kademlia over UDP, 160-bit XOR, k=8 | [MHR-DHT](/docs/L5-services/mhr-dht): Kademlia-style, k=3, XOR + cost weighting | Moderate — same algorithmic family, different parameters |
 | **Transport** | uTP (UDP) or TCP, requires IP addresses | Transport-agnostic (LoRa, WiFi, etc.), no IP required | Low — bridge must proxy between IP and mesh addressing |
 | **Mutable data (BEP-44)** | Ed25519-signed DHT entries, 1 KB max, monotonic sequence | Ed25519-signed IdentityClaims, NameBindings | High — same curve, same signing pattern |
 | **Encryption** | MSE/PE: obfuscation only (RC4), not security | ChaCha20-Poly1305 E2E encryption | Bridge re-encrypts at boundary |
@@ -96,7 +96,7 @@ The bridge performs a **hash translation**: it verifies BitTorrent integrity (SH
 To reduce trust requirements:
 
 - **Multiple bridges**: If two independent bridges produce the same Blake3 root hash for the same info hash, the content is almost certainly correct. Clients can query multiple bridges and compare.
-- **Bridge reputation**: Bridges build [reputation](../protocol/security#reputation) through the standard trust system. A bridge that serves corrupted content loses reputation and trust.
+- **Bridge reputation**: Bridges build [reputation](/docs/L2-security/security#reputation) through the standard trust system. A bridge that serves corrupted content loses reputation and trust.
 - **Torrent file forwarding**: The bridge can forward the original torrent metadata (piece hashes) to the user. The user can verify individual pieces against the original SHA-1/SHA-256 hashes if they want to cross-check the bridge's Blake3 hashing.
 
 ## Content Flow: Mehr → BitTorrent
@@ -119,7 +119,7 @@ This makes Mehr content available to the billions of devices running BitTorrent 
 
 ## Naming Integration
 
-BitTorrent content can be given human-readable names via [MHR-Name](../services/mhr-name):
+BitTorrent content can be given human-readable names via [MHR-Name](/docs/L5-services/mhr-name):
 
 ```
 Name binding:
@@ -147,13 +147,13 @@ A bridge can translate between BEP-44 mutable entries and Mehr NameBindings or I
 
 ## Economic Model
 
-The bridge is a [capability marketplace](../marketplace/overview) service, discoverable and payable like any other:
+The bridge is a [capability marketplace](/docs/L4-marketplace/overview) service, discoverable and payable like any other:
 
 | Cost | Who Pays | Mechanism |
 |------|---------|-----------|
 | BitTorrent download bandwidth | Bridge operator (internet costs) | Recouped from requester's service fee |
-| Mesh-side storage (MHR-Store) | Requester | Standard [storage pricing](../services/mhr-store) |
-| Mesh-side relay to requester | Requester | Standard [relay payment channels](../economics/payment-channels) |
+| Mesh-side storage (MHR-Store) | Requester | Standard [storage pricing](/docs/L5-services/mhr-store) |
+| Mesh-side relay to requester | Requester | Standard [relay payment channels](/docs/L3-economics/payment-channels) |
 | Bridge seeding (Mehr → BT) | Content owner | Pays bridge for outbound internet bandwidth |
 
 The bridge advertises `Capability(bittorrent_bridge, ...)` and competes with other bridges on price, speed, and reliability. Popular torrents get cached in MHR-Store and served from the mesh — subsequent requests don't go through the bridge at all.

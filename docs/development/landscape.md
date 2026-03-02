@@ -423,27 +423,27 @@ Six aspects of Mehr's design have no direct equivalent in existing projects:
 
 ### 1. ESP32-to-Datacenter Unified Economic Protocol
 
-No project spans this hardware range with a single economic protocol. Meshtastic runs on ESP32 but has no economics. Filecoin has economics but needs GPUs. Holochain needs at minimum a Raspberry Pi. Mehr's [three participation levels](../protocol/physical-transport#participation-levels) (L0 transport-only, L1 relay with lottery, L2 full node) let a $5 microcontroller and a datacenter server participate in the same economy.
+No project spans this hardware range with a single economic protocol. Meshtastic runs on ESP32 but has no economics. Filecoin has economics but needs GPUs. Holochain needs at minimum a Raspberry Pi. Mehr's [three participation levels](/docs/L0-physical/physical-transport#participation-levels) (L0 transport-only, L1 relay with lottery, L2 full node) let a $5 microcontroller and a datacenter server participate in the same economy.
 
 ### 2. Stochastic Relay Rewards via VRF Lottery
 
-Althea does paid relay but settles on a blockchain. Helium uses Solana. Mehr's [VRF lottery](../economics/payment-channels) reduces channel state updates by ~10x compared to per-packet payment, and the [CRDT ledger](../economics/crdt-ledger) converges without consensus. The specific mechanism — ECVRF-ED25519-SHA512-TAI lottery, bilateral payment channels, CRDT settlement, epoch compaction — doesn't exist elsewhere as a complete system.
+Althea does paid relay but settles on a blockchain. Helium uses Solana. Mehr's [VRF lottery](/docs/L3-economics/payment-channels) reduces channel state updates by ~10x compared to per-packet payment, and the [CRDT ledger](/docs/L3-economics/crdt-ledger) converges without consensus. The specific mechanism — ECVRF-ED25519-SHA512-TAI lottery, bilateral payment channels, CRDT settlement, epoch compaction — doesn't exist elsewhere as a complete system.
 
 ### 3. Economic Partition Tolerance
 
-SSB and Holochain handle *data* partition tolerance well. No project addresses what happens to *money* when the network splits. Mehr's CRDT ledger with [partition-aware epoch compaction](../economics/epoch-compaction#epoch-triggers), GCounter rebase, and bounded overminting (max 1.5x) is designed for the case where a village on LoRa is a permanent partition with its own functioning economy.
+SSB and Holochain handle *data* partition tolerance well. No project addresses what happens to *money* when the network splits. Mehr's CRDT ledger with [partition-aware epoch compaction](/docs/L3-economics/epoch-compaction#epoch-triggers), GCounter rebase, and bounded overminting (max 1.5x) is designed for the case where a village on LoRa is a permanent partition with its own functioning economy.
 
 ### 4. Trust-Based Free Tier Integrated with Paid Economics
 
-CJDNS and Hyphanet's darknet use friend-of-friend topology, but without economics on top. Mehr's [trust graph](../economics/trust-neighborhoods) lets friends relay for free while the same protocol charges strangers — and the boundary is fluid. No other project makes this the core economic primitive, with the paid layer activating only when traffic crosses trust boundaries.
+CJDNS and Hyphanet's darknet use friend-of-friend topology, but without economics on top. Mehr's [trust graph](/docs/L3-economics/trust-neighborhoods) lets friends relay for free while the same protocol charges strangers — and the boundary is fluid. No other project makes this the core economic primitive, with the paid layer activating only when traffic crosses trust boundaries.
 
 ### 5. Cost-Aware Kleinberg Small-World Routing
 
-No existing project combines formal small-world routing (O(log² N) hop guarantee) with per-link economic cost metrics. Reticulum has announce-based path discovery but no cost awareness. Althea has cost-aware routing but uses Babel (distance-vector, not small-world optimized). Mehr's [routing model](../protocol/network-protocol#routing) provides both scalability guarantees and economic efficiency.
+No existing project combines formal small-world routing (O(log² N) hop guarantee) with per-link economic cost metrics. Reticulum has announce-based path discovery but no cost awareness. Althea has cost-aware routing but uses Babel (distance-vector, not small-world optimized). Mehr's [routing model](/docs/L1-network/network-protocol#routing) provides both scalability guarantees and economic efficiency.
 
 ### 6. Integrated Capability Marketplace
 
-Filecoin does storage + emerging compute. Althea does connectivity. Holochain does storage + compute. No single project unifies storage, compute, and connectivity into one [discovery/negotiation/verification/payment framework](../marketplace/overview) where a node advertises whatever it can do and the market determines its role.
+Filecoin does storage + emerging compute. Althea does connectivity. Holochain does storage + compute. No single project unifies storage, compute, and connectivity into one [discovery/negotiation/verification/payment framework](/docs/L4-marketplace/overview) where a node advertises whatever it can do and the market determines its role.
 
 ---
 

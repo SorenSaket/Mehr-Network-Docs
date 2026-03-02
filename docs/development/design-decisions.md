@@ -19,9 +19,9 @@ This page documents the key architectural decisions made during Mehr protocol de
 
 | | |
 |---|---|
-| **Chosen** | Use [Reticulum Network Stack](https://reticulum.network/) as the initial transport implementation; treat it as a [swappable layer](#transport-layer-swappable-implementation) |
+| **Chosen** | Use [Reticulum Network Stack](https://reticulum.network/) as the design reference for transport; treat the transport layer as a [swappable interface](#transport-layer-swappable-implementation) |
 | **Alternatives** | Clean-room implementation from day one, libp2p, custom protocol |
-| **Rationale** | Reticulum already solves transport abstraction, cryptographic identity, mandatory encryption, sender anonymity (no source address), and announce-based routing — all proven on LoRa at 5 bps. Mehr extends it with CompactPathCost annotations and economic primitives rather than reinventing a tested foundation. The transport layer is an implementation detail: Mehr defines the interface it needs and can switch to a clean-room implementation in the future without affecting any layer above. |
+| **Rationale** | Reticulum solves transport abstraction, cryptographic identity, mandatory encryption, sender anonymity (no source address), and announce-based routing — all proven on LoRa at 5 bps. Mehr's transport interface is informed by Reticulum's design and extends it with CompactPathCost annotations and economic primitives. The transport layer is an interface: Mehr defines what it needs, and any conforming implementation can be used without affecting layers above. |
 
 ## Routing: Kleinberg Small-World with Cost Weighting
 
@@ -93,15 +93,15 @@ This page documents the key architectural decisions made during Mehr protocol de
 |---|---|
 | **Chosen** | Hierarchical-scope-based names (e.g., `alice@geo:us/oregon/portland`) |
 | **Alternatives** | Global names via consensus, flat community labels (`alice@portland-mesh`) |
-| **Rationale** | Global consensus contradicts partition tolerance. Flat community labels were replaced by [hierarchical scopes](../economics/trust-neighborhoods#hierarchical-scopes) — geographic (`Geo`) and interest (`Topic`) — which provide structured resolution. Names resolve against scope hierarchy: `alice@geo:portland` queries Portland scope first, then broadens. Two different cities named "portland" are disambiguated by longer paths (`alice@geo:us/oregon/portland` vs `alice@geo:us/maine/portland`). Proximity-based resolution handles most cases naturally. Local petnames provide a fallback. |
+| **Rationale** | Global consensus contradicts partition tolerance. Flat community labels were replaced by [hierarchical scopes](/docs/L3-economics/trust-neighborhoods#hierarchical-scopes) — geographic (`Geo`) and interest (`Topic`) — which provide structured resolution. Names resolve against scope hierarchy: `alice@geo:portland` queries Portland scope first, then broadens. Two different cities named "portland" are disambiguated by longer paths (`alice@geo:us/oregon/portland` vs `alice@geo:us/maine/portland`). Proximity-based resolution handles most cases naturally. Local petnames provide a fallback. |
 
 ## Cost Annotations: Compact Path Cost (No Per-Relay Signatures)
 
 | | |
 |---|---|
-| **Chosen** | 6-byte constant-size `CompactPathCost` (running totals updated by each relay, no per-relay signatures) |
+| **Chosen** | 7-byte constant-size `CompactPathCost` (running totals updated by each relay, no per-relay signatures) |
 | **Alternatives** | Per-relay signed CostAnnotation (~84 bytes per hop), aggregate signatures, signature-free with Merkle proof |
-| **Rationale** | Per-relay signatures make announces grow linearly with path length — 84 bytes × N hops. On a 1 kbps LoRa link with 3% routing budget, this limits convergence to ~1 announce per 22+ seconds. CompactPathCost uses 6 bytes total regardless of path length: log-encoded cumulative cost, worst-case latency, bottleneck bandwidth, and hop count. Per-relay signatures are unnecessary because routing decisions are local (you trust your link-authenticated neighbor), trust is transitive at each hop, and the market enforces honesty (overpriced relays get routed around, underpriced relays lose money). The announce itself remains signed by the destination node. |
+| **Rationale** | Per-relay signatures make announces grow linearly with path length — 84 bytes × N hops. On a 1 kbps LoRa link with 3% routing budget, this limits convergence to ~1 announce per 22+ seconds. CompactPathCost uses 7 bytes total regardless of path length: log-encoded cumulative cost, worst-case latency, bottleneck bandwidth, hop count, and bottleneck MTU. Per-relay signatures are unnecessary because routing decisions are local (you trust your link-authenticated neighbor), trust is transitive at each hop, and the market enforces honesty (overpriced relays get routed around, underpriced relays lose money). The announce itself remains signed by the destination node. |
 
 ## Congestion Control: Three-Layer Design
 
@@ -115,9 +115,9 @@ This page documents the key architectural decisions made during Mehr protocol de
 
 | | |
 |---|---|
-| **Chosen** | Define transport as an interface with requirements; use Reticulum as the current implementation |
+| **Chosen** | Define transport as an interface with requirements; use Reticulum as the reference design |
 | **Alternatives** | Hard dependency on Reticulum, clean-room from day one |
-| **Rationale** | Reticulum provides a proven transport layer tested at 5 bps on LoRa, saving significant implementation effort. But coupling Mehr to Reticulum's codebase or community roadmap creates fragility. Instead, Mehr defines the transport interface it needs (transport-agnostic links, announce-based routing, mandatory encryption, sender anonymity) and uses Reticulum as the current implementation. Mehr extensions are carried as opaque payload in the announce DATA field — a clean separation. Three participation levels (L0 transport-only, L1 Mehr relay, L2 full Mehr) ensure interoperability with the underlying transport. This allows a future clean-room implementation without affecting any layer above transport. |
+| **Rationale** | Reticulum provides a proven transport design tested at 5 bps on LoRa, informing the Mehr transport interface. But coupling Mehr to Reticulum's codebase or community roadmap creates fragility. Instead, Mehr defines the transport interface it needs (transport-agnostic links, announce-based routing, mandatory encryption, sender anonymity, per-link MTU negotiation) and uses Reticulum's design as a reference. Mehr extensions are carried as opaque payload in the announce DATA field — a clean separation. Three participation levels (L0 transport-only, L1 Mehr relay, L2 full Mehr) ensure interoperability with any conforming transport. A conforming implementation must meet the full [Transport Interface Specification](/docs/L0-physical/physical-transport#transport-interface-specification), including variable frame sizes — requirements that go beyond Reticulum's fixed 500-byte frame limit. |
 
 ## Storage: Pay-Per-Duration with Erasure Coding
 
@@ -302,3 +302,27 @@ This page documents the key architectural decisions made during Mehr protocol de
 | **Chosen** | Per-hop independent rewards (VRF lottery per relay, no end-to-end coordination) |
 | **Alternatives** | End-to-end payment (sender pays all relays in one transaction), hybrid (per-hop with end-to-end settlement) |
 | **Rationale** | End-to-end payment requires the sender to know the full path, which breaks sender anonymity — packets carry no source address by design. Per-hop stochastic rewards already achieve ~0.3% bandwidth overhead; end-to-end would save negligible additional bandwidth. Per-hop uses simple bilateral channels; end-to-end requires multi-hop payment routing (Lightning-style complexity). Each hop is independent — no coordination failure cascade. If one relay goes offline, only that hop is affected; upstream and downstream relays continue operating on their own bilateral channels. The hybrid approach adds complexity without meaningful benefit over pure per-hop. |
+
+## Variable Packet Sizes with Transport-Class MTU
+
+| | |
+|---|---|
+| **Chosen** | Three transport classes (Constrained 484B, Standard 1,500B, Bulk 4,096B) with per-link MTU negotiation, passive path MTU discovery via `bottleneck_mtu` in CompactPathCost, and opt-in active route probing |
+| **Alternatives** | Fixed 484-byte packets globally (status quo), fully variable with hop-by-hop fragmentation, end-to-end PMTUD (ICMP-style) |
+| **Rationale** | The 484-byte Reticulum-derived cap wastes 68–95% of WiFi/Ethernet frame capacity. Transferring 1 MB over WiFi takes 2,151 packets instead of 694. But LoRa's tiny MTU must remain the default for paths that cross constrained links. Transport classes solve this: each link negotiates its MTU during establishment (+3 bytes in handshake), and the `bottleneck_mtu` field in CompactPathCost (1 extra byte per announce) propagates the minimum MTU across the path. Senders size packets to the path — no change for LoRa paths, 3× improvement on pure WiFi, 8.5× on Ethernet/fiber. Hop-by-hop fragmentation was deferred — application-layer chunking (MHR-Store's 4 KB chunks) is simpler and avoids reassembly buffer pressure on ESP32 (520 KB RAM). End-to-end PMTUD requires error signaling from intermediate nodes, which conflicts with sender anonymity. The `PacketTooBig` signal (18 bytes) is sent 1-hop upstream for immediate local correction; the announce system propagates corrected path MTU globally. LoRa links retain fixed-size padding for traffic analysis resistance; WiFi+ links use variable sizes since the threat model differs (encrypted link, no broadcast RF observation). |
+
+## Route Probing: Passive Default with Opt-In Active
+
+| | |
+|---|---|
+| **Chosen** | Passive path characterization via `bottleneck_mtu` and `bottleneck_bps` in CompactPathCost (always on); active ProbeRequest/ProbeResponse for real-time measurements (opt-in, rate-limited, WiFi+ only) |
+| **Alternatives** | Active probing only (ICMP-style), no probing (rely solely on announces), continuous background probing |
+| **Rationale** | Passive probing costs 1 byte per announce and gives every node path MTU and bandwidth information for free — a clear win with no downside. Active probing adds real-time RTT and throughput measurement, valuable before voice calls or large transfers, but each probe consumes airtime (~4 seconds at 1 kbps on LoRa). Active probing is therefore restricted to links ≥10 kbps, rate-limited to 1 probe/minute per destination, and exempt from relay rewards to prevent probe flooding for profit. Continuous background probing was rejected — it wastes bandwidth on paths that may never carry user traffic. ICMP-style probing was rejected because it requires end-to-end signaling that conflicts with sender anonymity. |
+
+## Bandwidth Reservation: Hop-by-Hop Progressive Escrow
+
+| | |
+|---|---|
+| **Chosen** | Hop-by-hop reservation propagation with progressive escrow (10% upfront, per-chunk deterministic payment), VRF bypass during reservations, no `hop_count` in commitment |
+| **Alternatives** | Full prepayment, end-to-end reservation (sender specifies path), stochastic relay only (no reservation), circuit-based reservation (Tor-style) |
+| **Rationale** | Per-packet stochastic VRF lottery works well for small/interactive traffic but is wasteful for bulk transfers: a 1 GB transfer triggers ~666K VRF operations and ~6,667 channel updates. Bandwidth reservation eliminates VRF overhead entirely — per-chunk (1 MB) deterministic payment yields ~1,024 channel updates for the same 1 GB, a 6.5× reduction. Full prepayment was rejected because it creates moral hazard: a relay already paid in full has no incentive to prioritize the sender's traffic. Progressive escrow aligns incentives — the relay earns as it delivers. End-to-end reservation breaks sender anonymity (sender must know the path). Hop-by-hop propagation preserves the protocol's structural privacy: each relay negotiates only with its direct neighbor, identical to regular packet forwarding. `hop_count` was deliberately excluded from `ReservationCommitment` to prevent path-length deanonymization. The 60-second inactivity rule (non-refundable escrow floor) prevents bandwidth squatting — an attacker must spend real MHR per reservation. Circuit-based reservation was rejected because circuit establishment latency (~12 seconds on LoRa) is unacceptable and requires persistent state on relays. |

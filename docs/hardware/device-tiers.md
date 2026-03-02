@@ -96,7 +96,7 @@ Gateway node
 Inference node (GPU/NPU)
 ```
 
-Each delegation is a bilateral [capability agreement](../marketplace/agreements) with payment flowing through [channels](../economics/payment-channels).
+Each delegation is a bilateral [capability agreement](/docs/L4-marketplace/agreements) with payment flowing through [channels](/docs/L3-economics/payment-channels).
 
 :::caution[Trade-off]
 Delegation chains add latency and cost at each hop. A Minimal relay delegating compute to a Community node, which delegates storage to a Gateway, creates a 3-link economic dependency. If any link fails, the upstream node must re-discover and re-negotiate — trading simplicity for resilience.

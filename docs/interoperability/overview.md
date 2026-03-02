@@ -17,7 +17,7 @@ Mehr is not an island. A decentralized mesh protocol that can't talk to other ne
 
 ## Design Principle: Bridges as Services, Not Primitives
 
-Mehr deliberately avoids building interoperability into the protocol layer. Instead, bridges are **standalone gateway services** that advertise in the [capability marketplace](../marketplace/overview) like any other service — storage, compute, or relay.
+Mehr deliberately avoids building interoperability into the protocol layer. Instead, bridges are **standalone gateway services** that advertise in the [capability marketplace](/docs/L4-marketplace/overview) like any other service — storage, compute, or relay.
 
 This was an explicit [design decision](../development/design-decisions#protocol-bridges-standalone-gateway-services). The rationale:
 
@@ -45,9 +45,9 @@ Each bridge is an L2 Mehr node that also speaks an external protocol. From the M
 
 ## Identity Attestation
 
-The core interop mechanism builds on [MHR-ID's ExternalIdentity claims](../services/mhr-id/verification#identity-linking). An ExternalIdentity claim is a signed assertion linking a Mehr identity to an external platform account, verified via [crawler or OAuth challenges](../services/mhr-id/verification#crawler-challenge) — the same methods used by [FUTO ID](https://docs.polycentric.io/futo-id/).
+The core interop mechanism builds on [MHR-ID's ExternalIdentity claims](/docs/L5-services/mhr-id-verification#identity-linking). An ExternalIdentity claim is a signed assertion linking a Mehr identity to an external platform account, verified via [crawler or OAuth challenges](/docs/L5-services/mhr-id-verification#crawler-challenge) — the same methods used by [FUTO ID](https://docs.polycentric.io/futo-id/).
 
-For protocol bridges specifically, the bridge node acts as a **verification oracle** — it can verify the user's external identity via OAuth and publish a vouch, just like any [verification oracle](../services/mhr-id/verification#verification-oracles). The bridge also stores a protocol-specific attestation for message routing:
+For protocol bridges specifically, the bridge node acts as a **verification oracle** — it can verify the user's external identity via OAuth and publish a vouch, just like any [verification oracle](/docs/L5-services/mhr-id-verification#verification-oracles). The bridge also stores a protocol-specific attestation for message routing:
 
 ```
 BridgeAttestation {
@@ -70,7 +70,7 @@ BridgeAttestation {
 4. The bridge stores a `BridgeAttestation` for message routing
 5. Other Mehr nodes can verify the claim via trust-weighted vouches — no need to trust the bridge blindly
 
-This is stronger than a bridge-only attestation because the ExternalIdentity claim is part of Alice's [MHR-ID profile](../services/mhr-id#profile-assembly) — visible to anyone who views her profile, with verification status from multiple independent oracles.
+This is stronger than a bridge-only attestation because the ExternalIdentity claim is part of Alice's [MHR-ID profile](/docs/L5-services/mhr-id#profile-assembly) — visible to anyone who views her profile, with verification status from multiple independent oracles.
 
 **What the bridge doesn't know**: The content of E2E encrypted messages passing through it. The bridge translates metadata and routing, not plaintext.
 
@@ -88,7 +88,7 @@ Alice (Mehr) sends a message to Bob (Matrix):
 Alice → [pays relay MHR] → Bridge Node → [Matrix federation, bridge pays] → Bob
 ```
 
-- Alice pays Mehr-side relay costs via normal [payment channels](../economics/payment-channels)
+- Alice pays Mehr-side relay costs via normal [payment channels](/docs/L3-economics/payment-channels)
 - The bridge operator pays Matrix-side costs (homeserver hosting, bandwidth)
 - Bridge recoups costs through service fees (per-message, subscription, or ad-supported)
 
@@ -167,11 +167,11 @@ Protocol-level bridges face semantic mismatch: Mehr’s immutable DataObjects do
 
 These connect Mehr to protocols it already shares infrastructure with — particularly the [Reticulum ecosystem](reticulum-ecosystem).
 
-**Example**: LXMF messages carried natively on the same Reticulum transport Mehr uses.
+**Example**: LXMF messages carried natively on a Reticulum-compatible transport.
 
-**Advantage**: Near-zero translation overhead. Same wire format, same crypto, same transport.
+**Advantage**: Near-zero translation overhead. Compatible wire format, same crypto, same transport interface.
 
-**Challenge**: Coordinating upgrade paths as Mehr adds economic extensions that pure Reticulum nodes don't understand.
+**Challenge**: Coordinating upgrade paths as Mehr adds economic extensions and variable frame sizes that pure Reticulum nodes don't understand.
 
 ## Compatibility Landscape
 
@@ -213,8 +213,8 @@ These connect Mehr to protocols it already shares infrastructure with — partic
 Some things are deliberately out of scope:
 
 - **Cross-protocol atomic swaps.** Mehr's CRDT ledger has different finality guarantees than blockchains. Token exchange happens through gateway operators or bilateral agreement, not protocol-level swap primitives.
-- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. [ExternalIdentity claims](../services/mhr-id/verification#identity-linking) link your Mehr key to external platforms, but each bridge maintains its own routing attestations. Users choose which bridges they trust.
-- **Protocol-level name resolution for external systems.** Mehr's [naming system](../services/mhr-name) resolves Mehr names via trust-weighted resolution. External names resolve through their own systems, with bridges translating at the boundary.
+- **Universal identity federation.** Mehr doesn't maintain a global directory mapping all identities across all protocols. [ExternalIdentity claims](/docs/L5-services/mhr-id-verification#identity-linking) link your Mehr key to external platforms, but each bridge maintains its own routing attestations. Users choose which bridges they trust.
+- **Protocol-level name resolution for external systems.** Mehr's [naming system](/docs/L5-services/mhr-name) resolves Mehr names via trust-weighted resolution. External names resolve through their own systems, with bridges translating at the boundary.
 - **Backward compatibility shims.** Bridge operators handle version mismatches. The Mehr protocol doesn't adapt its wire format to accommodate external protocol changes.
 
 ## Building a Bridge
@@ -225,10 +225,10 @@ For developers wanting to create a bridge service:
 2. **Advertise bridging as a capability** — `compute.offered_functions` includes bridge-specific function IDs
 3. **Implement identity attestation** — store and serve `BridgeAttestation` records
 4. **Handle message translation** — protocol-specific logic for each direction
-5. **Manage payment** — collect fees via Mehr [service agreements](../marketplace/agreements), pay external protocol costs
+5. **Manage payment** — collect fees via Mehr [service agreements](/docs/L4-marketplace/agreements), pay external protocol costs
 6. **Gossip attestation availability** — so other Mehr nodes can discover which identities are reachable through your bridge
 
-The bridge is a regular Mehr service. It earns MHR through service agreements, pays for relay through payment channels, and builds reputation through the [trust system](../economics/trust-neighborhoods). No special protocol support is needed — the marketplace handles everything.
+The bridge is a regular Mehr service. It earns MHR through service agreements, pays for relay through payment channels, and builds reputation through the [trust system](/docs/L3-economics/trust-neighborhoods). No special protocol support is needed — the marketplace handles everything.
 
 ## Roadmap Integration
 

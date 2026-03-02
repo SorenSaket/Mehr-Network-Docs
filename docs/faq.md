@@ -49,16 +49,16 @@ See [Device Tiers](hardware/device-tiers) for detailed specifications per tier.
 <details className="faq-item">
 <summary>Is it free?</summary>
 
-Talking to your trusted peers (friends, family, neighbors) is always free — no tokens, no fees. This is the [trust neighborhoods](economics/trust-neighborhoods) model: if you trust someone, relaying their traffic costs you nothing.
+Talking to your trusted peers (friends, family, neighbors) is always free — no tokens, no fees. This is the [trust neighborhoods](/docs/L3-economics/trust-neighborhoods) model: if you trust someone, relaying their traffic costs you nothing.
 
-When your traffic crosses through strangers' infrastructure — people you don't know, who have no reason to carry your traffic for free — that costs a small amount of [MHR tokens](economics/mhr-token). You earn tokens by relaying traffic for others, so for most users the system balances out: you earn by participating and spend by using.
+When your traffic crosses through strangers' infrastructure — people you don't know, who have no reason to carry your traffic for free — that costs a small amount of [MHR tokens](/docs/L3-economics/mhr-token). You earn tokens by relaying traffic for others, so for most users the system balances out: you earn by participating and spend by using.
 
 </details>
 
 <details className="faq-item">
 <summary>Do I need to buy tokens?</summary>
 
-No. You earn MHR automatically by relaying traffic and providing services. A device that's turned on and connected earns tokens passively. If you don't want to deal with tokens at all, a [gateway operator](economics/token-economics#gateway-operators-fiat-onramp) can handle it — you pay a small monthly fee (in regular money) and they take care of the crypto side.
+No. You earn MHR automatically by relaying traffic and providing services. A device that's turned on and connected earns tokens passively. If you don't want to deal with tokens at all, a [gateway operator](/docs/L3-economics/token-economics#gateway-operators-fiat-onramp) can handle it — you pay a small monthly fee (in regular money) and they take care of the crypto side.
 
 </details>
 
@@ -69,7 +69,7 @@ No. You earn MHR automatically by relaying traffic and providing services. A dev
 <details className="faq-item">
 <summary>How do I find local news and events?</summary>
 
-Content on Mehr is tagged with [geographic scopes](economics/trust-neighborhoods#hierarchical-scopes) — like `geo:us/or/portland`. When you open the social feed, you see posts from your neighborhood first, then your city, then your region. It's like a local newspaper that writes itself.
+Content on Mehr is tagged with [geographic scopes](/docs/L3-economics/trust-neighborhoods#hierarchical-scopes) — like `geo:us/or/portland`. When you open the social feed, you see posts from your neighborhood first, then your city, then your region. It's like a local newspaper that writes itself.
 
 A local event or city feed might look like: `events@geo:us/or/portland`. Anyone in the Portland trust network can post to it. Popular content — posts that lots of people in the scope read — propagates outward automatically.
 
@@ -78,7 +78,7 @@ A local event or city feed might look like: `events@geo:us/or/portland`. Anyone 
 <details className="faq-item">
 <summary>How do I find my friends?</summary>
 
-By exchanging public keys — either in person (QR code scan) or through a mutual trusted contact. Once you have someone's key, you can always find them on the mesh. They can also register a human-readable name like `alice@geo:us/or/portland` through [MHR-Name](services/mhr-name), and you can look them up by name.
+By exchanging public keys — either in person (QR code scan) or through a mutual trusted contact. Once you have someone's key, you can always find them on the mesh. They can also register a human-readable name like `alice@geo:us/or/portland` through [MHR-Name](/docs/L5-services/mhr-name), and you can look them up by name.
 
 </details>
 
@@ -89,7 +89,7 @@ Three ways:
 
 1. **Trust-based feeds**: You see content from people your community trusts. This is the default experience — open the app and see what your neighborhood is reading.
 2. **Curated channels**: People you trust create curated feeds — hand-picked collections of the best content on a topic. Subscribe to feeds that match your interests.
-3. **Name resolution**: If you know what you're looking for, type its name. [MHR-Name](services/mhr-name) resolves human-readable names to content — like DNS, but without central authority.
+3. **Name resolution**: If you know what you're looking for, type its name. [MHR-Name](/docs/L5-services/mhr-name) resolves human-readable names to content — like DNS, but without central authority.
 
 </details>
 
@@ -180,9 +180,9 @@ Your device automatically handles roaming. It constantly listens for nearby node
 <details className="faq-item">
 <summary>How do communities form?</summary>
 
-You mark people as trusted. They mark you as trusted. When a group of people all trust each other, that's a community — a [trust neighborhood](economics/trust-neighborhoods). Nobody "creates" it or "runs" it — it emerges from real-world relationships.
+You mark people as trusted. They mark you as trusted. When a group of people all trust each other, that's a community — a [trust neighborhood](/docs/L3-economics/trust-neighborhoods). Nobody "creates" it or "runs" it — it emerges from real-world relationships.
 
-Each person tags themselves with where they are (e.g., Portland, Oregon) and what they're into (e.g., gaming, science). These tags — called [scopes](economics/trust-neighborhoods#hierarchical-scopes) — are how feeds and names work. No authority approves your tags. Communities converge on naming through social consensus, the same way they do today.
+Each person tags themselves with where they are (e.g., Portland, Oregon) and what they're into (e.g., gaming, science). These tags — called [scopes](/docs/L3-economics/trust-neighborhoods#hierarchical-scopes) — are how feeds and names work. No authority approves your tags. Communities converge on naming through social consensus, the same way they do today.
 
 </details>
 
@@ -219,23 +219,23 @@ You pay only for storage (tiny amounts of MHR), and popular content gets cheaper
 <details className="faq-item">
 <summary>Can I store my files on the network?</summary>
 
-Yes. Mehr provides [decentralized cloud storage](applications/cloud-storage) — like Dropbox, but your files are encrypted on your device before being stored across multiple mesh nodes. No cloud provider has access to your files. Your devices sync automatically through the mesh. You can share files with specific people by granting them a decryption key.
+Yes. Mehr provides [decentralized cloud storage](/docs/L6-applications/cloud-storage) — like Dropbox, but your files are encrypted on your device before being stored across multiple mesh nodes. No cloud provider has access to your files. Your devices sync automatically through the mesh. You can share files with specific people by granting them a decryption key.
 
-If you don't want to deal with tokens, a [gateway operator](economics/token-economics#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — same experience as any cloud storage app, but backed by the mesh.
+If you don't want to deal with tokens, a [gateway operator](/docs/L3-economics/token-economics#gateway-operators-fiat-onramp) can offer cloud storage as a fiat-billed service — same experience as any cloud storage app, but backed by the mesh.
 
 </details>
 
 <details className="faq-item">
 <summary>Can I earn by sharing my storage?</summary>
 
-Yes — and it's one of the easiest ways to start earning MHR. Any device with spare disk space can offer [storage services](applications/cloud-storage#earning-mhr-through-storage). You configure how much space to share, storage nodes advertise their availability, and clients form agreements with you. You earn μMHR for every epoch your storage is used. No special hardware needed — a Raspberry Pi with a USB drive works fine.
+Yes — and it's one of the easiest ways to start earning MHR. Any device with spare disk space can offer [storage services](/docs/L6-applications/cloud-storage#earning-mhr-through-storage). You configure how much space to share, storage nodes advertise their availability, and clients form agreements with you. You earn μMHR for every epoch your storage is used. No special hardware needed — a Raspberry Pi with a USB drive works fine.
 
 </details>
 
 <details className="faq-item">
 <summary>What happens when I move to a different location?</summary>
 
-Your device [roams seamlessly](applications/roaming). Mehr identity is your cryptographic key, not a network address. When you walk from WiFi to LoRa range to another WiFi node, your connections don't drop — traffic shifts to the best available transport in under a second. Apps adapt to link quality (images become previews on slow links, full quality returns on fast links). You can even plug an ethernet cable into different ports at different locations and stay connected with zero configuration.
+Your device [roams seamlessly](/docs/L6-applications/roaming). Mehr identity is your cryptographic key, not a network address. When you walk from WiFi to LoRa range to another WiFi node, your connections don't drop — traffic shifts to the best available transport in under a second. Apps adapt to link quality (images become previews on slow links, full quality returns on fast links). You can even plug an ethernet cable into different ports at different locations and stay connected with zero configuration.
 
 </details>
 
@@ -267,7 +267,7 @@ No single point of failure. There's no server to seize, no company to shut down,
 <details className="faq-item">
 <summary>What about illegal or harmful content?</summary>
 
-There is no central moderator. Instead, [content governance](economics/content-governance) is distributed:
+There is no central moderator. Instead, [content governance](/docs/L3-economics/content-governance) is distributed:
 
 - **Every node decides for itself** what to store, relay, and display. No node is forced to host or forward content it objects to.
 - **Trust revocation** is the enforcement mechanism. If your community discovers you're producing harmful content, they remove you from trusted peers — cutting off your free relay, storage, credit, and reputation.
@@ -315,7 +315,7 @@ Yes. **Gateway operators** handle this. A gateway is a regular node that accepts
 
 The gateway adds you as a trusted peer and extends credit, so your traffic flows through them for free. The gateway handles MHR costs on your behalf. Multiple gateways compete in any area, so pricing stays competitive. You can switch gateways at any time — your identity is yours, not the gateway's.
 
-See [Gateway Operators](economics/token-economics#gateway-operators-fiat-onramp) for details.
+See [Gateway Operators](/docs/L3-economics/token-economics#gateway-operators-fiat-onramp) for details.
 
 </details>
 
@@ -333,7 +333,7 @@ That's not the point. MHR is designed to be spent on services, not hoarded. Ther
 <details className="faq-item">
 <summary>Can I sell licenses for my work on Mehr?</summary>
 
-Yes. Mehr has a built-in [digital licensing](applications/licensing) system. You publish a **LicenseOffer** alongside your asset (photo, music, software, dataset) specifying terms — price, whether derivatives are allowed, whether commercial use is permitted, and how many licenses can be issued. Buyers pay you directly (in MHR or fiat) and receive a **LicenseGrant** signed by both parties.
+Yes. Mehr has a built-in [digital licensing](/docs/L6-applications/licensing) system. You publish a **LicenseOffer** alongside your asset (photo, music, software, dataset) specifying terms — price, whether derivatives are allowed, whether commercial use is permitted, and how many licenses can be issued. Buyers pay you directly (in MHR or fiat) and receive a **LicenseGrant** signed by both parties.
 
 </details>
 

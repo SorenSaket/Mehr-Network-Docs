@@ -273,6 +273,115 @@ table tbody tr:nth-child(even) {
 }
 
 /* ══════════════════════════════════════════════
+   Layer-colored sidebar categories
+   ══════════════════════════════════════════════ */
+
+/* Layer color variables */
+:root {
+  --layer-0: #E53935;  /* Red - Physical */
+  --layer-1: #FB8C00;  /* Orange - Network */
+  --layer-2: #FDD835;  /* Yellow - Security */
+  --layer-3: #43A047;  /* Green - Economics */
+  --layer-4: #1E88E5;  /* Blue - Marketplace */
+  --layer-5: #5E35B1;  /* Indigo - Services */
+  --layer-6: #8E24AA;  /* Violet - Applications */
+}
+
+[data-theme='dark'] {
+  --layer-0: #EF5350;
+  --layer-1: #FFA726;
+  --layer-2: #FFEE58;
+  --layer-3: #66BB6A;
+  --layer-4: #42A5F5;
+  --layer-5: #9575CD;
+  --layer-6: #BA68C8;
+}
+
+/* Helper to style category header based on contained links */
+.sidebar-layer-0 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-1 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-2 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-3 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-4 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-5 > .menu__list-item-collapsible .menu__link,
+.sidebar-layer-6 > .menu__list-item-collapsible .menu__link {
+  border-left: 3px solid transparent;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.sidebar-layer-0 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-0);
+  background: rgba(229, 57, 53, 0.06);
+}
+.sidebar-layer-1 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-1);
+  background: rgba(251, 140, 0, 0.06);
+}
+.sidebar-layer-2 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-2);
+  background: rgba(253, 216, 53, 0.08);
+}
+.sidebar-layer-3 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-3);
+  background: rgba(67, 160, 71, 0.06);
+}
+.sidebar-layer-4 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-4);
+  background: rgba(30, 136, 229, 0.06);
+}
+.sidebar-layer-5 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-5);
+  background: rgba(94, 53, 177, 0.06);
+}
+.sidebar-layer-6 > .menu__list-item-collapsible .menu__link {
+  border-left-color: var(--layer-6);
+  background: rgba(142, 36, 170, 0.06);
+}
+
+/* Dark mode backgrounds */
+[data-theme='dark'] .sidebar-layer-0 > .menu__list-item-collapsible .menu__link {
+  background: rgba(239, 83, 80, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-1 > .menu__list-item-collapsible .menu__link {
+  background: rgba(255, 167, 38, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-2 > .menu__list-item-collapsible .menu__link {
+  background: rgba(255, 238, 88, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-3 > .menu__list-item-collapsible .menu__link {
+  background: rgba(102, 187, 106, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-4 > .menu__list-item-collapsible .menu__link {
+  background: rgba(66, 165, 245, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-5 > .menu__list-item-collapsible .menu__link {
+  background: rgba(149, 117, 205, 0.10);
+}
+[data-theme='dark'] .sidebar-layer-6 > .menu__list-item-collapsible .menu__link {
+  background: rgba(186, 104, 200, 0.10);
+}
+
+/* Active/hover states for layer categories */
+.sidebar-layer-0 > .menu__list-item-collapsible .menu__link:hover { background: rgba(229, 57, 53, 0.12); }
+.sidebar-layer-1 > .menu__list-item-collapsible .menu__link:hover { background: rgba(251, 140, 0, 0.12); }
+.sidebar-layer-2 > .menu__list-item-collapsible .menu__link:hover { background: rgba(253, 216, 53, 0.14); }
+.sidebar-layer-3 > .menu__list-item-collapsible .menu__link:hover { background: rgba(67, 160, 71, 0.12); }
+.sidebar-layer-4 > .menu__list-item-collapsible .menu__link:hover { background: rgba(30, 136, 229, 0.12); }
+.sidebar-layer-5 > .menu__list-item-collapsible .menu__link:hover { background: rgba(94, 53, 177, 0.12); }
+.sidebar-layer-6 > .menu__list-item-collapsible .menu__link:hover { background: rgba(142, 36, 170, 0.12); }
+
+/* Style leaf items in each layer section */
+.sidebar-layer-0 .menu__link[href*="/L0-"] { border-left: 2px solid var(--layer-0); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-1 .menu__link[href*="/L1-"] { border-left: 2px solid var(--layer-1); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-2 .menu__link[href*="/L2-"] { border-left: 2px solid var(--layer-2); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-3 .menu__link[href*="/L3-"] { border-left: 2px solid var(--layer-3); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-4 .menu__link[href*="/L4-"] { border-left: 2px solid var(--layer-4); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-5 .menu__link[href*="/L5-"] { border-left: 2px solid var(--layer-5); margin-left: 0.25rem; padding-left: 0.5rem; }
+.sidebar-layer-6 .menu__link[href*="/L6-"] { border-left: 2px solid var(--layer-6); margin-left: 0.25rem; padding-left: 0.5rem; }
+
+/* ══════════════════════════════════════════════
    Spec-page visual key (admonition legend)
    ══════════════════════════════════════════════ */
 

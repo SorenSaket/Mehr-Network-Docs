@@ -28,7 +28,7 @@ SSB and Mehr are the two most aligned protocols in the decentralized ecosystem: 
 | **Identity** | Ed25519 keypair → feed ID (`@...=.ed25519`) | Ed25519 keypair → destination hash | High — same key type, different derivation |
 | **Data model** | Append-only signed log per identity | Immutable/mutable DataObjects in DHT | Moderate — log entries map to DataObjects |
 | **Replication** | Social graph-based gossip (friends + friends-of-friends) | DHT + Pub/Sub + trust neighborhoods | Moderate — different scoping models |
-| **Discovery** | LAN broadcast, pub servers, room servers | [Concentric ring discovery](../marketplace/discovery), DHT lookup | Low friction — bridge advertises in marketplace |
+| **Discovery** | LAN broadcast, pub servers, room servers | [Concentric ring discovery](/docs/L4-marketplace/discovery), DHT lookup | Low friction — bridge advertises in marketplace |
 | **Encryption** | Secret Handshake (SHS) for connections, private-box for DMs | X25519 ECDH link encryption, E2E per-message | Compatible — both use Curve25519-derived keys |
 | **Offline tolerance** | Excellent — feeds are self-contained | Excellent — store-and-forward, partition-tolerant | Native alignment |
 | **Economics** | None — volunteer pubs | MHR token, VRF relay lottery, CRDT ledger | Bridge handles economic boundary |
@@ -113,7 +113,7 @@ SSB Feed Message                    Mehr DataObject
 | `previous` | Stored in metadata | Preserves SSB feed chain |
 | `content.type` | DataObject metadata | `post`, `contact`, `vote`, `about` |
 | `content.text` | DataObject data | Unmodified content |
-| `content.channel` | [Scope](../economics/trust-neighborhoods) | `#channel` → `topic:channel` |
+| `content.channel` | [Scope](/docs/L3-economics/trust-neighborhoods) | `#channel` → `topic:channel` |
 | `content.mentions` | DataObject references | Hash references to other objects |
 | `signature` | Stored alongside | SSB signature preserved for verification |
 
@@ -123,7 +123,7 @@ SSB Feed Message                    Mehr DataObject
 
 Going the other direction, Mehr social posts become SSB feed messages:
 
-1. Bridge receives a Mehr [social post](../applications/social) (`PostEnvelope` DataObject)
+1. Bridge receives a Mehr [social post](/docs/L6-applications/social) (`PostEnvelope` DataObject)
 2. Bridge translates it into an SSB message on its own feed (bridge identity)
 3. SSB message `content.text` includes the post text
 4. SSB message `content.mentions` includes a reference to the Mehr author
@@ -161,7 +161,7 @@ Each SSB node has a different view of the network, determined by who it follows.
 
 ### Mehr Gossip
 
-Mehr gossips based on [concentric rings](../marketplace/discovery):
+Mehr gossips based on [concentric rings](/docs/L4-marketplace/discovery):
 - **Ring 0**: Direct neighbors (full detail)
 - **Ring 1**: 2-3 hops (summarized capabilities)
 - **Ring 2**: Trust neighborhood (periodic)
@@ -247,12 +247,12 @@ SSB Blob                          Mehr DataObject
 1. Alice publishes on SSB: `{ type: "post", text: "Great LoRa range today", channel: "#mesh" }`
 2. Bridge replicates Alice's feed (follows Alice on SSB)
 3. Bridge creates Mehr DataObject with scope `topic:mesh`
-4. Mehr users subscribed to `topic:mesh` via [MHR-Pub](../services/mhr-pub) receive the post
+4. Mehr users subscribed to `topic:mesh` via [MHR-Pub](/docs/L5-services/mhr-pub) receive the post
 5. Mehr users see Alice's post attributed to her SSB identity (via bridge attestation)
 
 ### Bob (Mehr) sends a DM to Alice (SSB)
 
-1. Bob looks up Alice's Mehr identity via bridge attestation in [MHR-DHT](../services/mhr-dht)
+1. Bob looks up Alice's Mehr identity via bridge attestation in [MHR-DHT](/docs/L5-services/mhr-dht)
 2. Bob sends E2E encrypted message to bridge, addressed to Alice's Mehr-side identity
 3. Bridge decrypts, re-encrypts with Alice's SSB public key (private-box)
 4. Bridge publishes as SSB private message on its own feed, encrypted for Alice

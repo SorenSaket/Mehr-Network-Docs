@@ -20,7 +20,7 @@ Meshtastic is the highest-priority bridge target for Mehr. Tens of thousands of 
 | Factor | Detail |
 |--------|--------|
 | **Same physical layer** | Both use LoRa on ISM bands (868/915 MHz). Same radios, same antennas, same propagation characteristics. |
-| **Massive hardware base** | LILYGO T-Beam, Heltec WiFi LoRa 32, RAK WisBlock — the same boards listed in Mehr's [reference designs](../hardware/reference-designs). Many are already deployed and powered. |
+| **Massive hardware base** | LILYGO T-Beam, Heltec WiFi LoRa 32, RAK WisBlock — the same boards listed in Mehr's [reference designs](/docs/hardware/reference-designs). Many are already deployed and powered. |
 | **Low barrier** | No firmware changes needed on existing Meshtastic nodes for basic L0 relay. Bridge nodes handle translation. |
 | **Complementary features** | Meshtastic provides GPS tracking, channel-based messaging, range testing. Mehr adds economics, storage, compute, and E2E encryption. |
 | **Community alignment** | Open-source, community-driven, off-grid focused. Same user base. |
@@ -95,7 +95,7 @@ flowchart LR
 
 - Recognizes Mehr announce packets (by magic bytes in the Meshtastic payload)
 - Forwards them using Meshtastic's mesh routing (opaque byte forwarding)
-- Reports link quality metrics (RSSI, SNR, hop count) that bridge nodes translate to [CompactPathCost](../protocol/network-protocol#mehr-extension-compact-path-cost)
+- Reports link quality metrics (RSSI, SNR, hop count) that bridge nodes translate to [CompactPathCost](/docs/L1-network/network-protocol#mehr-extension-compact-path-cost)
 - Does NOT parse economic extensions, run VRF lottery, or maintain payment channels
 
 **Implementation**: ~2-5 KB of additional firmware on ESP32. The module hooks into Meshtastic's packet receive/forward pipeline and recognizes the `0x4D48` magic prefix.
@@ -148,7 +148,7 @@ A Meshtastic-Mehr bridge node is a physical device that participates in both net
 
 ### Bridge Capabilities Advertised
 
-The bridge node advertises itself in the Mehr [capability marketplace](../marketplace/overview):
+The bridge node advertises itself in the Mehr [capability marketplace](/docs/L4-marketplace/overview):
 
 ```
 NodeCapabilities {
@@ -170,7 +170,7 @@ NodeCapabilities {
 
 ### Routing Cost Translation
 
-Meshtastic provides hop count and SNR. Mehr needs [CompactPathCost](../protocol/network-protocol#mehr-extension-compact-path-cost). The bridge translates:
+Meshtastic provides hop count and SNR. Mehr needs [CompactPathCost](/docs/L1-network/network-protocol#mehr-extension-compact-path-cost). The bridge translates:
 
 ```
 CompactPathCost from Meshtastic metrics:
@@ -180,7 +180,7 @@ CompactPathCost from Meshtastic metrics:
     hop_count = mt_hop_count + mehr_hop_count
 ```
 
-This lets Mehr's [cost-weighted routing](../protocol/network-protocol#routing) make informed decisions about paths that traverse Meshtastic segments. A Mehr node choosing between a 3-hop WiFi path and a 2-hop Meshtastic path can compare costs accurately.
+This lets Mehr's [cost-weighted routing](/docs/L1-network/network-protocol#routing) make informed decisions about paths that traverse Meshtastic segments. A Mehr node choosing between a 3-hop WiFi path and a 2-hop Meshtastic path can compare costs accurately.
 
 ## Message Translation
 
@@ -241,7 +241,7 @@ For Meshtastic community members who want to adopt Mehr incrementally:
 
 - Operators who want to earn MHR upgrade to dual-protocol firmware (Mode 3)
 - Their nodes participate in the VRF relay lottery
-- Relay wins earn MHR through [payment channels](../economics/payment-channels)
+- Relay wins earn MHR through [payment channels](/docs/L3-economics/payment-channels)
 - A $20 solar LoRa node becomes a revenue-generating relay
 
 ### Stage 4: Full Mehr (L2)
@@ -277,7 +277,7 @@ Meshtastic enforces regional LoRa parameters (frequency, bandwidth, duty cycle) 
 
 ### Mesh Routing Interaction
 
-Meshtastic uses a managed flood routing protocol. Mehr uses [Kleinberg small-world routing](../protocol/network-protocol#routing). These models differ fundamentally:
+Meshtastic uses a managed flood routing protocol. Mehr uses [Kleinberg small-world routing](/docs/L1-network/network-protocol#routing). These models differ fundamentally:
 
 - **Meshtastic**: Broadcast-oriented, packets flood to all reachable nodes
 - **Mehr**: Unicast-oriented, packets follow cost-optimal paths
